@@ -124,12 +124,12 @@ find_package(cpr CONFIG REQUIRED)
 target_link_libraries(third_libs INTERFACE cpr::cpr)
 echo_lib_version(cpr ${cpr_VERSION})
 
-# 添加头文件路径
-include_directories(${PROJECT_SOURCE_DIR}/include)
-
 # ============================================================
 # api 基础设施库
 # ============================================================
+
+# 添加头文件路径
+include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # 头文件
 set(HEADERS

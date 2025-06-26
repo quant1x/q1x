@@ -3,9 +3,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.0.3] - 2025-06-26
+### Changed
+- 从quant1x项目中迁移基础库api
+
 ## [0.0.2] - 2025-06-25
 ### Changed
 - 规范代码格式
+- update changelog
 
 ## [0.0.1] - 2025-06-25
 ### Changed
@@ -14,7 +19,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/api.git/compare/v0.0.2...HEAD
+[Unreleased]: https://gitee.com/quant1x/api.git/compare/v0.0.3...HEAD
+[0.0.3]: https://gitee.com/quant1x/api.git/compare/v0.0.2...v0.0.3
 [0.0.2]: https://gitee.com/quant1x/api.git/compare/v0.0.1...v0.0.2
 
 [0.0.1]: https://gitee.com/quant1x/api.git/releases/tag/v0.0.1

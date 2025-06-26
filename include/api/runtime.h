@@ -13,6 +13,9 @@ namespace runtime {
     /// 等待结束信号, 守护进程使用
     void wait_for_exit();
 
+    /// 设置终端的字符集为utf-8
+    void console_set_utf8(void);
+
     // 设置日志模块, debug模式及控制台显示
     void logger_set(bool verbose, bool debug);
 

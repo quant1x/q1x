@@ -80,7 +80,7 @@ namespace encoding {
                 if (row.length() == 0) {
                     continue;
                 }
-                T item;
+                T item{};
                 std::vector<std::string> row_data;
 
                 for (const auto& cell : row) {

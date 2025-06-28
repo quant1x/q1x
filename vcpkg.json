@@ -1,0 +1,13 @@
+{
+  "name": "api",
+  "version": "0.1.0",
+  "description": "quant1x engine",
+  "dependencies": [
+    "benchmark",
+    "catch2",
+    "gtest",
+    "capnproto",
+    "cpr",
+    "libiconv"
+  ]
+}

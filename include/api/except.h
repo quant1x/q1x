@@ -7,6 +7,7 @@
 #include <string>
 #include <stdexcept>
 #include <utility>
+#include <mutex>
 
 // 自定义异常类（继承自 std::exception）
 class BaseException : public std::exception {

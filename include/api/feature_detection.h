@@ -34,12 +34,7 @@
 #define COMPILER_CLANG       3
 #define COMPILER_ICC         4
 
-#define CURRENT_COMPILER \
-    (defined(_MSC_VER) ? COMPILER_MSVC : \
-     defined(__INTEL_COMPILER) ? COMPILER_ICC : \
-     defined(__clang__) ? COMPILER_CLANG : \
-     defined(__GNUC__) ? COMPILER_GCC : \
-     COMPILER_UNKNOWN)
+#define CURRENT_COMPILER (defined(_MSC_VER) ? COMPILER_MSVC : (defined(__INTEL_COMPILER) ? COMPILER_ICC : (defined(__clang__) ? COMPILER_CLANG : (defined(__GNUC__) ? COMPILER_GCC : COMPILER_UNKNOWN))))
 
 // 使用 TARGET_COMPILER_IS_* 命名风格（适合大型项目）
 #define TARGET_COMPILER_IS_MSVC     (CURRENT_COMPILER == COMPILER_MSVC)

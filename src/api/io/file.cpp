@@ -91,7 +91,7 @@ namespace {
         CloseHandle(hFile);
 
         // 将FILETIME转换为system_clock::time_point
-        ULARGE_INTEGER uli;
+        ULARGE_INTEGER uli{};
         uli.LowPart = ftWrite.dwLowDateTime;
         uli.HighPart = ftWrite.dwHighDateTime;
 
@@ -132,7 +132,7 @@ namespace {
             int64_t total_100ns = ft_duration.count() + offset;
 
             // 构造 FILETIME 结构
-            FILETIME ft;
+            FILETIME ft{};
             ft.dwLowDateTime = static_cast<DWORD>(total_100ns & 0xFFFFFFFF);
             ft.dwHighDateTime = static_cast<DWORD>((total_100ns >> 32) & 0xFFFFFFFF);
             return ft;

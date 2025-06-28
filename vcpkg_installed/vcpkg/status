@@ -1,0 +1,173 @@
+Package: vcpkg-cmake-config
+Version: 2024-05-23
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 2b7dbb0819b945d7fd9e7e05f304ad0757e3fd27f9eb58df9d432aa65f62f7d8
+Status: install ok installed
+
+Package: vcpkg-cmake
+Version: 2024-04-23
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 3a65670ed18214d4b48a21c59d769ac9d7cd2f8d10d98a2d023e83a89c87e095
+Status: install ok installed
+
+Package: benchmark
+Version: 1.9.4
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 8a7b48b420d29cf55b2870213beac4627785052befbffbd9ba072fb1a094559b
+Description: A library to benchmark code snippets, similar to unit tests.
+Status: install ok installed
+
+Package: zlib
+Version: 1.3.1
+Depends: vcpkg-cmake
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 1b55cf223b594269d26c3d02d3c3ed3c962fe983eb935aecd8c705f234a47035
+Description: A compression library
+Status: install ok installed
+
+Package: capnproto
+Version: 1.2.0
+Depends: vcpkg-cmake, vcpkg-cmake-config, zlib
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 20063bff319fd2b94f5adfdb02e04a9f0e1abb4f4939068bf26c82ea0cebfafd
+Description: Data interchange format and capability-based RPC system
+Status: install ok installed
+
+Package: catch2
+Version: 3.8.1
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: baa2eb751ac918dc7bece7632a1272c67c8172a614bea9eee321d7b8ebe6e46e
+Description: A modern, C++-native, test framework for unit-tests, TDD and BDD.
+Status: install ok installed
+
+Package: curl
+Version: 8.14.1
+Depends: vcpkg-cmake, vcpkg-cmake-config, zlib
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 7f08a857f42ef813709e22e4d3b9c17555f892405a86ec648416985e4a0a5cd6
+Description: A library for transferring data with URLs
+Default-Features: non-http, ssl
+Status: install ok installed
+
+Package: curl
+Feature: non-http
+Architecture: x64-windows
+Multi-Arch: same
+Description: Enables protocols beyond HTTP/HTTPS/HTTP2
+Status: install ok installed
+
+Package: curl
+Feature: schannel
+Architecture: x64-windows
+Multi-Arch: same
+Description: SSL support (Secure Channel)
+Status: install ok installed
+
+Package: curl
+Feature: ssl
+Architecture: x64-windows
+Multi-Arch: same
+Description: Default SSL backend
+Status: install ok installed
+
+Package: curl
+Feature: sspi
+Architecture: x64-windows
+Multi-Arch: same
+Description: SSPI support
+Status: install ok installed
+
+Package: cpr
+Version: 1.12.0
+Depends: curl, vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 6c0238c9be916d3a7d10815a559393dea3ed1282fd916d782ed87881c625f194
+Description: C++ Requests is a simple wrapper around libcurl inspired by the excellent Python Requests project.
+Default-Features: ssl
+Status: install ok installed
+
+Package: cpr
+Feature: ssl
+Depends: curl
+Architecture: x64-windows
+Multi-Arch: same
+Description: Enable SSL support
+Status: install ok installed
+
+Package: duktape
+Version: 2.7.0
+Port-Version: 2
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 963575ce7bd732ae6c52a2a960515303ea1abbe6fa4961714388888bdfec5cb7
+Description: Embeddable Javascript engine with a focus on portability and compact footprint.
+Status: purge ok not-installed
+
+Package: flatbuffers
+Version: 25.2.10
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: ae66750ce11c5455f1820b5389414d82905173a1a9b01fde60b2ca8fd048d5eb
+Description: FlatBuffers is a cross platform serialization library architected for maximum memory efficiency. It allows you to directly access serialized data without parsing/unpacking it first, while still having great forwards/backwards compatibility.
+Status: purge ok not-installed
+
+Package: fmt
+Version: 11.0.2
+Port-Version: 1
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 10c2435038994a28f0f8ea469df281391328777b6a113ddfe0436dfbcca795d7
+Description: {fmt} is an open-source formatting library providing a fast and safe alternative to C stdio and C++ iostreams.
+Status: purge ok not-installed
+
+Package: zstd
+Version: 1.5.7
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 25990cae4323266bd46e52120f6b45b69e77329a231302b94c0666ccf5ad8cf9
+Description: Zstandard - Fast real-time compression algorithm
+Status: purge ok not-installed
+
+Package: libdwarf
+Version: 2.0.0
+Depends: vcpkg-cmake, vcpkg-cmake-config, zlib, zstd
+Architecture: x64-windows
+Multi-Arch: same
+Abi: b5f2ef0794d89d251bf11e822b0d3f7cb1bd962039679f3bcf712907919a65fc
+Description: A library for reading DWARF2 and later DWARF.
+Status: purge ok not-installed
+
+Package: libiconv
+Version: 1.18
+Port-Version: 1
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 7791077035db88d3266698853263d18a848d2044287196893ff8da926cb44bf8
+Description: iconv() text conversion.
+    This port installs GNU libiconv if the system C runtime doesn't provide a suitable iconv() implementation.
+Status: install ok installed
+
+Package: gtest
+Version: 1.17.0
+Port-Version: 1
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: dd0bef1a90d948e9f1aeb70729f8d19fb858204fa222bcc3a3147eef9e37f2ee
+Description: Google Testing and Mocking Framework
+Status: install ok installed
+

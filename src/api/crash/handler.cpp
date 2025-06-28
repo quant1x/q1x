@@ -10,13 +10,13 @@
 namespace crash {
     namespace detail {
 
-        std::string application_name() {
+        static std::string application_name() {
             static std::string app_name = io::executable_absolute_path();
             return app_name;
         }
 
         // 初始化日志, 日志路径与执行程序相同, 去掉扩展名后增加_crash, 避免了创建目录及权限问题
-        void init_logger() {
+        static void init_logger() {
             std::filesystem::path app_path = detail::application_name(); // 获取可执行文件完整路径
             std::filesystem::path log_file = app_path.stem().string() + "_crash.log"; // myapp_crash.log
             std::filesystem::path log_dir = app_path.parent_path(); // 同目录
@@ -35,7 +35,7 @@ namespace crash {
 
         std::once_flag once_crash_logger;
 
-        std::shared_ptr<spdlog::logger> get_logger() {
+        static std::shared_ptr<spdlog::logger> get_logger() {
             std::call_once(once_crash_logger, [&]() {
                 detail::init_logger();
             });
@@ -68,15 +68,15 @@ namespace crash {
 #endif
 
 #include "backward.hpp"
-#if defined(WIN32) || defined(_WIN32)
-#   include <windows.h>
-#   include <dbghelp.h>
-#endif
+//#if defined(WIN32) || defined(_WIN32)
+//#   include <windows.h>
+//#   include <dbghelp.h>
+//#endif
 
 namespace crash {
 
     namespace detail {
-        void LogStackTrace(const backward::StackTrace &st) {
+        static void LogStackTrace(const backward::StackTrace &st) {
             std::ostringstream oss;
             backward::Printer p;
             p.address = true;
@@ -106,7 +106,7 @@ namespace crash {
                                        nullptr);
 
             if (hFile != INVALID_HANDLE_VALUE) {
-                MINIDUMP_EXCEPTION_INFORMATION mdei;
+                MINIDUMP_EXCEPTION_INFORMATION mdei{};
                 mdei.ThreadId = GetCurrentThreadId();
                 mdei.ExceptionPointers = pExceptionInfo;
 

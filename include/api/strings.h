@@ -34,7 +34,7 @@ namespace strings {
         }
 
         std::istringstream iss(s);
-        T val;
+        T val{};
         iss >> val;
 
         // 如果转换失败，仍返回默认值
@@ -56,24 +56,26 @@ namespace strings {
 
     // 将字符串容器通过分隔符连接成一个字符串
     inline std::string join(const std::vector<std::string>& tokens, const std::string& delimiter) {
-        if (tokens.empty()) return {};
+        if (tokens.empty()) {
+            return "";  // 明确返回空字符串而不是默认构造的string
+        }
 
-        // 计算总长度
-        size_t totalLength = std::accumulate(tokens.begin(),
-                                             tokens.end(),
-                                             0,
-                                             [](size_t sum, const std::string& s) { return sum + s.size(); }
-                                             );
+        // 计算总长度（更简洁的lambda写法）
+        size_t totalLength = std::accumulate(
+            tokens.begin(),
+            tokens.end(),
+            size_t(0),
+            [](size_t sum, const std::string& s) { return sum + s.size(); }
+        );
         totalLength += delimiter.size() * (tokens.size() - 1);
 
         std::string result;
         result.reserve(totalLength);
 
-        if (!tokens.empty()) {
-            result.append(tokens[0]);
-            for (size_t i = 1; i < tokens.size(); ++i) {
-                result.append(delimiter).append(tokens[i]);
-            }
+        // 这里不需要再检查empty，因为前面已经处理了
+        result.append(tokens[0]);
+        for (size_t i = 1; i < tokens.size(); ++i) {
+            result.append(delimiter).append(tokens[i]);
         }
 
         return result;
@@ -81,12 +83,12 @@ namespace strings {
 
     // 将字符串容器通过分隔符连接成一个字符串
     inline std::string join(const std::vector<std::string_view>& tokens, const std::string& delimiter) {
-        if (tokens.empty()) return {};
+        if (tokens.empty()) return "";
 
         // 计算总长度
         size_t totalLength = std::accumulate(tokens.begin(),
                                              tokens.end(),
-                                             0,
+                                             size_t(0),
                                              [](size_t sum, const std::string_view & s) { return sum + s.size(); }
         );
         totalLength += delimiter.size() * (tokens.size() - 1);
@@ -94,24 +96,22 @@ namespace strings {
         std::string result;
         result.reserve(totalLength);
 
-        if (!tokens.empty()) {
-            result.append(tokens[0]);
-            for (size_t i = 1; i < tokens.size(); ++i) {
-                result.append(delimiter).append(tokens[i]);
-            }
+        result.append(tokens[0]);
+        for (size_t i = 1; i < tokens.size(); ++i) {
+            result.append(delimiter).append(tokens[i]);
         }
-
+        
         return result;
     }
 
     // 将字符串容器通过分隔符连接成一个字符串
     inline std::string join(const std::vector<std::string>& tokens, char delimiter) {
-        if (tokens.empty()) return {};
+        if (tokens.empty()) return "";
 
         // 计算总长度
         size_t totalLength = std::accumulate(tokens.begin(),
                                              tokens.end(),
-                                             0,
+                                             size_t(0),
                                              [](size_t sum, const std::string& s) { return sum + s.size(); }
                                              );
         totalLength += tokens.size() - 1;
@@ -119,25 +119,23 @@ namespace strings {
         std::string result;
         result.reserve(totalLength);
 
-        if (!tokens.empty()) {
-            result.append(tokens[0]);
-            for (size_t i = 1; i < tokens.size(); ++i) {
-                result.push_back(delimiter);
-                result.append(tokens[i]);
-            }
+        result.append(tokens[0]);
+        for (size_t i = 1; i < tokens.size(); ++i) {
+            result.push_back(delimiter);
+            result.append(tokens[i]);
         }
-
+        
         return result;
     }
 
     // 将字符串容器通过分隔符连接成一个字符串
     inline std::string join(const std::vector<std::string_view >& tokens, char delimiter) {
-        if (tokens.empty()) return {};
+        if (tokens.empty()) return "";
 
         // 计算总长度
         size_t totalLength = std::accumulate(tokens.begin(),
                                              tokens.end(),
-                                             0,
+                                             size_t(0),
                                              [](size_t sum, const std::string_view& s) { return sum + s.size(); }
         );
         totalLength += tokens.size() - 1;
@@ -145,14 +143,12 @@ namespace strings {
         std::string result;
         result.reserve(totalLength);
 
-        if (!tokens.empty()) {
-            result.append(tokens[0]);
-            for (size_t i = 1; i < tokens.size(); ++i) {
-                result.push_back(delimiter);
-                result.append(tokens[i]);
-            }
+        result.append(tokens[0]);
+        for (size_t i = 1; i < tokens.size(); ++i) {
+            result.push_back(delimiter);
+            result.append(tokens[i]);
         }
-
+        
         return result;
     }
 
@@ -386,7 +382,7 @@ namespace strings {
     inline bool try_parse(const std::string& str, T& out_value) {
         std::string processed = remove_quotes(str);
         std::istringstream iss(processed);
-        T value;
+        T value{};
         if ((iss >> value) && iss.eof()) {
             out_value = value;
             return true;

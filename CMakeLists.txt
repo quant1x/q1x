@@ -22,7 +22,7 @@ macro(echo_lib_version label value)
     message("Found ${label}, version = ${value}")
 endmacro()
 
-project(api VERSION 0.0.1 LANGUAGES CXX)
+project(quant1x-api VERSION 0.0.1 LANGUAGES CXX)
 
 # ============================================================
 # 设置 C++ 标准为 C++20
@@ -35,6 +35,7 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
         "Choose the default build type: Debug, Release, RelWithDebInfo, MinSizeRel")
 endif()
+
 message(STATUS "Build Type: \"${CMAKE_BUILD_TYPE}\"")
 set(CMAKE_INSTALL_CONFIG_NAME ${CMAKE_BUILD_TYPE})
 message(STATUS "Install configuration: \"${CMAKE_INSTALL_CONFIG_NAME}\"")
@@ -74,7 +75,13 @@ endif ()
 
 set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 MESSAGE(STATUS "CMAKE_TOOLCHAIN_FILE = ${CMAKE_TOOLCHAIN_FILE}")
-set(VCPKG_INSTALLED_DIR "${VCPKG_ROOT}/installed")
+
+# 修正VCPKG的installed目录
+if(MSVC)
+    set(VCPKG_INSTALLED_DIR "${PROJECT_SOURCE_DIR}/vcpkg_installed")
+else()
+    set(VCPKG_INSTALLED_DIR "${VCPKG_ROOT}/installed")
+endif()
 
 # 在 Triplet 文件中添加
 set(VCPKG_LIBRARY_LINKAGE static)
@@ -108,17 +115,66 @@ link_directories(${CMAKE_PREFIX_PATH}/lib)
 set(VCPKG_INCLUDE_DIRS ${VCPKG_LIBS_PATH}/include)
 set(VCPKG_LIBRARY_DIRS ${VCPKG_LIBS_PATH}/lib)
 
-# spdlog
-find_package(spdlog CONFIG REQUIRED)
-target_link_libraries(third_libs INTERFACE spdlog::spdlog_header_only)
+# libiconv
+find_package(Iconv REQUIRED)  # CMake 官方模块名称是 Iconv（大写 I）
+if (NOT DEFINED Iconv_VERSION) # 如果没有定义Iconv_VERSION变量, 去查找iconv.h文件路径
+    if (DEFINED CACHE{ICONV_INCLUDE_DIR})
+        message(WARNING "Cache exists: ICONV_INCLUDE_DIR=${ICONV_INCLUDE_DIR}")
+        unset(ICONV_INCLUDE_DIR CACHE)
+    endif ()
+    find_path(ICONV_INCLUDE_DIR iconv.h PATHS /usr/local/include /usr/include /usr/local/opt/libiconv/include ${VCPKG_INCLUDE_DIRS} NO_DEFAULT_PATH)
+    if (ICONV_INCLUDE_DIR)
+        message(WARNING "Iconv exists: ICONV_INCLUDE_DIR=${ICONV_INCLUDE_DIR}")
+        # 读取版本宏定义行
+        file(STRINGS "${ICONV_INCLUDE_DIR}/iconv.h" ICONV_VERSION_LINE
+            REGEX "^#define _LIBICONV_VERSION 0x[0-9A-Fa-f]+")
 
-# fmt
-find_package(fmt CONFIG REQUIRED)
-target_link_libraries(third_libs INTERFACE fmt::fmt)
-echo_lib_version(fmt ${fmt_VERSION})
-find_package(date CONFIG REQUIRED)
-target_link_libraries(third_libs INTERFACE date::date date::date-tz)
+        # 提取纯十六进制数值部分（去掉注释等）
+        string(REGEX MATCH "0x[0-9A-Fa-f]+" ICONV_VERSION_HEX "${ICONV_VERSION_LINE}")
 
+        if (ICONV_VERSION_HEX)
+            # 计算主次版本号
+            math(EXPR ICONV_VERSION_MAJOR "${ICONV_VERSION_HEX} >> 8" OUTPUT_FORMAT DECIMAL)
+            math(EXPR ICONV_VERSION_MINOR "${ICONV_VERSION_HEX} & 0xFF" OUTPUT_FORMAT DECIMAL)
+
+            set(Iconv_VERSION "${ICONV_VERSION_MAJOR}.${ICONV_VERSION_MINOR}")
+            message(STATUS "Found libiconv version: ${Iconv_VERSION}")
+        else ()
+            message(WARNING "Could not extract version number from iconv.h")
+        endif ()
+    else ()
+        message(WARNING "Could not find iconv.h")
+    endif ()
+endif ()
+target_link_libraries(third_libs INTERFACE Iconv::Iconv iconv charset)
+echo_lib_version(iconv ${Iconv_VERSION})
+if (APPLE OR LINUX)
+    # 获取头文件所在的基础目录（通常是 "installed/x64-osx"）
+    get_filename_component(ICONV_BASE_DIR "${ICONV_INCLUDE_DIR}" DIRECTORY)
+
+    # 拼接 lib 目录
+    set(ICONV_LIB_DIR "${ICONV_BASE_DIR}/lib")
+
+    # 验证 lib 目录是否存在
+    if (NOT EXISTS "${ICONV_LIB_DIR}")
+        message(FATAL_ERROR "libiconv 的库目录不存在: ${ICONV_LIB_DIR}")
+    else ()
+        target_link_directories(third_libs INTERFACE ${ICONV_LIB_DIR})
+    endif ()
+endif ()
+
+
+## spdlog
+#find_package(spdlog CONFIG REQUIRED)
+#target_link_libraries(third_libs INTERFACE spdlog::spdlog_header_only)
+#
+## fmt
+#find_package(fmt CONFIG REQUIRED)
+#target_link_libraries(third_libs INTERFACE fmt::fmt)
+#echo_lib_version(fmt ${fmt_VERSION})
+#find_package(date CONFIG REQUIRED)
+#target_link_libraries(third_libs INTERFACE date::date date::date-tz)
+#
 # C++ Requests Library (Cpr for curl)
 find_package(cpr CONFIG REQUIRED)
 target_link_libraries(third_libs INTERFACE cpr::cpr)
@@ -130,10 +186,14 @@ echo_lib_version(cpr ${cpr_VERSION})
 
 # 添加头文件路径
 include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/include/api-third-party)
 
 # 头文件
 set(HEADERS
     include/api/api.h
+    include/api/base/cache1d.h
+    include/api/base/once.h
+    include/api/base/scheduler.h
     include/api/crash/handler.h
     include/api/encoding/csv.h
     include/api/encoding/json.h
@@ -240,28 +300,26 @@ target_link_libraries(api-static PUBLIC
 # ============================================================
 # Crash BackTrace
 # ============================================================
+if(MSVC)
+    # 仅在 MSVC 下设置符号生成选项
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")
+    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /Zi")
+endif()
 if (WIN32)
     target_link_libraries(api PUBLIC ws2_32)   # Windows 网络库, 标准 Winsock API 支持, TCP/UDP 通信、客户端/服务器, winsock2.h
-    target_link_libraries(api-static PUBLIC ws2_32)
     target_link_libraries(api PUBLIC mswsock)  # Windows 网络库, 微软扩展函数（高性能网络）, IOCP、异步网络、高性能服务端, mswsock.h
-    target_link_libraries(api-static PUBLIC mswsock)
     target_link_libraries(api PUBLIC Imagehlp) # Windows Crash Dump, PE 文件结构解析
-    target_link_libraries(api-static PUBLIC Imagehlp)
     target_link_libraries(api PUBLIC Dbghelp)  # Windows Crash Dump, 堆栈回溯（Stack Walking）
-    target_link_libraries(api-static PUBLIC Dbghelp)
     target_link_libraries(api PUBLIC advapi32) # Windows 服务管理
-    target_link_libraries(api-static PUBLIC advapi32)
 elseif(LINUX)
     # vcpkg版本的libdwarf未实验成功
     #target_link_libraries(api PUBLIC libdwarf::dwarf)
     # #define BACKWARD_HAS_DW 1
     target_link_libraries(api PUBLIC dw) # apt-get install libdw-dev
-    target_link_libraries(api-static PUBLIC dw)
     # #define BACKWARD_HAS_DWARF 1
     #target_link_libraries(api PUBLIC elf dwarf) # apt-get install libdwarf-dev
 elseif(APPLE)
     target_link_libraries(api PUBLIC dwarf) # apt-get install libdw-dev
-    target_link_libraries(api-static PUBLIC dwarf)
 endif ()
 
 if (WIN32)
@@ -292,3 +350,28 @@ install(EXPORT api
         FILE api.cmake
         NAMESPACE api::
         DESTINATION lib/cmake/api)
+
+message(STATUS "================== 测试工具库 ==================")
+# 查找 Google Benchmark 包
+find_package(benchmark REQUIRED)
+add_library(test-benchmark INTERFACE)
+target_link_libraries(test-benchmark INTERFACE benchmark::benchmark benchmark::benchmark_main)
+echo_lib_version(benchmark ${benchmark_VERSION})
+# Catch2
+find_package(Catch2 CONFIG REQUIRED)
+echo_lib_version(Catch2 ${Catch2_VERSION})
+add_library(test-catch2 INTERFACE)
+target_link_libraries(test-catch2 INTERFACE Catch2::Catch2 Catch2::Catch2WithMain)
+# 启用Catch2 Unicode支持
+target_compile_definitions(third_libs INTERFACE
+    CATCH_CONFIG_WINDOWS_SEH
+    CATCH_CONFIG_USE_ANSI_COLOR_CODES
+)
+# GTest
+find_package(GTest CONFIG REQUIRED)
+add_library(test-gtest INTERFACE)
+target_link_libraries(test-gtest INTERFACE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
+echo_lib_version(GTest ${GTest_VERSION})
+
+# 单元测试
+add_subdirectory(tests)

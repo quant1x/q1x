@@ -1,14 +1,12 @@
-#include <api/std.h>
-
 #include <api/os/service.h>
+#include <api/runtime.h>
+#include <spdlog/spdlog.h>
 #include <windows.h>
 #include <shellapi.h>
 #include <winsvc.h>
 #include <sstream>
 #include <iostream>
 #include <string>
-#include <spdlog/spdlog.h>
-#include <api/runtime.h>
 
 namespace service {
 
@@ -17,7 +15,7 @@ namespace service {
     }
 
     // UTF-8 -> UTF-16 转换函数
-    std::wstring utf8_to_utf16(const std::string& str) {
+    static std::wstring utf8_to_utf16(const std::string& str) {
         if (str.empty()) return {};
         int size_needed = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
         std::wstring result(size_needed, 0);
@@ -25,7 +23,7 @@ namespace service {
         return result;
     }
 
-    std::string utf16_to_utf8(const std::wstring& wstr) {
+    static std::string utf16_to_utf8(const std::wstring& wstr) {
         if (wstr.empty()) return {};
         int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
         std::string result(size_needed, 0);
@@ -33,7 +31,7 @@ namespace service {
         return result;
     }
 
-    std::string get_last_error_string() {
+    static std::string get_last_error_string() {
         DWORD error = GetLastError();
         if (error == 0) {
             return "No error.";
@@ -80,18 +78,83 @@ namespace service {
         return oss.str();
     }
 
-    bool is_admin() {
-        BOOL fRet = FALSE;
-        HANDLE hToken = NULL;
-        if (OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
-            TOKEN_ELEVATION_TYPE elevType;
-            DWORD cbSize;
-            if (GetTokenInformation(hToken, TokenElevationType, &elevType, sizeof(elevType), &cbSize)) {
-                fRet = (elevType == TokenElevationTypeFull);
+    static bool v1_current_user_is_administrator() {
+        HANDLE hToken = nullptr;
+        if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
+            return false;
+        }
+
+        // 获取令牌信息（检查管理员组）
+        DWORD dwSize = 0;
+        if (!GetTokenInformation(hToken, TokenGroups, nullptr, 0, &dwSize) &&
+            GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+            CloseHandle(hToken);
+            return false;
+        }
+
+        std::vector<BYTE> buffer(dwSize);
+        PTOKEN_GROUPS pTokenGroups = reinterpret_cast<PTOKEN_GROUPS>(buffer.data());
+        if (!GetTokenInformation(hToken, TokenGroups, pTokenGroups, dwSize, &dwSize)) {
+            CloseHandle(hToken);
+            return false;
+        }
+
+        // 检查 SID 是否属于管理员组
+        PSID pAdminSid = nullptr;
+        SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+        if (!AllocateAndInitializeSid(
+            &NtAuthority,
+            2,
+            SECURITY_BUILTIN_DOMAIN_RID,
+            DOMAIN_ALIAS_RID_ADMINS,
+            0, 0, 0, 0, 0, 0,
+            &pAdminSid)) {
+            CloseHandle(hToken);
+            return false;
+        }
+
+        bool isAdmin = false;
+        for (DWORD i = 0; i < pTokenGroups->GroupCount; i++) {
+            if (EqualSid(pTokenGroups->Groups[i].Sid, pAdminSid)) {
+                if ((pTokenGroups->Groups[i].Attributes & SE_GROUP_ENABLED) &&
+                    !(pTokenGroups->Groups[i].Attributes & SE_GROUP_USE_FOR_DENY_ONLY)) {
+                    isAdmin = true;
+                }
+                break;
             }
         }
-        if (hToken) CloseHandle(hToken);
-        return fRet;
+
+        FreeSid(pAdminSid);
+        CloseHandle(hToken);
+        return isAdmin;
+    }
+
+    static bool current_user_is_administrator() {
+        BOOL isAdmin = FALSE;
+        PSID pAdminSid = nullptr;
+        SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
+
+        // 创建管理员组 SID
+        if (!AllocateAndInitializeSid(
+            &NtAuthority,
+            2,
+            SECURITY_BUILTIN_DOMAIN_RID,
+            DOMAIN_ALIAS_RID_ADMINS,
+            0, 0, 0, 0, 0, 0,
+            &pAdminSid)) {
+            spdlog::error("AllocateAndInitializeSid failed: {}", get_last_error_string());
+            return false;
+        }
+
+        // 检查当前进程令牌是否属于管理员组
+        if (!CheckTokenMembership(nullptr, pAdminSid, &isAdmin)) {
+            spdlog::error("CheckTokenMembership failed: {}", get_last_error_string());
+            FreeSid(pAdminSid);
+            return false;
+        }
+
+        FreeSid(pAdminSid);
+        return isAdmin == TRUE;
     }
 
     namespace {
@@ -116,8 +179,8 @@ namespace service {
         }
     }
 
-    bool require_admin_and_do(const std::string& choice) {
-        if (is_admin()) {
+    static bool require_admin_and_do(const std::string& choice) {
+        if (current_user_is_administrator()) {
             return true; // 已有管理员权限
         }
 
@@ -142,7 +205,8 @@ namespace service {
         if (!ShellExecuteExW(&sei)) {
             std::cerr << "[-] Failed to request admin privileges." << std::endl;
             return false;
-        } else {
+        }
+        else {
             WaitForSingleObject(sei.hProcess, INFINITE); // 等待子进程结束
             CloseHandle(sei.hProcess);
             std::cout << "[+] 管理员权限操作, 继续:" << std::endl;
@@ -173,7 +237,7 @@ namespace service {
         std::wstring serviceNameW = utf8_to_utf16(g_api_service_config.service_name);
         std::wstring displayNameW = utf8_to_utf16(g_api_service_config.display_name);
         CHAR path[MAX_PATH];
-        GetModuleFileName(nullptr, path, MAX_PATH);
+        GetModuleFileNameA(nullptr, path, MAX_PATH);
         std::string exec_path = path;
         exec_path.append(" service run");
         std::wstring execute = utf8_to_utf16(exec_path);
@@ -198,7 +262,8 @@ namespace service {
             if (err == ERROR_SERVICE_EXISTS) {
                 std::cerr << "[!] Service already exists." << std::endl;
                 spdlog::warn("[!] Service already exists.");
-            } else {
+            }
+            else {
                 std::cerr << "[-] CreateService failed (" << err << ")" << std::endl;
                 spdlog::warn("[-] CreateService failed ({})", err);
             }
@@ -209,7 +274,7 @@ namespace service {
         // 设置服务描述
         if (!g_api_service_config.description.empty()) {
             std::wstring descW = utf8_to_utf16(g_api_service_config.description);
-            SERVICE_DESCRIPTIONW sd;
+            SERVICE_DESCRIPTIONW sd{};
             sd.lpDescription = const_cast<LPWSTR>(descW.c_str());
             ChangeServiceConfig2W(schService, SERVICE_CONFIG_DESCRIPTION, &sd);
         }
@@ -245,7 +310,8 @@ namespace service {
 
         if (!DeleteService(schService)) {
             std::cerr << "[-] DeleteService failed (" << get_last_error_string() << ")" << std::endl;
-        } else {
+        }
+        else {
             std::cout << "[+] Service uninstalled: " << g_api_service_config.service_name << std::endl;
         }
 
@@ -338,21 +404,21 @@ namespace service {
         } else {
             std::cout << "[+] Service status: ";
             switch (status.dwCurrentState) {
-                case SERVICE_RUNNING:
-                    std::cout << "Running";
-                    break;
-                case SERVICE_STOPPED:
-                    std::cout << "Stopped";
-                    break;
-                case SERVICE_START_PENDING:
-                    std::cout << "Starting";
-                    break;
-                case SERVICE_STOP_PENDING:
-                    std::cout << "Stopping";
-                    break;
-                default:
-                    std::cout << "Unknown";
-                    break;
+            case SERVICE_RUNNING:
+                std::cout << "Running";
+                break;
+            case SERVICE_STOPPED:
+                std::cout << "Stopped";
+                break;
+            case SERVICE_START_PENDING:
+                std::cout << "Starting";
+                break;
+            case SERVICE_STOP_PENDING:
+                std::cout << "Stopping";
+                break;
+            default:
+                std::cout << "Unknown";
+                break;
             }
             std::cout << std::endl;
         }
@@ -367,34 +433,34 @@ namespace service {
     HANDLE                  g_ServiceStopEvent = nullptr;
 
     // 服务控制处理函数
-    VOID WINAPI ServiceCtrlHandler(DWORD CtrlCode) {
+    static VOID WINAPI ServiceCtrlHandler(DWORD CtrlCode) {
         switch (CtrlCode) {
-            case SERVICE_CONTROL_STOP:
-                // 收到停止请求
-                if (g_ServiceStatus.dwCurrentState != SERVICE_RUNNING) {
-                    break;
-                }
-                // 更新状态为停止中
-                g_ServiceStatus.dwControlsAccepted = 0;
-                g_ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
-                g_ServiceStatus.dwWin32ExitCode = 0;
-                g_ServiceStatus.dwCheckPoint = 4;
-
-                if (SetServiceStatus(g_StatusHandle, &g_ServiceStatus) == FALSE){
-                    spdlog::error("{}: ServiceCtrlHandler: SetServiceStatus returned error", g_api_service_config.service_name);
-                }
-
-                // 设置停止事件
-                SetEvent(g_ServiceStopEvent);
+        case SERVICE_CONTROL_STOP:
+            // 收到停止请求
+            if (g_ServiceStatus.dwCurrentState != SERVICE_RUNNING) {
                 break;
+            }
+            // 更新状态为停止中
+            g_ServiceStatus.dwControlsAccepted = 0;
+            g_ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
+            g_ServiceStatus.dwWin32ExitCode = 0;
+            g_ServiceStatus.dwCheckPoint = 4;
 
-            default:
-                break;
+            if (SetServiceStatus(g_StatusHandle, &g_ServiceStatus) == FALSE) {
+                spdlog::error("{}: ServiceCtrlHandler: SetServiceStatus returned error", g_api_service_config.service_name);
+            }
+
+            // 设置停止事件
+            SetEvent(g_ServiceStopEvent);
+            break;
+
+        default:
+            break;
         }
     }
 
     // 服务主函数
-    VOID WINAPI ServiceMain(DWORD argc, LPTSTR *argv)
+    static VOID WINAPI ServiceMain(DWORD argc, LPTSTR* argv)
     {
         (void)argc;
         (void)argv;
@@ -470,7 +536,7 @@ namespace service {
             // 检查是否收到停止事件
             if (WaitForSingleObject(g_ServiceStopEvent, 0) == WAIT_OBJECT_0)
             {
-                runtime::set_quit_flag(true);
+                runtime::SetQuitFlag(true);
                 spdlog::warn("{}: ServiceMain: Received stop signal", g_api_service_config.service_name);
                 break;
             }
@@ -497,12 +563,14 @@ namespace service {
     void run_daemon() {
         spdlog::info("[*] 守护进程已启动");
         //runtime::logger_set(false, config::is_debug());
+        //std::wstring serviceNameW = utf8_to_utf16(g_api_service_config.service_name);
+        //SetThreadName(GetCurrentThreadId(), g_api_service_config.service_name.c_str());;
         // 服务分派表
         SERVICE_TABLE_ENTRY DispatchTable[] =
-            {
-                { (LPTSTR)g_api_service_config.service_name.c_str(), (LPSERVICE_MAIN_FUNCTION)ServiceMain },
-                { nullptr, nullptr }
-            };
+        {
+            { (LPTSTR)g_api_service_config.service_name.c_str(), (LPSERVICE_MAIN_FUNCTION)ServiceMain },
+            { nullptr, nullptr }
+        };
 
         if (!StartServiceCtrlDispatcher(DispatchTable)) {
             spdlog::error("StartServiceCtrlDispatcher failed ({})", GetLastError());

@@ -2,6 +2,8 @@
 #ifndef API_ALGO_H
 #define API_ALGO_H 1
 
+#include <complex>
+
 namespace algo {
 
     namespace detail {

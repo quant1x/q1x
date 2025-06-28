@@ -6,33 +6,6 @@ namespace strings {
         return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
     }
 
-    // 使用位掩码优化，性能好且易于扩展 [存在掩码误报的情况]
-    bool v1_is_whitespace(char ch) {
-        // 定义空白字符的掩码：
-        // 空格 ' ' (0x20), 制表符 '\t' (0x09), 换行 '\n' (0x0A), 回车 '\r' (0x0D)
-        constexpr unsigned int whitespace_mask =
-            (1 << (' '  & 0x1F)) |  // 空格
-            (1 << ('\t' & 0x1F)) |  // 水平制表符
-            (1 << ('\n' & 0x1F)) |  // 换行
-            (1 << ('\r' & 0x1F));   // 回车
-
-        // 检查字符是否在掩码中
-        return (whitespace_mask >> (ch & 0x1F)) & 1;
-    }
-
-    // [存在掩码误报的情况]
-    bool v2_is_whitespace(char ch) {
-        constexpr uint32_t whitespace_mask =
-            (1 << (' '  & 0x1F)) |
-            (1 << ('\t' & 0x1F)) |
-            (1 << ('\n' & 0x1F)) |
-            (1 << ('\r' & 0x1F)) |
-            (1 << ('\v' & 0x1F)) |
-            (1 << ('\f' & 0x1F));
-
-        return (whitespace_mask >> (static_cast<uint8_t>(ch) & 0x1F)) & 1;
-    }
-
     std::string trim(const std::string& str) {
         size_t start = 0;
         size_t end = str.size();

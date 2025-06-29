@@ -46,7 +46,7 @@ namespace runtime {
 
     static void shutdown();
 
-    void SetQuitFlag(bool flag) {
+    void set_quit_flag(bool flag) {
         global_quit_flag = flag;
     }
 
@@ -265,6 +265,7 @@ namespace runtime {
         while (!global_quit_flag.load()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
+        spdlog::info("[*] 守护进程已关闭");
         shutdown();
     }
 }  // namespace runtime

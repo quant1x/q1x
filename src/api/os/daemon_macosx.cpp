@@ -12,7 +12,7 @@
 #include <dirent.h>
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
-#include <quant1x/base/runtime.h>
+#include <api/runtime.h>
 
 namespace service {
 
@@ -284,7 +284,7 @@ namespace service {
 
         spdlog::info("[*] 守护进程已启动");
 
-        runtime::logger_set(false, true); // 示例设置日志器
+        runtime::logger_set(false, false); // 示例设置日志器
         runtime::wait_for_exit();         // 主循环或等待退出信号
     }
 

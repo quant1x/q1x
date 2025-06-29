@@ -17,7 +17,7 @@ namespace runtime {
     void logger_set(bool verbose = false, bool debug = false);
 
     /// 设置服务退出标识
-    void SetQuitFlag(bool flag);
+    void set_quit_flag(bool flag);
 
     /// 等待结束信号, 守护进程使用
     void wait_for_exit();

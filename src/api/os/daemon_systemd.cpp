@@ -188,57 +188,6 @@ namespace service {
 
     // 守护进程主逻辑（带日志）
     void run_daemon() {
-//        // 第一次 fork：创建子进程，父进程退出
-//        pid_t pid = fork();
-//        if (pid < 0) {
-//            std::cerr << "[-] 第一次 fork 失败" << std::endl;
-//            exit(EXIT_FAILURE);
-//        }
-//        if (pid > 0) {
-//            exit(EXIT_SUCCESS);  // 父进程退出
-//        }
-//
-//        // 创建新会话
-//        pid_t sid = setsid();
-//        if (sid < 0) {
-//            std::cerr << "[-] setsid 失败" << std::endl;
-//            exit(EXIT_FAILURE);
-//        }
-//
-//        // 忽略挂断信号
-//        signal(SIGCHLD, SIG_IGN);
-//        signal(SIGHUP, SIG_IGN);
-//
-//        // 第二次 fork：确保不会重新获得控制终端
-//        pid = fork();
-//        if (pid < 0) {
-//            std::cerr << "[-] 第二次 fork 失败" << std::endl;
-//            exit(EXIT_FAILURE);
-//        }
-//        if (pid > 0) {
-//            exit(EXIT_SUCCESS);  // 子进程退出
-//        }
-//
-//        // 设置 umask
-//        umask(0);
-//
-//        // 切换工作目录到根目录或用户目录
-//        chdir("/");
-//
-//        // 关闭标准输入输出
-//        close(STDIN_FILENO);
-//        close(STDOUT_FILENO);
-//        close(STDERR_FILENO);
-//
-//        // 重定向 stdin/stdout/stderr 到 /dev/null
-//        int dev_null_fd = open("/dev/null", O_RDWR);
-//        if (dev_null_fd != -1) {
-//            dup2(dev_null_fd, STDIN_FILENO);
-//            dup2(dev_null_fd, STDOUT_FILENO);
-//            dup2(dev_null_fd, STDERR_FILENO);
-//            close(dev_null_fd);
-//        }
-
         // 获取当前用户名（用于日志路径）
         uid_t uid = getuid();
         struct passwd *pw = getpwuid(uid);
@@ -264,8 +213,8 @@ namespace service {
 
         // 示例日志
         file_logger->info("[*] 守护进程已启动");
-        // console_logger->info("[*] 守护进程已启动");
-        runtime::logger_set(false, config::is_debug());
+		spdlog::info("[*] 守护进程已启动");
+        runtime::logger_set(false, false);
 
         runtime::wait_for_exit();
     }

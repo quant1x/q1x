@@ -536,7 +536,7 @@ namespace service {
             // 检查是否收到停止事件
             if (WaitForSingleObject(g_ServiceStopEvent, 0) == WAIT_OBJECT_0)
             {
-                runtime::SetQuitFlag(true);
+                runtime::set_quit_flag(true);
                 spdlog::warn("{}: ServiceMain: Received stop signal", g_api_service_config.service_name);
                 break;
             }

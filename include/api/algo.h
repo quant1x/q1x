@@ -50,17 +50,17 @@ namespace algo {
 
             // 获取当前均值
             double getMean() const {
-                return (count > 0) ? mean : 0.0/0.0; // 返回NaN如果无数据
+                return (count > 0) ? mean : std::numeric_limits<double>::quiet_NaN(); // 返回NaN如果无数据
             }
 
             // 获取总体方差
             double getVariancePopulation() const {
-                return (count > 0) ? M2 / count : 0.0/0.0; // NaN如果无数据
+                return (count > 0) ? M2 / count : std::numeric_limits<double>::quiet_NaN(); // NaN如果无数据
             }
 
             // 获取样本方差（无偏估计）
             double getVarianceSample() const {
-                return (count > 1) ? M2 / (count - 1) : 0.0/0.0; // NaN如果数据不足
+                return (count > 1) ? M2 / (count - 1) : std::numeric_limits<double>::quiet_NaN(); // NaN如果数据不足
             }
 
             // 获取总体标准差

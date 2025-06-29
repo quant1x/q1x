@@ -90,4 +90,8 @@ macro(add_benchmark_executable source_file)
     )
 endmacro()
 
+# 字符集测试
 add_catch2_executable(tdd-iconv.cpp)
+
+# formula测试
+add_catch2_executable(tdd-formula.cpp)

@@ -224,6 +224,18 @@ set(HEADERS
     include/api/time.h
     include/api/util.h
     include/api/runtime.h
+
+    include/api/test/test.h
+    
+    include/api/dataframe/dataframe.h
+    include/api/dataframe/ewm.h
+    include/api/dataframe/periods.h
+    include/api/dataframe/series.h
+
+    include/api/net/base.h
+    include/api/net/connection_pool.h
+    include/api/net/endpoint.h
+    include/api/net/operation_handler.h
 )
 # 源文件
 set(SOURCES

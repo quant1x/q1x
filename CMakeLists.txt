@@ -88,10 +88,12 @@ set(VCPKG_LIBRARY_LINKAGE static)
 set(VCPKG_CRT_LINKAGE static)
 message(STATUS "        MSVC_VERSION = ${MSVC_VERSION}")
 message(STATUS "MSVC_TOOLSET_VERSION = ${MSVC_TOOLSET_VERSION}")
+#unset(VCPKG_TARGET_TRIPLET CACHE)
 # 根据平台自动选择 Triplet
 if (WIN32)
     if (MSVC)
-        set(VCPKG_TARGET_TRIPLET "x64-windows" CACHE STRING "Default Triplet for Windows")
+        set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Default Triplet for Windows")
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") # 设置 MSVC 静态链接运行时库
     else ()
         set(VCPKG_TARGET_TRIPLET "x64-mingw-static" CACHE STRING "Default Triplet for Windows")
     endif ()
@@ -103,6 +105,7 @@ elseif (APPLE)
 else ()
     message(status "other...")
 endif ()
+#set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Default Triplet for Windows")
 MESSAGE(STATUS "VCPKG_TARGET_TRIPLET = ${VCPKG_TARGET_TRIPLET}")
 
 # 设置cmake搜索路径

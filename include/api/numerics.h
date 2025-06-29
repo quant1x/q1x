@@ -7,6 +7,10 @@
 
 namespace numerics {
 
+	constexpr double NaN    =  std::numeric_limits<double>::quiet_NaN(); ///< NaN常量
+	constexpr double Inf    =  std::numeric_limits<double>::infinity();  ///< 正无穷常量
+	constexpr double NegInf = -std::numeric_limits<double>::infinity();  ///< 负无穷常量
+
     /**
      * @brief 适用于高频高精度的银行家四舍五入
      * @param value double类型value

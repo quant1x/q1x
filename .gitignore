@@ -40,3 +40,6 @@ out/
 
 # CMake specific
 *build/
+
+# vcpkg specific
+vcpkg_installed/

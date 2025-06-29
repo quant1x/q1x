@@ -44,7 +44,7 @@ namespace ta {
         //Series& operator=(const Series&) = delete;
 
         //== 允许移动 ===//
-        Series<T>(Series<T>&&) = default;
+        Series(Series&&) = default;
         Series<T>& operator=(Series<T>&&) = default;
 
         //=== 数据访问 ===//

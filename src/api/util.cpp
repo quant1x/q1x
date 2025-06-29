@@ -111,7 +111,7 @@ namespace util {
         return {};
     }
 
-    std::error_code CheckFilepath(const std::string &filename, bool notExistToCreate) {
+    std::error_code check_filepath(const std::string &filename, bool notExistToCreate) {
         std::string expanded = expand_homedir(filename);
         fs::path file_path(expanded);
         fs::path dir_path = file_path.parent_path();

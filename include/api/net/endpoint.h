@@ -3,7 +3,7 @@
 #define API_NET_ENDPOINT_H 1
 
 #include <api/net/base.h>
-//#include <api/runtime.h>
+#include <spdlog/spdlog.h>
 
 class EndpointManager {
 public:

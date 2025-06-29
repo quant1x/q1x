@@ -16,7 +16,7 @@
 #define CPP_STD_CXX23     202302L
 
 #if defined(_MSVC_LANG)
-#define TARGET_CPP (__cplusplus ? __cplusplus : _MSVC_LANG)
+#define TARGET_CPP (_MSVC_LANG)
 #else
 #define TARGET_CPP __cplusplus
 #endif
@@ -28,19 +28,30 @@
 // == 编译器类型判断 ==
 // ==================================================================
 
-#define COMPILER_UNKNOWN     0
-#define COMPILER_MSVC        1
-#define COMPILER_GCC         2
-#define COMPILER_CLANG       3
-#define COMPILER_ICC         4
+// 先全部置为0，后面再根据实际编译器置为1
+#if defined(_MSC_VER)
+#define TARGET_COMPILER_IS_MSVC 1
+#else
+#define TARGET_COMPILER_IS_MSVC 0
+#endif
 
-#define CURRENT_COMPILER (defined(_MSC_VER) ? COMPILER_MSVC : (defined(__INTEL_COMPILER) ? COMPILER_ICC : (defined(__clang__) ? COMPILER_CLANG : (defined(__GNUC__) ? COMPILER_GCC : COMPILER_UNKNOWN))))
+#if defined(__GNUC__) && !defined(__clang__)
+#define TARGET_COMPILER_IS_GCC 1
+#else
+#define TARGET_COMPILER_IS_GCC 0
+#endif
 
-// 使用 TARGET_COMPILER_IS_* 命名风格（适合大型项目）
-#define TARGET_COMPILER_IS_MSVC     (CURRENT_COMPILER == COMPILER_MSVC)
-#define TARGET_COMPILER_IS_GCC      (CURRENT_COMPILER == COMPILER_GCC)
-#define TARGET_COMPILER_IS_CLANG    (CURRENT_COMPILER == COMPILER_CLANG)
-#define TARGET_COMPILER_IS_ICC      (CURRENT_COMPILER == COMPILER_ICC)
+#if defined(__clang__)
+#define TARGET_COMPILER_IS_CLANG 1
+#else
+#define TARGET_COMPILER_IS_CLANG 0
+#endif
+
+#if defined(__INTEL_COMPILER)
+#define TARGET_COMPILER_IS_ICC 1
+#else
+#define TARGET_COMPILER_IS_ICC 0
+#endif
 
 // 编译器版本检测（可选）
 #if TARGET_COMPILER_IS_MSVC
@@ -50,9 +61,9 @@
 #elif TARGET_COMPILER_IS_CLANG
 #define COMPILER_VERSION (__clang_major__ * 10000 + __clang_minor__ * 100 + __clang_patchlevel__)
 #elif TARGET_COMPILER_IS_ICC
-    #define COMPILER_VERSION (__INTEL_COMPILER)
+#define COMPILER_VERSION (__INTEL_COMPILER)
 #else
-    #define COMPILER_VERSION 0
+#define COMPILER_VERSION 0
 #endif
 
 // 强制内联宏定义（示例）
@@ -80,7 +91,7 @@
 // == CPU 架构检测 ==
 // ==================================================================
 
-#define CPU_ARCH_UNKNOWN      0
+#define CPU_ARCH_UNKNOWN    0
 #define CPU_ARCH_X86_32     1
 #define CPU_ARCH_X86_64     2
 #define CPU_ARCH_ARM_32     3
@@ -89,15 +100,23 @@
 #define CPU_ARCH_POWERPC    6
 #define CPU_ARCH_RISCV      7
 
-#define CURRENT_CPU_ARCH \
-    (defined(__x86_64__) || defined(_M_X64) ? CPU_ARCH_X86_64 : \
-     defined(__i386__) || defined(_M_I386) ? CPU_ARCH_X86_32 : \
-     defined(__aarch64__) || defined(_M_ARM64) ? CPU_ARCH_ARM_64 : \
-     defined(__arm__) || defined(_M_ARM) ? CPU_ARCH_ARM_32 : \
-     defined(__mips__) ? CPU_ARCH_MIPS : \
-     defined(__powerpc__) || defined(__ppc__) ? CPU_ARCH_POWERPC : \
-     defined(__riscv) ? CPU_ARCH_RISCV : \
-     CPU_ARCH_UNKNOWN)
+#if defined(__x86_64__) || defined(_M_X64)
+#define CURRENT_CPU_ARCH CPU_ARCH_X86_64
+#elif defined(__i386__) || defined(_M_I386)
+#define CURRENT_CPU_ARCH CPU_ARCH_X86_32
+#elif defined(__aarch64__) || defined(_M_ARM64)
+#define CURRENT_CPU_ARCH CPU_ARCH_ARM_64
+#elif defined(__arm__) || defined(_M_ARM)
+#define CURRENT_CPU_ARCH CPU_ARCH_ARM_32
+#elif defined(__mips__)
+#define CURRENT_CPU_ARCH CPU_ARCH_MIPS
+#elif defined(__powerpc__) || defined(__ppc__)
+#define CURRENT_CPU_ARCH CPU_ARCH_POWERPC
+#elif defined(__riscv)
+#define CURRENT_CPU_ARCH CPU_ARCH_RISCV
+#else
+#define CURRENT_CPU_ARCH CPU_ARCH_UNKNOWN
+#endif
 
 // 是否是 x86 架构
 #define TARGET_CPU_HAS_X86_32     (CURRENT_CPU_ARCH == CPU_ARCH_X86_32)
@@ -128,7 +147,7 @@
 // 判断是否支持内联汇编（取决于编译器和平台）
 #if TARGET_COMPILER_IS_MSVC && (defined(_M_IX86) || defined(_M_X64))
 #define TARGET_HAS_INLINE_ASM 1
-#elif (IS_GCC || IS_CLANG) && !defined(__arm__) && !defined(__aarch64__)
+#elif (TARGET_COMPILER_IS_GCC || TARGET_COMPILER_IS_CLANG) && !defined(__arm__) && !defined(__aarch64__)
 #define TARGET_HAS_INLINE_ASM 1
 #else
 #define TARGET_HAS_INLINE_ASM 0

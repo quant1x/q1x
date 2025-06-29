@@ -22,7 +22,12 @@ macro(echo_lib_version label value)
     message("Found ${label}, version = ${value}")
 endmacro()
 
-project(quant1x-api VERSION 0.0.1 LANGUAGES CXX)
+# 通过git获取版本信息
+include(cmake/git_tag_info.cmake)
+get_latest_git_tag_info(GIT_VERSION GIT_AUTHOR GIT_EMAIL GIT_DATE)
+message(STATUS "GIT_VERSION=${GIT_VERSION}, GIT_AUTHOR=${GIT_AUTHOR}, GIT_EMAIL=${GIT_EMAIL}, GIT_DATE=${GIT_DATE}")
+
+project(quant1x-api VERSION ${GIT_VERSION} LANGUAGES CXX)
 
 # ============================================================
 # 设置 C++ 标准为 C++20
@@ -213,7 +218,7 @@ set(HEADERS
     include/api/buffer.h
     include/api/config.h.in
     include/api/except.h
-    include/api/feature_detection.h
+    
     include/api/format.h
     include/api/iconv.h
     include/api/mmap.h
@@ -279,8 +284,8 @@ add_library(api SHARED ${HEADERS} ${SOURCES})
 add_library(api-static STATIC ${HEADERS} ${SOURCES})
 
 # 为动态库定义导出宏
-target_compile_definitions(api PRIVATE API_DECLARE_EXPORT)
-target_compile_definitions(api-static PRIVATE API_DECLARE_STATIC)
+target_compile_definitions(api PUBLIC API_DECLARE_EXPORT MI_OVERRIDE=1)
+target_compile_definitions(api-static PUBLIC API_DECLARE_STATIC MI_OVERRIDE=1)
 
 # 清除DLL文件的前缀
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
@@ -299,6 +304,19 @@ MESSAGE(STATUS "RUNTIME = ${RUNTIME}")
 set(CMAKE_INSTALL_PREFIX ${RUNTIME})
 MESSAGE(STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
 
+if (MINGW)
+    # MinGW (GCC)，Windows 下使用 -mthreads
+    target_link_options(api PUBLIC -mthreads)
+elseif (MSVC)
+    # Visual Studio，不需要 -mthreads 或 -pthread
+    # Windows 上 MSVC 的多线程由编译器自动处理
+    # 可以什么都不加，或根据需要添加特定选项
+    message(STATUS "Using MSVC, no thread flags needed.")
+else ()
+    # Linux/macOS 使用 -pthread
+    target_compile_options(api PUBLIC -pthread)
+    target_link_options(api PUBLIC -pthread)
+endif ()
 target_link_libraries(api PUBLIC
     third_libs
 )
@@ -365,6 +383,34 @@ install(EXPORT api
         FILE api.cmake
         NAMESPACE api::
         DESTINATION lib/cmake/api)
+
+include(CMakePackageConfigHelpers)
+
+# 生成版本文件
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/api-config-version.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+
+install(EXPORT api
+    FILE api-targets.cmake
+    NAMESPACE api::
+    DESTINATION lib/cmake/api
+)
+
+# 安装配置文件
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/api-config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/api-config.cmake"
+    INSTALL_DESTINATION lib/cmake/api
+)
+
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/api-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/api-config-version.cmake"
+    DESTINATION lib/cmake/api
+)
 
 message(STATUS "================== 测试工具库 ==================")
 # 查找 Google Benchmark 包

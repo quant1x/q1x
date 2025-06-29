@@ -6,7 +6,7 @@
 #include <api/net/operation_handler.h>
 #include <api/util.h>
 #include <api/except.h>
-//#include <quant1x/base/runtime.h>
+#include <spdlog/spdlog.h>
 #include <shared_mutex>
 #include <utility>
 

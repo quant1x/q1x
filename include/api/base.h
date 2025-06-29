@@ -5,7 +5,7 @@
 #include <api/feature_detection.h>
 
 // 网络相关头文件（Windows 特定）
-#if OS_IS_WINDOWS
+#if defined(_WIN32) || defined(_WIN64)
 #ifndef WINVER
 #define WINVER 0x0A00
 #endif
@@ -28,7 +28,7 @@
 #if TARGET_CPP_AT_LEAST(20)
 #define std_cplusplus 20
 #include <format>
-#elif
+#else
 #define std_cplusplus 17
 #endif
 
@@ -84,7 +84,7 @@ constexpr const char *const INVALID_DATE_FORMAT_YMD_COMPACT_MSG = "日期格式�
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
 #define ENDIAN_BIG 1
 #endif
-#elif defined(OS_IS_WINDOWS)
+#elif defined(_WIN32) || defined(_WIN64)
 // Windows 系统默认小端
 #define ENDIAN_LITTLE 1
 #elif defined(__LITTLE_ENDIAN__) || defined(__i386__) || defined(__x86_64__) || defined(__ARMEL__)

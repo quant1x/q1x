@@ -76,7 +76,7 @@ namespace realtime {
     static constexpr const size_t capnp_cache_size = 64 * 1024 * 1024; // 64MB
     namespace fs = std::filesystem;
 
-    void ensure_file_size(const std::string &path, size_t required_size) {
+    static void ensure_file_size(const std::string &path, size_t required_size) {
         // 检查文件是否存在
         if (fs::exists(path)) {
             // 获取当前大小

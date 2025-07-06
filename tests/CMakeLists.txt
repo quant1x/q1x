@@ -97,6 +97,7 @@ if (WIN32)
 elseif (LINUX)
     add_app_executable(crash-linux.cpp)
 endif ()
+add_app_executable(test-crash.cpp)
 
 # 测试宿主目录
 add_catch2_executable(tdd-homedir.cpp)

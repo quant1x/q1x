@@ -116,8 +116,8 @@ namespace realtime {
     }
 
     namespace {
-        tsl::robin_map<std::string, level1::SecurityQuote> mem_snapshots;
-        std::shared_mutex mem_mutex;
+        static inline tsl::robin_map<std::string, level1::SecurityQuote> mem_snapshots;
+        static inline std::shared_mutex mem_mutex;
     }
 
     void sync_snapshots() {
@@ -293,10 +293,10 @@ namespace realtime {
     }
 
     namespace {
-        tsl::robin_map<std::string, Snapshot::Reader> cache_snapshots;
-        std::shared_ptr<mio::mmap_sink> cache_snapshot_mmap;
-        std::unique_ptr<capnp::FlatArrayMessageReader> cache_reader;
-        std::mutex cache_mutex;
+        static inline tsl::robin_map<std::string, Snapshot::Reader> cache_snapshots;
+        static inline std::shared_ptr<mio::mmap_sink> cache_snapshot_mmap;
+        static inline std::unique_ptr<capnp::FlatArrayMessageReader> cache_reader;
+        static inline std::mutex cache_mutex;
     }
 
     void load_snapshots() {

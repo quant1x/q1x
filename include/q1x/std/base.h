@@ -101,18 +101,6 @@ constexpr const char *const INVALID_DATE_FORMAT_YMD_COMPACT_MSG = "日期格式�
 #error "Unknown endianness"
 #endif
 
-#if std_cplusplus < 20
-FORCE_INLINE std::runtime_error make_system_error() {
-    const int err = errno;  // 立即保存当前 errno
-    return std::runtime_error("exception: " + std::string(std::strerror(err)) + " (code: " + std::to_string(err) + ")");
-}
-#else
-// 通用错误生成函数（C++20）
-FORCE_INLINE auto make_system_error(int err = errno) {
-    return std::runtime_error(std::format("exception: {} (code: {})", std::strerror(err), err));
-}
-#endif
-
 #define api_inline FORCE_INLINE
 
 #include "format.h"

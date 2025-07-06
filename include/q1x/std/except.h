@@ -1,7 +1,8 @@
 #pragma once
-#ifndef API_EXCEPT_H
-#define API_EXCEPT_H 1
+#ifndef QUANT1X_STD_EXCEPT_H
+#define QUANT1X_STD_EXCEPT_H 1
 
+#include <q1x/std/safe.h>
 #include <iostream>
 #include <exception>
 #include <string>
@@ -84,4 +85,16 @@ inline std::error_code make_error_code(int err_code, std::string message) {
     return {err_code, *category};
 }
 
-#endif //API_EXCEPT_H
+#if std_cplusplus < 20
+inline std::runtime_error make_system_error() {
+    const int err = errno;  // 立即保存当前 errno
+    return std::runtime_error("exception: " + std::string(q1x::safe::strerror(err)) + " (code: " + std::to_string(err) + ")");
+}
+#else
+// 通用错误生成函数（C++20）
+inline auto make_system_error(int err = errno) {
+    return std::runtime_error(std::format("exception: {} (code: {})", q1x::safe::strerror(err), err));
+}
+#endif
+
+#endif //QUANT1X_STD_EXCEPT_H

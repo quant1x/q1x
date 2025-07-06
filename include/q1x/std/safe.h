@@ -6,6 +6,7 @@
 #include <cerrno>   // C标准库errno
 #include <cstring>  // C标准库字符串函数
 #include <cstdio>   // snprintf
+#include <string>
 
 namespace q1x {
     std::tm safe_localtime(std::time_t t) noexcept;
@@ -16,6 +17,7 @@ namespace q1x {
         inline std::tm localtime(std::time_t t) noexcept {
             return q1x::safe_localtime(t);
         }
+
         // 安全的 gmtime 函数，避免线程不安全
         inline std::tm gmtime(std::time_t t) noexcept {
             return q1x::safe_gmtime(t);

@@ -1,13 +1,11 @@
-#include <api/test/test.h>
-#include <api/formula.h>
-#include <api/algo.h>
-#include <api/runtime.h>
+#include <q1x/test/test.h>
+#include <q1x/formula.h>
+#include <q1x/std/algo.h>
 #ifdef _WIN32
 #include <windows.h>
 #endif
 
 TEST_CASE("formula-hhv", "[formula]") {
-    runtime::console_set_utf8();
     // 数值类型测试
     xt::xarray<double> values_num = {10.5, 11.2, 12.3, 11.8, 10.9};
     std::cout << "origin:" << values_num << std::endl;
@@ -22,7 +20,6 @@ TEST_CASE("formula-hhv", "[formula]") {
 }
 
 TEST_CASE("formula-llv", "[formula]") {
-    runtime::console_set_utf8();
     // 数值类型测试
     xt::xarray<double> values_num = {10.5, 11.2, 12.3, 11.8, 10.9};
     auto result_num = formula::llv(values_num, 3); // 正确：调用数值版本
@@ -89,7 +86,6 @@ xt::xarray<int> BARSLAST_optimized(E&& cond) {
 }
 
 TEST_CASE("formula-barslast-bool", "[formula]") {
-    runtime::console_set_utf8();
     // 数值类型测试
     xt::xarray<double> values_num = {1, 2, 3, 4, 5, 6, 0, 8, 9, 10, 11, 12};
     auto c0 = values_num <6 && values_num>2;
@@ -123,7 +119,6 @@ xt::xarray<int> BARSLAST_simd(E&& cond) {
 }
 
 TEST_CASE("BARSLAST_simd", "[formula]") {
-    runtime::console_set_utf8();
     // 数值类型测试
     xt::xarray<double> values_num = {1, 2, 3, 4, 5, 6, 0, 8, 9, 10, 11, 12};
     auto c0 = values_num >10;
@@ -133,7 +128,6 @@ TEST_CASE("BARSLAST_simd", "[formula]") {
 }
 
 TEST_CASE("BARSLAST_release", "[formula]") {
-    runtime::console_set_utf8();
     // 数值类型测试
     xt::xarray<double> values_num = {1, 2, 3, 4, 5, 6, 0, 8, 9, 10, 11, 12};
     auto c0 = values_num >10;
@@ -170,7 +164,6 @@ xt::xarray<double> BARSLASTS(E&& cond, int N) {
 
 
 TEST_CASE("BARSLASTS", "[formula]") {
-    runtime::console_set_utf8();
     // 测试用例1
     xt::xarray<double> values_num = {4, 5, 6, 0, 8, 9, 10, 11, 12, 0};
     std::cout << "origin:" << values_num << std::endl;
@@ -190,7 +183,6 @@ TEST_CASE("BARSLASTS", "[formula]") {
 }
 
 TEST_CASE("BARSLASTS-v2", "[formula]") {
-    runtime::console_set_utf8();
     // 测试用例1
     xt::xarray<bool> cond1 = {false, true, false, true, false, true, false, false, true};
     auto res1 = BARSLASTS(cond1, 2); // 倒数第2次满足条件的周期数
@@ -208,7 +200,6 @@ TEST_CASE("BARSLASTS-v2", "[formula]") {
 }
 
 TEST_CASE("BARSLASTS-release", "[formula]") {
-    runtime::console_set_utf8();
     // 测试用例1
     xt::xarray<bool> cond1 = {false, true, false, true, false, true, false, false, true};
     auto res1 = formula::bars_lasts(cond1, 2); // 倒数第2次满足条件的周期数
@@ -273,8 +264,7 @@ xt::xarray<double> RSI_std(E&& close, size_t period = 14) {
 }
 
 TEST_CASE("RSI-basic", "[formula]") {
-    runtime::console_set_utf8();
-    // 测试用例
+// 测试用例
     xt::xarray<double> close = {
         44.34, 44.09, 44.15, 43.61, 44.33, 44.83, 45.10, 45.42, 45.84,
         46.08, 45.89, 46.03, 45.61, 46.28, 46.28, 46.00, 46.03, 46.41,
@@ -438,7 +428,6 @@ auto IFF(Cond&& condition, T&& true_expr, F&& false_expr) {
 }
 
 TEST_CASE("RSI-tdx", "[formula]") {
-    runtime::console_set_utf8();
     // 测试用例
     std::vector<double> close = {
         44.34, 44.09, 44.15, 43.61, 44.33, 44.83, 45.10, 45.42, 45.84,
@@ -477,7 +466,6 @@ TEST_CASE("RSI-tdx", "[formula]") {
 
 
 TEST_CASE("median", "[formula]") {
-    runtime::console_set_utf8();
     // 测试用例1：奇数长度
     xt::xarray<int> arr1 = {5, 3, 1, 4, 2};
     std::cout << "降序排序后的中位数 (" << arr1 << ") = "
@@ -485,7 +473,6 @@ TEST_CASE("median", "[formula]") {
 }
 
 TEST_CASE("stddev", "[formula]") {
-    runtime::console_set_utf8();
     // 测试数据
     xt::xarray<double> prices = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
@@ -575,7 +562,6 @@ xt::xarray<double> rolling_std_optimized(const xt::xarray<double>& data, size_t 
 }
 
 TEST_CASE("滚动标准差验证") {
-    runtime::console_set_utf8();
     xt::xarray<double> data = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
     SECTION("period=5") {
@@ -597,7 +583,11 @@ TEST_CASE("滚动标准差验证") {
 }
 
 TEST_CASE("滚动标准差性能基准测试", "[benchmark][rolling_std]") {
-    runtime::console_set_utf8();
+#ifdef _WIN32
+    // 设置控制台输出和输入代码页为UTF-8
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
+#endif
     // 1. 准备测试数据
     const size_t data_size = 1'000'000;
     xt::xarray<double> data = xt::random::randn<double>({data_size});
@@ -699,17 +689,17 @@ public:
 
     // 获取当前均值
     double getMean() const {
-        return (count > 0) ? mean : std::numeric_limits<double>::quiet_NaN(); // 返回NaN如果无数据
+        return (count > 0) ? mean : numerics::NaN; // 返回NaN如果无数据
     }
 
     // 获取总体方差
     double getVariancePopulation() const {
-        return (count > 0) ? M2 / count : std::numeric_limits<double>::quiet_NaN(); // NaN如果无数据
+        return (count > 0) ? M2 / count : numerics::NaN;  // NaN如果无数据
     }
 
     // 获取样本方差（无偏估计）
     double getVarianceSample() const {
-        return (count > 1) ? M2 / (count - 1) : std::numeric_limits<double>::quiet_NaN(); // NaN如果数据不足
+        return (count > 1) ? M2 / (count - 1) : numerics::NaN;  // NaN如果数据不足
     }
 
     // 获取总体标准差
@@ -758,8 +748,7 @@ public:
 };
 
 TEST_CASE("stddev-Welford", "[formula]") {
-    runtime::console_set_utf8();
-    // 示例数据集
+// 示例数据集
     std::vector<double> data = {1, 2, 3, 4, 5};
 
     // 使用Welford算法计算统计量
@@ -832,7 +821,6 @@ xt::xarray<bool> CROSS_vectorized(const xt::xarray<double>& S1, const xt::xarray
 
 
 TEST_CASE("cross-vectorized", "[formula]") {
-    runtime::console_set_utf8();
     // 示例数据
     xt::xarray<double> S1 = {1.0, 2.0, 3.0, 4.0, 5.0};
     xt::xarray<double> S2 = {3.0, 2.5, 2.8, 4.5, 4.0};
@@ -870,7 +858,6 @@ xt::xarray<bool> CROSS_optimized(const xt::xarray<double>& S1, const xt::xarray<
 }
 
 TEST_CASE("cross-optimized", "[formula]") {
-    runtime::console_set_utf8();
     // 示例数据
     xt::xarray<double> S1 = {1.0, 2.0, 3.0, 4.0, 5.0};
     xt::xarray<double> S2 = {3.0, 2.5, 2.8, 4.5, 4.0};
@@ -885,7 +872,6 @@ TEST_CASE("cross-optimized", "[formula]") {
 }
 
 TEST_CASE("cross-release", "[formula]") {
-    runtime::console_set_utf8();
     // 示例数据
     xt::xarray<double> S1 = {1.0, 2.0, 3.0, 4.0, 5.0};
     xt::xarray<double> S2 = {2.5, 2.8, 4.5, 4.0};
@@ -930,7 +916,6 @@ xt::xarray<int> bars_last_count(const xt::xexpression<E>& e) {
 }
 
 TEST_CASE("bars_last_count", "[formula]") {
-    runtime::console_set_utf8();
     // 模拟一个布尔条件数组
     xt::xarray<bool> cond = {true, true, false, true, true, true, false};
 
@@ -976,7 +961,6 @@ xt::xarray<double> valueWhen(const xt::xarray<bool>& condition, const xt::xarray
 }
 
 TEST_CASE("value_when", "[formula]") {
-    runtime::console_set_utf8();
     // 示例数据
     xt::xarray<bool> condition = {true, false, false, true, false, true, false};
     xt::xarray<double> values = {10.5, 11.2, 12.3, 13.4, 14.5, 15.6, 16.7};

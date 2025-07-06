@@ -1,47 +1,22 @@
 cmake_minimum_required(VERSION 3.30)
 
-# =============================
-# 对齐输出宏定义, 可用于中间对齐的KV显示
-# =============================
-macro(pretty_print_label label value)
-    set(max_len 36)
-    string(LENGTH "${label}" len)
-    math(EXPR padding "${max_len} - ${len}")
-    if(padding GREATER 0)
-        string(REPEAT " " ${padding} pad_str)
-    else()
-        set(pad_str "")
-    endif()
-    message(STATUS "${pad_str}${label} : ${value}")
-endmacro()
+# 加载基础 CMake 配置
+include(cmake/base.cmake)
 
-# =============================
-# 对齐输出宏定义
-# =============================
-macro(echo_lib_version label value)
-    message("Found ${label}, version = ${value}")
-endmacro()
-
+# ============================================================
+# 检测 项目git仓库当前分支的最新tag, 用tag作为版本号
+# ============================================================
 # 通过git获取版本信息
 include(cmake/git_tag_info.cmake)
-get_latest_git_tag_info(GIT_VERSION GIT_AUTHOR GIT_EMAIL GIT_DATE)
-message(STATUS "GIT_VERSION=${GIT_VERSION}, GIT_AUTHOR=${GIT_AUTHOR}, GIT_EMAIL=${GIT_EMAIL}, GIT_DATE=${GIT_DATE}")
+get_latest_git_tag_info(VERSION_FROM_GIT LATEST_TAG TAG_COMMIT_HASH GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_AUTHOR_DATE)
 
-project(quant1x-api VERSION ${GIT_VERSION} LANGUAGES CXX)
+project(quant1x-q1x 
+        VERSION ${VERSION_FROM_GIT}
+        LANGUAGES C CXX)
 
-# ============================================================
-# 设置 C++ 标准为 C++20
-# ============================================================
-# 2. 全局配置, 预设c/c++执行标准17
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_C_COMPILER_WORKS TRUE)
-set(CMAKE_CXX_COMPILER_WORKS TRUE)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF) # 可选：禁用编译器扩展（如 MSVC 的 /Zc:__cplusplus）
-
+# -----------------------------------------------------------------------------
+# Convenience: set default build type and compiler depending on the build directory
+# -----------------------------------------------------------------------------
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
         "Choose the default build type: Debug, Release, RelWithDebInfo, MinSizeRel")
@@ -51,32 +26,55 @@ message(STATUS "Build Type: \"${CMAKE_BUILD_TYPE}\"")
 set(CMAKE_INSTALL_CONFIG_NAME ${CMAKE_BUILD_TYPE})
 message(STATUS "Install configuration: \"${CMAKE_INSTALL_CONFIG_NAME}\"")
 
+# 设置默认的构建类型
+if (CMAKE_GENERATOR MATCHES "^Visual Studio.*$")
+  message(STATUS "Note: when building with Visual Studio the build type is specified when building.")
+  message(STATUS "For example: 'cmake --build . --config=Release")
+endif()
 
-if (BUILD_SHARED_LIBS)
-  set(quant1x_BUILD_SHARED_LIBS_DEFAULT ON)
-else (BUILD_SHARED_LIBS)
-  set(quant1x_BUILD_SHARED_LIBS_DEFAULT OFF)
-endif (BUILD_SHARED_LIBS)
-option(quant1x_BUILD_SHARED_LIBS "Build Shared Libraries" ${quant1x_BUILD_SHARED_LIBS_DEFAULT})
-include(CMakeDependentOption)
-cmake_dependent_option(quant1x_MSVC_STATIC_RUNTIME "Link static runtime libraries" ON
-  "NOT quant1x_BUILD_SHARED_LIBS" OFF)
+# 2. 全局配置, 预设c/c++执行标准17
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17)
+#set(CMAKE_TOOLCHAIN_FILE "toolchain.cmake")  # 如果需要交叉编译
 
-# ============================================================
-# 全局编码设置
-# ============================================================
-if(MSVC)
+set(CMAKE_C_COMPILER_WORKS TRUE)
+set(CMAKE_CXX_COMPILER_WORKS TRUE)
+
+# 3. 系统环境
+message("CMAKE_HOST_SYSTEM_NAME: ${CMAKE_HOST_SYSTEM_NAME}")
+message("     CMAKE_HOST_SYSTEM: ${CMAKE_HOST_SYSTEM}")
+message("     CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
+message("          CMAKE_SYSTEM: ${CMAKE_SYSTEM}")
+message("       CMAKE_HOST_UNIX: ${CMAKE_HOST_UNIX}")
+message("      CMAKE_HOST_WIN32: ${CMAKE_HOST_WIN32}")
+message("      CMAKE_HOST_WIN64: ${CMAKE_HOST_WIN64}")
+
+# 4. CPU类型
+#include(CMakeDetermineSystem OPTIONAL)
+message("                System: ${CMAKE_SYSTEM}")
+message("             Processor: ${CMAKE_SYSTEM_PROCESSOR}")
+
+# 5. 编译参数-字符集
+if (MSVC)
     add_compile_options(/utf-8)
     add_definitions(-D_UNICODE -DUNICODE)
-else()
+else ()
+    set(quant1x_charsets "-finput-charset=UTF-8 -fexec-charset=UTF-8")
     add_compile_options(-finput-charset=UTF-8 -fexec-charset=UTF-8)
-endif()
+    if (NOT CMAKE_C_FLAGS)
+        set(CMAKE_C_FLAGS ${quant1x_charsets})
+    else ()
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${quant1x_charsets}")
+    endif ()
+    if (NOT CMAKE_CXX_FLAGS)
+        set(CMAKE_CXX_FLAGS ${quant1x_charsets})
+    else ()
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${quant1x_charsets}")
+    endif ()
+endif ()
 
 # 6. 编译器选项
 # 6.1 检测编译器类型
-# ============================================================
-# 编译器选项
-# ============================================================
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 
@@ -108,10 +106,9 @@ if (IS_MINGW)
     string(REPLACE "\\" "/" MINGW_PATH "${MINGW_PATH}")
 endif ()
 
-# 编译器警告选项
 if (MSVC)
     # 对于MSVC编译器
-    #add_compile_options(/W4 /WX)  # /W4显示所有警告，/WX将警告视为错误
+    add_compile_options(/W3 /WX)  # /W4显示所有警告，/WX将警告视为错误
 else ()
     # 对于GCC/Clang等编译器
     add_compile_options(-Wall -Wextra)
@@ -138,19 +135,146 @@ else ()
     endif ()
 endif ()
 
-if (NOT MSVC)
-    # 全局启用异常
-    add_compile_options(-fexceptions)
+# 查看全局 C 选项
+message(STATUS "  CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
+# 查看全局 C++ 选项
+message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+
+include(CMakeDependentOption)
+include(CMakeDetermineSystem)
+# 4. CPU类型
+include(CMakeDetermineSystem)
+message("                System: ${CMAKE_SYSTEM}")
+message("             Processor: ${CMAKE_SYSTEM_PROCESSOR}")
+
+# 全局启用异常
+if (MSVC)
+    # 对于 MSVC 编译器
+    add_compile_options(/EHsc)  # /EHsc 启用 C++ 异常处理
+else ()
+    # 对于 GCC/Clang 等编译器
+    add_compile_options(-fexceptions)  # 启用 C++ 异常处理
+endif()
+
+# 或方法 3: 使用内置变量（推荐）
+set(CMAKE_CXX_EXCEPTIONS ON)
+set(CMAKE_VERBOSE_MAKEFILE ON)
+## 在CMake中启用内存检测
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
+# 打印检测到的 C 和 C++ 编译器
+message(STATUS "  C compiler: ${CMAKE_C_COMPILER}")
+message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
+
+# 打印编译器版本
+execute_process(
+    COMMAND "${CMAKE_CXX_COMPILER}" --version
+    OUTPUT_VARIABLE COMPILER_VERSION
+)
+message(STATUS "Compiler version:\n${COMPILER_VERSION}")
+
+# ============================================================
+# C/C++ Languages Standard
+# ============================================================
+include(CheckCCompilerFlag)
+# 检测 C11 支持
+check_c_compiler_flag("-std=c11" SUPPORTS_C11)
+if (SUPPORTS_C11)
+    message(STATUS "Compiler supports C11")
+else ()
+    message(WARNING "Compiler does not support C11")
+endif ()
+# 检测 C17 支持
+check_c_compiler_flag("-std=c17" SUPPORTS_C17)
+if (SUPPORTS_C17)
+    message(STATUS "Compiler supports C17")
+else ()
+    message(WARNING "Compiler does not support C17")
+endif ()
+
+include(CheckCXXCompilerFlag)
+# 检测 C++17 支持
+check_cxx_compiler_flag("-std=c++17" SUPPORTS_CXX17)
+if (SUPPORTS_CXX17)
+    message(STATUS "Compiler supports C++17")
+else ()
+    message(WARNING "Compiler does not support C++17, falling back to C++14")
+endif ()
+
+# 检测 C++20 支持
+check_cxx_compiler_flag("-std=c++20" SUPPORTS_CXX20)
+check_cxx_compiler_flag("/-std:c++20" HAS_CPP20_SUPPORT)
+if (SUPPORTS_CXX20)
+    message(STATUS "Compiler supports C++20")
+    add_compile_options(-std=c++20)
+elseif (HAS_CPP20_SUPPORT)
+    add_compile_options(/-std:c++20)
+else ()
+    message(WARNING "Compiler does not support C++20")
+endif ()
+
+# 设置标准属性
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+# 禁用 GNU 扩展（关键！）
+set(CMAKE_C_EXTENSIONS OFF)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# 禁用 GNU 扩展（关键！）
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# 检查编译器版本
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
+    message(FATAL_ERROR "GCC >= 9 required for C++20 support.")
+endif ()
+
+# ============================================================
+# Global Compiler Options
+# ============================================================
+if(MSVC)
+    # Release flags
+    string(APPEND CMAKE_C_FLAGS_RELEASE " /O2 /Gy /GF /GS")
+    string(APPEND CMAKE_CXX_FLAGS_RELEASE " /O2 /Gy /GF /GS")
+
+    # Debug flags
+    string(APPEND CMAKE_C_FLAGS_DEBUG " /Od /GS")
+    string(APPEND CMAKE_CXX_FLAGS_DEBUG " /Od /GS")
+else ()
+    set(CMAKE_C_FLAGS "-O2 -m64 -march=native -mtune=native -fstack-protector-strong")
+    set(CMAKE_CXX_FLAGS "-O2 -m64 -march=native -mtune=native -fstack-protector-strong")
     # 启用 function/data sections
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffunction-sections -fdata-sections")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
-    # 编译优化
-    add_compile_options(-O2)
+endif()
+
+# 仅对新版MSVC添加高级保护（需版本检测）
+if(MSVC_VERSION GREATER_EQUAL 1920)  # VS2019+
+    # 合法选项替代方案
+    add_compile_options(
+        "/volatile:iso"  # 严格内存顺序
+        "/Zc:threadSafeInit-"      # 禁用线程安全初始化（测试编译器bug）
+        #"/d2:-IncrementalLink"     # 增强链接时检查
+    )
+    # 确保静态变量在独立段
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SECTION:.staticvars,RWS")
+else()
+    # 通用保护方案
+    add_definitions(-DSTATIC_VAR_PROTECTION)
+endif()
+
+# 编译优化
+# 对于MSVC
+if (MSVC)
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /Zi /DEBUG")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi /DEBUG")
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG")
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif ()
 
 # 对于MinGW/GCC
 if (MINGW OR GNU)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O2 -gdwarf-3")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O2")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O2")
     set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g")
     # 确保生成.map文件用于符号解析
     #set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -Wl,-Map=output.map")
@@ -192,6 +316,15 @@ endif ()
 set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 MESSAGE(STATUS "CMAKE_TOOLCHAIN_FILE = ${CMAKE_TOOLCHAIN_FILE}")
 
+## 如果是MSVC, 且使用了MSVC内置的vcpkg, 需要改成本地安装的vcpkg
+#if(VCPKG_ROOT MATCHES "Visual Studio")
+#    message(STATUS "This is a Visual Studio generator")
+#    if (DEFINED ENV{RUNTIME_VCPKG})
+#        file(TO_CMAKE_PATH "$ENV{RUNTIME_VCPKG}" VCPKG_ROOT)
+#        string(REGEX REPLACE "/$" "" VCPKG_ROOT "${VCPKG_ROOT}")
+#    endif ()
+#endif()
+
 # 修正VCPKG的installed目录
 if(MSVC)
     set(VCPKG_INSTALLED_DIR "${PROJECT_SOURCE_DIR}/vcpkg_installed")
@@ -204,12 +337,10 @@ set(VCPKG_LIBRARY_LINKAGE static)
 set(VCPKG_CRT_LINKAGE static)
 message(STATUS "        MSVC_VERSION = ${MSVC_VERSION}")
 message(STATUS "MSVC_TOOLSET_VERSION = ${MSVC_TOOLSET_VERSION}")
-#unset(VCPKG_TARGET_TRIPLET CACHE)
 # 根据平台自动选择 Triplet
 if (WIN32)
     if (MSVC)
         set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Default Triplet for Windows")
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>") # 设置 MSVC 静态链接运行时库
     else ()
         set(VCPKG_TARGET_TRIPLET "x64-mingw-static" CACHE STRING "Default Triplet for Windows")
     endif ()
@@ -221,7 +352,6 @@ elseif (APPLE)
 else ()
     message(status "other...")
 endif ()
-#set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Default Triplet for Windows")
 MESSAGE(STATUS "VCPKG_TARGET_TRIPLET = ${VCPKG_TARGET_TRIPLET}")
 
 # 设置cmake搜索路径
@@ -234,12 +364,50 @@ link_directories(${CMAKE_PREFIX_PATH}/lib)
 set(VCPKG_INCLUDE_DIRS ${VCPKG_LIBS_PATH}/include)
 set(VCPKG_LIBRARY_DIRS ${VCPKG_LIBS_PATH}/lib)
 
+if (DEFINED ENV{MSF_RUNTIME})
+    file(TO_CMAKE_PATH "$ENV{MSF_RUNTIME}" RUNTIME)
+    string(REGEX REPLACE "/$" "" RUNTIME "${RUNTIME}")
+else ()
+    message(FATAL_ERROR "NOT found ENV MSF_RUNTIME")
+endif ()
+
+include_directories(${RUNTIME}/include)
+link_directories(${RUNTIME}/lib)
+MESSAGE(STATUS "RUNTIME = ${RUNTIME}")
+set(RUNTIME_INCLUDE_DIRS ${RUNTIME}/include)
+set(RUNTIME_LIBRARY_DIRS ${RUNTIME}/lib)
+
 # 项目内聚合的第三方库
-set(inner_third_party_dir "${CMAKE_SOURCE_DIR}/include/api-third-party")
-set(INNER_THIRD_PARTY_INCLUDE_DIRS ${inner_third_party_dir})
-set(INNER_THIRD_PARTY_LIBRARY_DIRS ${inner_third_party_dir})
+set(inner_third_party_dir "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
+set(INNER_THIRD_PARTY_INCLUDE_DIRS ${inner_third_party_dir}/include)
+set(INNER_THIRD_PARTY_LIBRARY_DIRS ${inner_third_party_dir}/lib)
+
+message(STATUS "================== Crash Report Integration ==================")
+#add_library(CrashReport INTERFACE)
+#find_package(dlfcn-win32 CONFIG REQUIRED)
 
 message(STATUS "================== 基础功能库 ==================")
+# OpenSSL
+find_package(OpenSSL REQUIRED)
+# 尝试直接输出版本（如果存在）
+if (DEFINED OPENSSL_VERSION)
+    message(STATUS "OpenSSL version (predefined): ${OPENSSL_VERSION}")
+else ()
+    # 如果 OPENSSL_VERSION 未定义，尝试通过命令行工具获取版本
+    find_program(OPENSSL_EXECUTABLE openssl)
+    if (OPENSSL_EXECUTABLE)
+        execute_process(
+            COMMAND "${OPENSSL_EXECUTABLE}" version
+            OUTPUT_VARIABLE OPENSSL_VERSION_OUTPUT
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        message(STATUS "OpenSSL version (from command line): ${OPENSSL_VERSION_OUTPUT}")
+    else ()
+        message(WARNING "Could not determine OpenSSL version. Please check your installation.")
+    endif ()
+endif ()
+target_link_libraries(third_libs INTERFACE OpenSSL::SSL OpenSSL::Crypto)
+echo_lib_version(OpenSSL ${OPENSSL_VERSION})
 
 # libiconv
 find_package(Iconv REQUIRED)  # CMake 官方模块名称是 Iconv（大写 I）
@@ -289,22 +457,70 @@ if (APPLE OR LINUX)
     endif ()
 endif ()
 
+# argparse, argparse::argparse, header-only方式库, 收敛到项目内
+#find_package(argparse CONFIG REQUIRED)
+set(argparse_VERSION "3.2.0")
+target_include_directories(third_libs INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/third_party/include>
+    $<INSTALL_INTERFACE:include>
+)
+echo_lib_version(argparse ${argparse_VERSION})
 
-## spdlog
-#find_package(spdlog CONFIG REQUIRED)
-#target_link_libraries(third_libs INTERFACE spdlog::spdlog_header_only)
-#
-## fmt
-#find_package(fmt CONFIG REQUIRED)
-#target_link_libraries(third_libs INTERFACE fmt::fmt)
-#echo_lib_version(fmt ${fmt_VERSION})
-#find_package(date CONFIG REQUIRED)
-#target_link_libraries(third_libs INTERFACE date::date date::date-tz)
-#
-# C++ Requests Library (Cpr for curl)
-find_package(cpr CONFIG REQUIRED)
-target_link_libraries(third_libs INTERFACE cpr::cpr)
-echo_lib_version(cpr ${cpr_VERSION})
+# yaml-cpp yaml-cpp::yaml-cpp
+find_package(yaml-cpp CONFIG REQUIRED)
+target_link_libraries(third_libs INTERFACE yaml-cpp::yaml-cpp)
+echo_lib_version(yaml-cpp ${yaml-cpp_VERSION})
+
+# tsl::robin_map(robin-map)
+#find_package(tsl-robin-map CONFIG REQUIRED)
+#target_link_libraries(main PRIVATE tsl::robin_map)
+set(tsl-robin-map_VERSION "1.4.0")
+echo_lib_version(tsl-robin-map ${tsl-robin-map_VERSION})
+
+# croncpp
+#find_package(croncpp CONFIG REQUIRED)
+set(croncpp_VERSION "2023-03-30")
+echo_lib_version(croncpp ${croncpp_VERSION})
+
+# ==============================
+# BS::thread_pool(bshoshany-thread-pool)
+# find_path(BSHOSHANY_THREAD_POOL_INCLUDE_DIRS "BS_thread_pool.hpp")
+# ==============================
+# BS::thread_pool(bshoshany-thread-pool), header-only方式的第三方库收敛到third_party
+# find_path(BSHOSHANY_THREAD_POOL_INCLUDE_DIRS "BS_thread_pool.hpp")
+set(BSHOSHANY_THREAD_POOL_INCLUDE_DIRS "${INNER_THIRD_PARTY_INCLUDE_DIRS}")
+MESSAGE(STATUS "BSHOSHANY_THREAD_POOL_INCLUDE_DIRS = ${BSHOSHANY_THREAD_POOL_INCLUDE_DIRS}")
+## 查找 thread_pool.hpp 文件路径
+## find_path(THREAD_POOL_INCLUDE_DIR BS_thread_pool.hpp PATHS ${CMAKE_PREFIX_PATH}/include /usr/include /usr/local/include ${CMAKE_SOURCE_DIR}/third_party)
+if (BSHOSHANY_THREAD_POOL_INCLUDE_DIRS)
+    # 提取 BS_THREAD_POOL_VERSION_MAJOR 宏
+    file(STRINGS "${BSHOSHANY_THREAD_POOL_INCLUDE_DIRS}/BS_thread_pool.hpp" THREAD_POOL_VERSION_MAJOR_LINE REGEX "#define BS_THREAD_POOL_VERSION_MAJOR")
+    if (THREAD_POOL_VERSION_MAJOR_LINE)
+        string(REGEX MATCH "[0-9]+" THREAD_POOL_VERSION_MAJOR "${THREAD_POOL_VERSION_MAJOR_LINE}")
+    endif ()
+
+    # 提取 BS_THREAD_POOL_VERSION_MINOR 宏
+    file(STRINGS "${BSHOSHANY_THREAD_POOL_INCLUDE_DIRS}/BS_thread_pool.hpp" THREAD_POOL_VERSION_MINOR_LINE REGEX "#define BS_THREAD_POOL_VERSION_MINOR")
+    if (THREAD_POOL_VERSION_MINOR_LINE)
+        string(REGEX MATCH "[0-9]+" THREAD_POOL_VERSION_MINOR "${THREAD_POOL_VERSION_MINOR_LINE}")
+    endif ()
+
+    # 提取 BS_THREAD_POOL_VERSION_PATCH 宏
+    file(STRINGS "${BSHOSHANY_THREAD_POOL_INCLUDE_DIRS}/BS_thread_pool.hpp" THREAD_POOL_VERSION_PATCH_LINE REGEX "#define BS_THREAD_POOL_VERSION_PATCH")
+    if (THREAD_POOL_VERSION_PATCH_LINE)
+        string(REGEX MATCH "[0-9]+" THREAD_POOL_VERSION_PATCH "${THREAD_POOL_VERSION_PATCH_LINE}")
+    endif ()
+
+    # 组合完整版本号
+    set(THREAD_POOL_VERSION_FULL "${THREAD_POOL_VERSION_MAJOR}.${THREAD_POOL_VERSION_MINOR}.${THREAD_POOL_VERSION_PATCH}")
+
+    # 显示版本信息
+    message(STATUS "bshoshany-thread-pool version: ${THREAD_POOL_VERSION_FULL}")
+    set(BSHOSHANY_THREAD_POOL_VERSION ${THREAD_POOL_VERSION_FULL})
+else ()
+    message(WARNING "bshoshany-thread-pool headers not found.")
+endif ()
+echo_lib_version(BS::thread_pool ${BSHOSHANY_THREAD_POOL_VERSION})
 
 # ==============================
 # xsimd 13.2.0
@@ -319,25 +535,67 @@ foreach (ver ${xsimd_version_defines})
     endif ()
 endforeach ()
 set(xsimd_VERSION ${XSIMD_VERSION_MAJOR}.${XSIMD_VERSION_MINOR}.${XSIMD_VERSION_PATCH})
-
 echo_lib_version(xsimd ${xsimd_VERSION})
-#target_include_directories(third_libs INTERFACE ${INNER_THIRD_PARTY_INCLUDE_DIRS})
-#set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -mavx -mavx2 -march=native -mtune=native -fno-tree-vectorize")
-#set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mavx -mavx2 -march=native -mtune=native -fno-tree-vectorize")
-#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -mavx -mavx2 -march=native -mtune=native -fno-tree-vectorize")
-#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mavx -mavx2 -march=native -mtune=native -fno-tree-vectorize")
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -mavx -mavx2 -march=native -mtune=native")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mavx -mavx2 -march=native -mtune=native")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -mavx -mavx2 -march=native -mtune=native")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mavx -mavx2 -march=native -mtune=native")
-add_library(xtensor::optimize INTERFACE IMPORTED)
 
+# AVX2
+if (MSVC)
+    # Microsoft compiler
+    # AVX2 for Release
+    string(APPEND CMAKE_C_FLAGS_RELEASE " /arch:AVX2")
+    string(APPEND CMAKE_CXX_FLAGS_RELEASE " /arch:AVX2")
+
+    # AVX for Debug
+    string(APPEND CMAKE_C_FLAGS_DEBUG " /arch:AVX")
+    string(APPEND CMAKE_CXX_FLAGS_DEBUG " /arch:AVX")
+else ()
+    # gcc, clang, ...
+    #set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -mavx -mavx2 -march=native -mtune=native -fno-tree-vectorize")
+    #set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mavx -mavx2 -march=native -mtune=native -fno-tree-vectorize")
+    #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -mavx -mavx2 -march=native -mtune=native -fno-tree-vectorize")
+    #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mavx -mavx2 -march=native -mtune=native -fno-tree-vectorize")
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -mavx -mavx2 -march=native -mtune=native")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mavx -mavx2 -march=native -mtune=native")
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -mavx -mavx2 -march=native -mtune=native")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mavx -mavx2 -march=native -mtune=native")
+endif ()
+
+# ==============================
+# xtensor 0.26.0
+# find_package(xtensor CONFIG REQUIRED)
+# ==============================
+file(STRINGS "${INNER_THIRD_PARTY_INCLUDE_DIRS}/xtensor/core/xtensor_config.hpp" xtensor_version_defines
+    REGEX "#define XTENSOR_VERSION_(MAJOR|MINOR|PATCH)")
+foreach (ver ${xtensor_version_defines})
+    if (ver MATCHES "#define XTENSOR_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
+        set(XTENSOR_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
+    endif ()
+endforeach ()
+set(xtensor_VERSION ${XTENSOR_VERSION_MAJOR}.${XTENSOR_VERSION_MINOR}.${XTENSOR_VERSION_PATCH})
+echo_lib_version(xtensor ${xtensor_VERSION})
+
+# ==============================
+# xtl 0.8.0
+# find_package(xtl CONFIG REQUIRED)
+# ==============================
+file(STRINGS "${INNER_THIRD_PARTY_INCLUDE_DIRS}/xtl/xtl_config.hpp" xtl_version_defines
+    REGEX "#define XTL_VERSION_(MAJOR|MINOR|PATCH)")
+foreach (ver ${xtl_version_defines})
+    if (ver MATCHES "#define XTL_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
+        set(XTL_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
+    endif ()
+endforeach ()
+set(xtl_VERSION ${XTL_VERSION_MAJOR}.${XTL_VERSION_MINOR}.${XTL_VERSION_PATCH})
+echo_lib_version(xtl ${xtl_VERSION})
+
+# nlohmann-json 依赖 inja:x64-mingw-static@3.4.0
+set(inja_VERSION 3.4.0)
+set(nlohmann_json_VERSION "3.1.1")
+add_library(xtensor::optimize INTERFACE IMPORTED)
 if (MSVC)
     # Microsoft compiler
     target_compile_options(xtensor::optimize INTERFACE /EHsc /MP /bigobj)
 else ()
-    # GNU or Clang compiler
-    add_compile_options(-Wno-deprecated-copy)
+    # gcc, clang, ...
     include(CheckCXXCompilerFlag)
     CHECK_CXX_COMPILER_FLAG(-march=native arch_native_supported)
     if (arch_native_supported)
@@ -346,233 +604,197 @@ else ()
 endif ()
 target_link_libraries(third_libs INTERFACE xtensor::optimize)
 
-# ============================================================
-# api 基础设施库
-# ============================================================
+## ==============================
+## DataFrame
+## find_package(Protobuf REQUIRED)
+## ==============================
+#find_package(DataFrame CONFIG REQUIRED)
+#echo_lib_version(DataFrame ${DataFrame_VERSION})
+#target_link_libraries(third_libs INTERFACE DataFrame::DataFrame)
 
-# 添加头文件路径
-include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(${PROJECT_SOURCE_DIR}/include/api-third-party)
+message(STATUS "================== 编解码工具库 ==================")
+## RapidJSON
+#find_package(RapidJSON CONFIG REQUIRED)
 
-# 头文件
-set(HEADERS
-    include/api/api.h
-    include/api/base/cache1d.h
-    include/api/base/once.h
-    include/api/base/scheduler.h
-    include/api/crash/handler.h
-    include/api/encoding/csv.h
-    include/api/encoding/json.h
-    include/api/encoding/yaml.h
-    include/api/io/csv-reader.h
-    include/api/io/csv-writer.h
-    include/api/io/file.h
-    include/api/io/http.h
-    include/api/logger.h
-    include/api/os/service.h
-    include/api/affinity.h
-    include/api/algo.h
-    include/api/base.h
-    include/api/buffer.h
-    include/api/config.h.in
-    include/api/except.h
-    
-    include/api/format.h
-    include/api/iconv.h
-    include/api/mmap.h
-    include/api/numerics.h
-    include/api/object.h
-    include/api/std.h
-    include/api/strings.h
-    include/api/time.h
-    include/api/util.h
-    include/api/runtime.h
-
-    include/api/test/test.h
-    
-    include/api/dataframe/dataframe.h
-    include/api/dataframe/ewm.h
-    include/api/dataframe/periods.h
-    include/api/dataframe/series.h
-
-    include/api/net/base.h
-    include/api/net/connection_pool.h
-    include/api/net/endpoint.h
-    include/api/net/operation_handler.h
-)
-# 源文件
-set(SOURCES
-    src/api/api.cpp
-    src/api/crash/handler.cpp
-    src/api/encoding/json.cpp
-    src/api/io/file.cpp
-    src/api/io/http.cpp
-    src/api/affinity.cpp
-    src/api/iconv.cpp
-    src/api/numerics.cpp
-    src/api/strings.cpp
-    src/api/time.cpp
-    src/api/util.cpp
-    src/api/runtime.cpp
-    src/api/logger.cpp
-)
-
-if (WIN32)
-    list(APPEND SOURCES src/api/os/service.cpp)
-elseif (APPLE)
-    list(APPEND SOURCES src/api/os/daemon_macosx.cpp)
-elseif (UNIX)
-    # LINUX 是非官方变量，我们手动检测
-    set(LINUX FALSE)
-    if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-        set(LINUX TRUE)
-    endif()
-
-    if(LINUX)
-        list(APPEND SOURCES src/api/os/daemon_systemd.cpp)
-    else()
-        message(WARNING "Unsupported Unix OS: ${CMAKE_SYSTEM_NAME}")
-    endif()
-else()
-    message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
-endif ()
-
-# 添加库目标
-add_library(api SHARED ${HEADERS} ${SOURCES})
-add_library(api-static STATIC ${HEADERS} ${SOURCES})
-
-# 为动态库定义导出宏
-target_compile_definitions(api PUBLIC API_DECLARE_EXPORT MI_OVERRIDE=1)
-target_compile_definitions(api-static PUBLIC API_DECLARE_STATIC MI_OVERRIDE=1)
-
-# 清除DLL文件的前缀
-set(CMAKE_SHARED_LIBRARY_PREFIX "")
-set(CMAKE_IMPORT_LIBRARY_PREFIX "")
-# 为静态库和动态库分别设置目标名称，避免冲突
-set_target_properties(api PROPERTIES OUTPUT_NAME "api" PREFIX "")
-set_target_properties(api-static PROPERTIES OUTPUT_NAME "api-static" PREFIX "")
-
-if (DEFINED ENV{MSF_RUNTIME})
-    file(TO_CMAKE_PATH "$ENV{MSF_RUNTIME}" RUNTIME)
-    string(REGEX REPLACE "/$" "" RUNTIME "${RUNTIME}")
+# ==============================
+# protobuf 3.21.11 固定版本, 3.21.12以上版本带有abseil库, 放弃高版本
+# find_package(Protobuf REQUIRED)
+# ==============================
+#find_package(Protobuf REQUIRED)
+# 显示版本信息
+if (DEFINED Protobuf_VERSION)
+    message(STATUS "Protobuf version: ${Protobuf_VERSION}")
 else ()
-    message(FATAL_ERROR "NOT found ENV MSF_RUNTIME")
+    if (DEFINED CACHE{PROTOBUF_INCLUDE_DIR})
+        message(WARNING "Cache exists: PROTOBUF_INCLUDE_DIR=${PROTOBUF_INCLUDE_DIR}")
+        unset(PROTOBUF_INCLUDE_DIR CACHE)
+    endif ()
+    message(WARNING "Protobuf version not found. Falling back to header parsing.")
+    find_path(PROTOBUF_INCLUDE_DIR google/protobuf/port_def.inc PATHS "${RUNTIME}/include" NO_DEFAULT_PATH)
+    message(STATUS "PROTOBUF_INCLUDE_DIR=${PROTOBUF_INCLUDE_DIR}")
+    if (PROTOBUF_INCLUDE_DIR)
+        file(STRINGS "${PROTOBUF_INCLUDE_DIR}/google/protobuf/port_def.inc" PROTOBUF_VERSION_LINE REGEX "#define PROTOBUF_VERSION")
+        if (PROTOBUF_VERSION_LINE)
+            string(REGEX MATCH "[0-9]+" GOOGLE_PROTOBUF_VERSION "${PROTOBUF_VERSION_LINE}")
+            math(EXPR PROTOBUF_MAJOR_VERSION "${GOOGLE_PROTOBUF_VERSION} / 1000000")
+            math(EXPR PROTOBUF_MINOR_VERSION "(${GOOGLE_PROTOBUF_VERSION} / 1000) % 1000")
+            math(EXPR PROTOBUF_PATCH_VERSION "${GOOGLE_PROTOBUF_VERSION} % 1000")
+            set(PROTOBUF_VERSION_FULL "${PROTOBUF_MAJOR_VERSION}.${PROTOBUF_MINOR_VERSION}.${PROTOBUF_PATCH_VERSION}")
+            message(STATUS "Protobuf version (from header): ${PROTOBUF_VERSION_FULL}")
+            set(Protobuf_VERSION ${PROTOBUF_VERSION_FULL})
+        else ()
+            message(WARNING "Could not extract Protobuf version from header file.")
+        endif ()
+    else ()
+        message(WARNING "Protobuf headers not found.")
+    endif ()
 endif ()
-MESSAGE(STATUS "RUNTIME = ${RUNTIME}")
-set(CMAKE_INSTALL_PREFIX ${RUNTIME})
-MESSAGE(STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
-
-if (MINGW)
-    # MinGW (GCC)，Windows 下使用 -mthreads
-    target_link_options(api PUBLIC -mthreads)
-    target_link_options(api-static PUBLIC -mthreads)
-elseif (MSVC)
-    # Visual Studio，不需要 -mthreads 或 -pthread
-    # Windows 上 MSVC 的多线程由编译器自动处理
-    # 可以什么都不加，或根据需要添加特定选项
-    message(STATUS "Using MSVC, no thread flags needed.")
+if (MSVC)
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        # Debug模式下链接
+        set(PROTOBUF_LIB_NAME "libprotobufd.lib")
+    else ()
+        # Release模式下链接
+        set(PROTOBUF_LIB_NAME "libprotobuf.lib")
+    endif ()
+    target_link_libraries(third_libs INTERFACE ${PROTOBUF_LIB_NAME})
 else ()
-    # Linux/macOS 使用 -pthread
-    target_compile_options(api PUBLIC -pthread)
-    target_compile_options(api-static PUBLIC -pthread)
-    target_link_options(api PUBLIC -pthread)
-    target_link_options(api-static PUBLIC -pthread)
+    target_link_libraries(third_libs INTERFACE protobuf)
 endif ()
-target_link_libraries(api PUBLIC
-    third_libs
-)
+echo_lib_version(protobuf ${Protobuf_VERSION})
 
-target_link_libraries(api-static PUBLIC
-    third_libs
-)
+# ==============================
+# CapnProto
+# find_package(CapnProto CONFIG REQUIRED)
+# ==============================
+# 查找 Cap'n Proto 包（需要 pkg-config 或 find_package）
+find_package(CapnProto CONFIG REQUIRED)
+#include_directories(${CAPNPROTO_INCLUDE_DIRS})
+target_link_libraries(third_libs INTERFACE CapnProto::capnp CapnProto::capnp-json)
+echo_lib_version(CapnProto ${CapnProto_VERSION})
+if (MSVC)
+    add_compile_definitions(KJ_USE_FIBERS=0)
+endif ()
+# ==============================
+# cista
+# find_package(cista CONFIG REQUIRED)
+# ==============================
+# Cista
+#find_package(cista CONFIG REQUIRED)
+set(CISTA_VERSION "0.15") # 无法获取, 手动设定
+echo_lib_version(cista ${CISTA_VERSION})
 
-## 可选：为 Windows 平台生成 dll 时生成 .def 文件
-# if(WIN32)
-#     set_target_properties(api PROPERTIES PREFIX "" SUFFIX ".dll")
-# endif()
+message(STATUS "================== 底层 工具库 ==================")
+# ASIO
+#find_package(asio CONFIG REQUIRED)
+## 查找 Asio 头文件
+if (DEFINED CACHE{ASIO_INCLUDE_DIR})
+    message(WARNING "Cache exists: ASIO_INCLUDE_DIR=${ASIO_INCLUDE_DIR}")
+    unset(ASIO_INCLUDE_DIR CACHE)
+endif ()
+find_path(ASIO_INCLUDE_DIR asio.hpp PATHS ${INNER_THIRD_PARTY_INCLUDE_DIRS})
+if (ASIO_INCLUDE_DIR)
+    # 提取版本信息
+    file(STRINGS "${ASIO_INCLUDE_DIR}/asio/version.hpp" ASIO_VERSION_LINE REGEX "#define ASIO_VERSION")
+    if (ASIO_VERSION_LINE)
+        string(REGEX MATCH "[0-9]+" ASIO_VERSION "${ASIO_VERSION_LINE}")
+        math(EXPR ASIO_MAJOR_VERSION "${ASIO_VERSION} / 100000")
+        math(EXPR ASIO_MINOR_VERSION "(${ASIO_VERSION} / 100) % 1000")
+        math(EXPR ASIO_PATCH_VERSION "${ASIO_VERSION} % 100")
+        set(ASIO_VERSION_FULL "${ASIO_MAJOR_VERSION}.${ASIO_MINOR_VERSION}.${ASIO_PATCH_VERSION}")
+    endif ()
 
-# ============================================================
-# Crash BackTrace
-# ============================================================
-if(MSVC)
-    # 仅在 MSVC 下设置符号生成选项
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
-    set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /Zi")
-endif()
-if (WIN32)
-    target_link_libraries(api PUBLIC ws2_32)   # Windows 网络库, 标准 Winsock API 支持, TCP/UDP 通信、客户端/服务器, winsock2.h
-    target_link_libraries(api PUBLIC mswsock)  # Windows 网络库, 微软扩展函数（高性能网络）, IOCP、异步网络、高性能服务端, mswsock.h
-    target_link_libraries(api PUBLIC Imagehlp) # Windows Crash Dump, PE 文件结构解析
-    target_link_libraries(api PUBLIC Dbghelp)  # Windows Crash Dump, 堆栈回溯（Stack Walking）
-    target_link_libraries(api PUBLIC advapi32) # Windows 服务管理
-elseif(LINUX)
-    # vcpkg版本的libdwarf未实验成功
-    #target_link_libraries(api PUBLIC libdwarf::dwarf)
-    # #define BACKWARD_HAS_DW 1
-    target_link_libraries(api PUBLIC dw) # apt-get install libdw-dev
-    # #define BACKWARD_HAS_DWARF 1
-    #target_link_libraries(api PUBLIC elf dwarf) # apt-get install libdwarf-dev
-elseif(APPLE)
-    target_link_libraries(api PUBLIC dwarf) # apt-get install libdw-dev
+    file(STRINGS "${ASIO_INCLUDE_DIR}/asio/version.hpp" ASIO_VERSION_STR_LINE REGEX "#define ASIO_VERSION_STR")
+    if (ASIO_VERSION_STR_LINE)
+        string(REGEX MATCH "\"[^\"]+\"" ASIO_VERSION_STR "${ASIO_VERSION_STR_LINE}")
+        string(REPLACE "\"" "" ASIO_VERSION_STR "${ASIO_VERSION_STR}")
+    endif ()
+
+    # 显示版本信息
+    message(STATUS "asio version (numeric): ${ASIO_VERSION_FULL}")
+    message(STATUS "asio version (string): ${ASIO_VERSION_STR}")
+
+    # 添加头文件路径
+    include_directories(${ASIO_INCLUDE_DIR})
+    set(ASIO_VERSION ${ASIO_VERSION_FULL})
+else ()
+    message(FATAL_ERROR "Asio headers not found. Please install Asio and specify its path.")
 endif ()
 
-if (WIN32)
-    target_link_libraries(api-static PUBLIC ws2_32)
-    target_link_libraries(api-static PUBLIC mswsock)
-    target_link_libraries(api-static PUBLIC Imagehlp)
-    target_link_libraries(api-static PUBLIC Dbghelp)
-    target_link_libraries(api-static PUBLIC advapi32)
-elseif(LINUX)
-    target_link_libraries(api-static PUBLIC dw)
-elseif(APPLE)
-    target_link_libraries(api-static PUBLIC dwarf)
-endif ()
+# mimalloc
+find_package(mimalloc CONFIG REQUIRED)
+target_link_libraries(third_libs INTERFACE $<IF:$<TARGET_EXISTS:mimalloc-static>,mimalloc-static,mimalloc>)
+target_compile_definitions(third_libs INTERFACE MI_OVERRIDE=1)
+echo_lib_version(mimalloc ${mimalloc_VERSION})
 
-include(GNUInstallDirs)
+# C++ Requests Library (Cpr for curl)
+find_package(cpr CONFIG REQUIRED)
+target_link_libraries(third_libs INTERFACE cpr::cpr)
+echo_lib_version(cpr ${cpr_VERSION})
 
-# 安装配置（可选）
-install(TARGETS api api-static third_libs EXPORT api
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        RUNTIME DESTINATION bin
-        INCLUDES DESTINATION include
-)
+# zlib
+find_package(ZLIB REQUIRED)
+target_link_libraries(third_libs INTERFACE ZLIB::ZLIB)
+echo_lib_version(ZLIB ${ZLIB_VERSION})
 
-install(DIRECTORY include/ DESTINATION include)
-# 安装 CMake 配置文件
-install(EXPORT api
-        FILE api.cmake
-        NAMESPACE api::
-        DESTINATION lib/cmake/api)
+# fmt
+find_package(fmt CONFIG REQUIRED)
+target_link_libraries(third_libs INTERFACE fmt::fmt)
+echo_lib_version(fmt ${fmt_VERSION})
+find_package(date CONFIG REQUIRED)
+target_link_libraries(third_libs INTERFACE date::date date::date-tz)
 
-include(CMakePackageConfigHelpers)
+# spdlog
+find_package(spdlog CONFIG REQUIRED)
+target_link_libraries(third_libs INTERFACE spdlog::spdlog_header_only)
+#set(SPDLOG_FMT_EXTERNAL OFF)
+#set(SPDLOG_NO_EXTERNAL_FMT ON)
+#set(SPDLOG_HEADER_PATH "${INNER_THIRD_PARTY_INCLUDE_DIRS}/spdlog/version.h")
+## 检查文件是否存在
+#if(EXISTS ${SPDLOG_HEADER_PATH})
+#    # 读取并解析版本号
+#    file(READ ${SPDLOG_HEADER_PATH} SPDLOG_HEADER_CONTENTS)
+#
+#    string(REGEX MATCH "#define SPDLOG_VER_MAJOR ([0-9]+)" _ ${SPDLOG_HEADER_CONTENTS})
+#    if(CMAKE_MATCH_1)
+#        set(SPDLOG_VERSION_MAJOR ${CMAKE_MATCH_1})
+#    else()
+#        message(WARNING "Could not determine SPDLOG_VER_MAJOR from version.h")
+#        set(SPDLOG_VERSION_MAJOR 0)
+#    endif()
+#
+#    string(REGEX MATCH "#define SPDLOG_VER_MINOR ([0-9]+)" _ ${SPDLOG_HEADER_CONTENTS})
+#    if(CMAKE_MATCH_1)
+#        set(SPDLOG_VERSION_MINOR ${CMAKE_MATCH_1})
+#    else()
+#        message(WARNING "Could not determine SPDLOG_VER_MINOR from version.h")
+#        set(SPDLOG_VERSION_MINOR 0)
+#    endif()
+#
+#    string(REGEX MATCH "#define SPDLOG_VER_PATCH ([0-9]+)" _ ${SPDLOG_HEADER_CONTENTS})
+#    if(CMAKE_MATCH_1)
+#        set(SPDLOG_VERSION_PATCH ${CMAKE_MATCH_1})
+#    else()
+#        message(WARNING "Could not determine SPDLOG_VER_PATCH from version.h")
+#        set(SPDLOG_VERSION_PATCH 0)
+#    endif()
+#
+#    set(spdlog_VERSION "${SPDLOG_VERSION_MAJOR}.${SPDLOG_VERSION_MINOR}.${SPDLOG_VERSION_PATCH}")
+#    message(STATUS "Detected spdlog version: ${SPDLOG_VERSION}")
+#else()
+#    message(WARNING "spdlog version.h not found at: ${SPDLOG_HEADER_PATH}")
+#    set(spdlog_VERSION "0.0.0")
+#endif()
+echo_lib_version(spdlog ${spdlog_VERSION})
 
-# 生成版本文件
-write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/api-config-version.cmake"
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY AnyNewerVersion
-)
-
-install(EXPORT api
-    FILE api-targets.cmake
-    NAMESPACE api::
-    DESTINATION lib/cmake/api
-)
-
-# 安装配置文件
-configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/api-config.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/api-config.cmake"
-    INSTALL_DESTINATION lib/cmake/api
-)
-
-install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/api-config.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/api-config-version.cmake"
-    DESTINATION lib/cmake/api
-)
+message(STATUS "================== JavaScript工具库 ==================")
+## MuJS
+#find_package(PkgConfig)
+#pkg_check_modules(MUJS REQUIRED IMPORTED_TARGET mujs)
+# duktape
+find_package(unofficial-duktape CONFIG REQUIRED)
+target_link_libraries(third_libs INTERFACE unofficial::duktape::duktape)
+echo_lib_version(duktape ${unofficial-duktape_VERSION})
 
 message(STATUS "================== 测试工具库 ==================")
 # 查找 Google Benchmark 包
@@ -595,6 +817,460 @@ find_package(GTest CONFIG REQUIRED)
 add_library(test-gtest INTERFACE)
 target_link_libraries(test-gtest INTERFACE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
 echo_lib_version(GTest ${GTest_VERSION})
+
+# ============================================================
+# Language Standards Detection and Configuration
+# ============================================================
+# 设置构建信息变量
+set(BUILD_TYPE "${CMAKE_BUILD_TYPE}")
+
+# C 标准相关
+set(C_STANDARD "${CMAKE_C_STANDARD}")
+set(C_STANDARD_REQUIRED "${CMAKE_C_STANDARD_REQUIRED}")
+set(C_EXTENSIONS "${CMAKE_C_EXTENSIONS}")
+
+set(C_FLAGS "${CMAKE_C_FLAGS}")
+set(C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+set(C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}")
+
+# C++ 标准相关
+set(CXX_STANDARD "${CMAKE_CXX_STANDARD}")
+set(CXX_STANDARD_REQUIRED "${CMAKE_CXX_STANDARD_REQUIRED}")
+set(CXX_EXTENSIONS "${CMAKE_CXX_EXTENSIONS}")
+
+set(CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+set(CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+
+# 链接器参数
+set(EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
+
+# 编译器信息
+set(C_COMPILER_ID "${CMAKE_C_COMPILER_ID}")
+set(C_COMPILER_VERSION "${CMAKE_C_COMPILER_VERSION}")
+set(C_COMPILER_PATH "${CMAKE_C_COMPILER}")
+
+set(CXX_COMPILER_ID "${CMAKE_CXX_COMPILER_ID}")
+set(CXX_COMPILER_VERSION "${CMAKE_CXX_COMPILER_VERSION}")
+set(CXX_COMPILER_PATH "${CMAKE_CXX_COMPILER}")
+
+# CUDA 参数（如果启用）
+if (ENABLE_CUDA)
+    set(CUDA_FLAGS_DEBUG "${CMAKE_CUDA_FLAGS_DEBUG}")
+    set(CUDA_FLAGS_RELEASE "${CMAKE_CUDA_FLAGS_RELEASE}")
+else ()
+    set(CUDA_FLAGS_DEBUG "N/A")
+    set(CUDA_FLAGS_RELEASE "N/A")
+endif ()
+# 第三方库版本定义
+set(DEPENDENCY_OPENSSL "v${OPENSSL_VERSION}")
+set(DEPENDENCY_ASIO "v${ASIO_VERSION_FULL}")
+set(DEPENDENCY_ICONV "v${Iconv_VERSION}")
+set(DEPENDENCY_FMT "v${fmt_VERSION}")
+set(DEPENDENCY_ZLIB "v${ZLIB_VERSION}")
+set(DEPENDENCY_XSIMD "v${xsimd_VERSION}")
+set(DEPENDENCY_BSHOSHANY_THREAD_POOL "v${BSHOSHANY_THREAD_POOL_VERSION}")
+set(DEPENDENCY_CRONCPP "v${croncpp_VERSION}")
+set(DEPENDENCY_TSL_ROBIN_MAP "v${tsl-robin-map_VERSION}")
+set(DEPENDENCY_ARGPARSE "v${argparse_VERSION}")
+#set(DEPENDENCY_RAPIDJSON "v${RapidJSON_VERSION}")
+set(DEPENDENCY_YAML_CPP "v${yaml-cpp_VERSION}")
+set(DEPENDENCY_PROTOBUF "v${Protobuf_VERSION}")
+set(DEPENDENCY_CAPNP "v${CapnProto_VERSION}")
+set(DEPENDENCY_CISTA "v${CISTA_VERSION}")
+set(DEPENDENCY_MIMALLOC "v${mimalloc_VERSION}")
+set(DEPENDENCY_SPDLOG "v${spdlog_VERSION}")
+set(DEPENDENCY_CPR "v${cpr_VERSION}")
+set(DEPENDENCY_DUKTAPE "v${unofficial-duktape_VERSION}")
+set(DEPENDENCY_BENCHMARK "v${benchmark_VERSION}")
+set(DEPENDENCY_CATCH2 "v${Catch2_VERSION}")
+
+# ============================================================
+# 量化基础设施
+# ============================================================
+
+set(q1x-headers
+    include/q1x/std/api.h
+    include/q1x/std/base.h
+    include/q1x/std/buffer.h
+    include/q1x/std/strings.h
+    include/q1x/std/util.h
+    include/q1x/std/format.h
+    include/q1x/std/feature_detection.h
+    include/q1x/std/numerics.h
+    include/q1x/std/safe.h
+
+    # i/o 相关
+    include/q1x/io/csv-reader.h
+    include/q1x/io/csv-writer.h
+    include/q1x/io/file.h
+    include/q1x/io/http.h
+
+    # 编码相关
+    include/q1x/encoding/iconv.h
+    include/q1x/encoding/csv.h
+    include/q1x/encoding/json.h
+    include/q1x/encoding/yaml.h
+
+    # 运行时
+    include/q1x/std/affinity.h
+    include/q1x/runtime/crash.h
+    include/q1x/runtime/service.h
+    include/q1x/runtime/cache1d.h
+    include/q1x/runtime/once.h
+    include/q1x/runtime/core.h
+    include/q1x/std/scheduler.h
+    include/q1x/ta/simd.h
+
+    # 配置
+    include/q1x/config/rule-parameter.h
+    include/q1x/config/strategy-parameter.h
+    include/q1x/config/trader-parameter.h
+    include/q1x/config/trading-session.h
+
+    # 业务引擎
+    include/q1x/engine/action.h
+
+    # 网络相关
+    include/q1x/net/base.h
+    include/q1x/net/connection_pool.h
+    include/q1x/net/endpoint.h
+    include/q1x/net/operation_handler.h
+
+    # 数据帧, 列式存储
+    include/q1x/dataframe/dataframe.h
+    include/q1x/dataframe/periods.h
+    include/q1x/dataframe/series.h
+
+    # 数据协议
+    include/q1x/proto/data.h
+    include/q1x/proto/data.pb.h
+    include/q1x/proto/data.pb.cc
+    include/q1x/proto/kline.pb.h
+    include/q1x/proto/kline.pb.cc
+    include/q1x/proto/snapshot.capnp.h
+    include/q1x/proto/snapshot.capnp.c++
+    include/q1x/proto/xdxr.pb.h
+    include/q1x/proto/xdxr.pb.cc
+
+    # 技术分析
+    include/q1x/ta/boll.h
+    include/q1x/ta/ta.h
+    include/q1x/ta/ma.h
+    include/q1x/ta/rsi.h
+    include/q1x/ta/macd.h
+    include/q1x/ta/type_default.h
+    include/q1x/ta/rsi.h
+    include/q1x/ta/rolling.h
+    include/q1x/ta/type_default.h
+    include/q1x/ta/sma.h
+
+    # 数据集
+    include/q1x/datasets/chips.h
+    include/q1x/datasets/kline_raw.h
+    include/q1x/datasets/kline.h
+    include/q1x/datasets/trans.h
+    include/q1x/datasets/minute.h
+    include/q1x/datasets/xdxr.h
+    include/q1x/datasets/xdxr_adjust_factor.h
+
+    # 实时模块
+    include/q1x/realtime/snapshot.h
+
+    # 回测
+    include/q1x/backtest/backtest.h
+    include/q1x/backtest/order.h
+    include/q1x/backtest/trade.h
+    include/q1x/backtest/position.h
+
+    # 交易所相关
+    include/q1x/exchange/blocks.h
+    include/q1x/exchange/calendar.h
+    include/q1x/exchange/code.h
+    include/q1x/exchange/margin-trading.h
+    include/q1x/exchange/session.h
+    include/q1x/exchange/timestamp.h
+
+    # level1
+    include/q1x/level1/minute_time.h
+    include/q1x/level1/client.h
+    include/q1x/level1/protocol.h
+
+    # 策略
+    include/q1x/strategies/strategy.h
+    include/q1x/strategies/rule-engine.h
+    include/q1x/strategies/rule-error.h
+    include/q1x/strategies/rule-context.h
+
+    # 插件
+    include/q1x/models/plugin-loader.h
+    include/q1x/models/plugin-api.h
+
+    # 因子
+    include/q1x/factors/f10.h
+    include/q1x/factors/share-holder.h
+    include/q1x/factors/base.h
+    include/q1x/factors/notice.h
+    include/q1x/factors/financial_report.h
+    include/q1x/factors/safety-score.h
+    include/q1x/factors/history.h
+
+    # 交易柜台
+    include/q1x/trader/fee.h
+    include/q1x/trader/order.h
+    include/q1x/trader/constants.h
+    include/q1x/trader/account.h
+    include/q1x/trader/trader.h
+    include/q1x/trader/holding.h
+    include/q1x/trader/order_cache.h
+    include/q1x/trader/position.h
+    include/q1x/trader/tracker.h
+    include/q1x/trader/order_state.h
+
+    # 内嵌资源文件
+    include/q1x/resources/meta/blocks.h
+)
+
+set(q1x-sources
+    # 标准库兼容
+    src/q1x/std/strings.cpp
+    src/q1x/std/time.cpp
+    src/q1x/std/util.cpp
+    src/q1x/std/numerics.cpp
+    src/q1x/std/safe.cpp
+
+    # 运行时
+    src/q1x/std/affinity.cpp
+    src/q1x/runtime/core.cpp
+    src/q1x/runtime/crash.cpp
+    src/q1x/std/scheduler.cpp
+
+    # i/o 相关
+    src/q1x/io/file.cpp
+    src/q1x/io/http.cpp
+
+    # 编码相关
+    src/q1x/encoding/iconv.cpp
+    src/q1x/encoding/json.cpp
+
+    # 引擎
+    src/q1x/engine/adapter.cpp
+
+    # level1
+    src/q1x/level1/client.cpp
+    src/q1x/level1/protocol.cpp
+
+    # 配置信息
+    src/q1x/config/config.cpp
+    src/q1x/config/detail/trading-session.cpp
+    src/q1x/config/detail/trader-parameter.cpp
+    src/q1x/config/detail/strategy-parameter.cpp
+
+    src/q1x/cache.cpp
+    src/q1x/command.cpp
+    src/q1x/formula.cpp
+    src/q1x/exchange.cpp
+
+    # 回测
+    src/q1x/backtest/backtest.cpp
+    src/q1x/backtest/position.cpp
+    src/q1x/backtest/engine.cpp
+    src/q1x/backtest/order.cpp
+    src/q1x/backtest/trade.cpp
+
+    # 数据集
+    src/q1x/datasets/minute.cpp
+    src/q1x/datasets/xdxr_adjust_factor.cpp
+    src/q1x/datasets/xdxr.cpp
+    src/q1x/datasets/trans.cpp
+    src/q1x/datasets/klines.cpp
+    src/q1x/datasets/kline_raw.cpp
+    src/q1x/datasets.cpp
+
+    # 交易所相关
+    src/q1x/exchange/blocks.cpp
+    src/q1x/exchange/security.cpp
+    src/q1x/exchange/code.cpp
+    src/q1x/exchange/calendar.cpp
+    src/q1x/exchange/session.cpp
+    src/q1x/exchange/timestamp.cpp
+    src/q1x/exchange/margin-trading.cpp
+
+    # 因子
+    src/q1x/factors/f10.cpp
+    src/q1x/factors/share-holder.cpp
+    src/q1x/factors/base.cpp
+    src/q1x/factors/history.cpp
+    src/q1x/factors/notice.cpp
+    src/q1x/factors/financial_report.cpp
+    src/q1x/factors/safety-score.cpp
+
+    # 实时
+    src/q1x/realtime/snapshot.cpp
+
+    # 插件
+    src/q1x/plugins/plugin-loader.cpp
+
+    # 策略
+    src/q1x/strategies/rule-engine.cpp
+    src/q1x/strategies/strategy.cpp
+
+    # 交易柜台
+    src/q1x/trader/fee.cpp
+    src/q1x/trader/order.cpp
+    src/q1x/trader/account.cpp
+    src/q1x/trader/trader.cpp
+    src/q1x/trader/holding.cpp
+    src/q1x/trader/order_cache.cpp
+    src/q1x/trader/position.cpp
+    src/q1x/trader/tracker.cpp
+    src/q1x/trader/order_state.cpp
+)
+
+if (WIN32)
+    list(APPEND q1x-sources src/q1x/runtime/daemon_service.cpp)
+elseif (APPLE)
+    list(APPEND q1x-sources src/q1x/runtime/daemon_macosx.cpp)
+elseif (UNIX)
+    # LINUX 是非官方变量，我们手动检测
+    set(LINUX FALSE)
+    if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+        set(LINUX TRUE)
+    endif ()
+
+    if (LINUX)
+        list(APPEND q1x-sources src/q1x/runtime/daemon_systemd.cpp)
+    else ()
+        message(WARNING "Unsupported Unix OS: ${CMAKE_SYSTEM_NAME}")
+    endif ()
+else ()
+    message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
+endif ()
+
+# 链接不同平台的库
+if (WIN32)
+    target_link_libraries(third_libs INTERFACE ws2_32)   # Windows 网络库, 标准 Winsock API 支持, TCP/UDP 通信、客户端/服务器, winsock2.h
+    target_link_libraries(third_libs INTERFACE mswsock)  # Windows 网络库, 微软扩展函数（高性能网络）, IOCP、异步网络、高性能服务端, mswsock.h
+    target_link_libraries(third_libs INTERFACE Imagehlp) # Windows Crash Dump, PE 文件结构解析
+    target_link_libraries(third_libs INTERFACE Dbghelp)  # Windows Crash Dump, 堆栈回溯（Stack Walking）
+    target_link_libraries(third_libs INTERFACE advapi32) # Windows 服务管理
+    #find_package(libdwarf CONFIG REQUIRED)
+    #target_link_libraries(third_libs INTERFACE libdwarf::dwarf)
+    target_link_libraries(third_libs INTERFACE psapi)
+elseif (LINUX)
+    # vcpkg版本的libdwarf未实验成功
+    #target_link_libraries(third_libs PUBLIC libdwarf::dwarf)
+    # #define BACKWARD_HAS_DW 1
+    target_link_libraries(third_libs INTERFACE dw bfd) # apt-get install libdw-dev
+    # #define BACKWARD_HAS_DWARF 1
+    #target_link_libraries(third_libs INTERFACE elf dwarf) # apt-get install libdwarf-dev
+elseif (APPLE)
+    target_link_libraries(third_libs INTERFACE dwarf) # apt-get install libdw-dev
+endif ()
+
+get_target_property(_libs third_libs INTERFACE_LINK_LIBRARIES)
+message(STATUS "Library 'third_libs' requires: ${_libs}")
+
+add_library(q1x STATIC
+    ${q1x-headers}
+    ${q1x-sources}
+)
+target_include_directories(q1x
+    SYSTEM        # 关键选项：标记为系统头文件路径
+    PUBLIC        # 仅当前目标可见（或 PUBLIC/INTERFACE）
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/third_party/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(q1x PUBLIC
+    third_libs
+)
+
+if (MINGW)
+    # MinGW (GCC)，Windows 下使用 -mthreads
+    target_link_options(q1x PUBLIC -mthreads)
+elseif (MSVC)
+    # Visual Studio，不需要 -mthreads 或 -pthread
+    # Windows 上 MSVC 的多线程由编译器自动处理
+    # 可以什么都不加，或根据需要添加特定选项
+    message(STATUS "Using MSVC, no thread flags needed.")
+else ()
+    # Linux/macOS 使用 -pthread
+    target_compile_options(q1x PUBLIC -pthread)
+    target_link_options(q1x PUBLIC -pthread)
+endif ()
+
+get_target_property(_libs q1x INTERFACE_LINK_LIBRARIES)
+message(STATUS "Library 'q1x' requires: ${_libs}")
+
+
+# 清除DLL文件的前缀
+set(CMAKE_SHARED_LIBRARY_PREFIX "")
+set(CMAKE_IMPORT_LIBRARY_PREFIX "")
+# 为静态库和动态库分别设置目标名称，避免冲突
+set_target_properties(q1x PROPERTIES OUTPUT_NAME "q1x" PREFIX "")
+
+# 设置安装路径变量
+include(GNUInstallDirs)
+set(THIRD_PARTY_INSTALL_INCDIR "${CMAKE_INSTALL_INCLUDEDIR}/third_party")
+
+# 将第三方头文件声明为安装目标
+install(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/third_party/include/
+    DESTINATION ${THIRD_PARTY_INSTALL_INCDIR}
+    #FILES_MATCHING
+    #PATTERN "*.h"
+    #PATTERN "*.hpp"
+    #PATTERN "*.inl"
+)
+
+# 安装配置（可选）
+install(TARGETS q1x third_libs EXPORT q1x
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include
+)
+
+# 安装主库头文件
+install(
+    DIRECTORY include/ DESTINATION include
+)
+
+# 安装 CMake 配置文件
+install(EXPORT q1x
+        FILE q1x.cmake
+        NAMESPACE quant1x::
+        DESTINATION lib/cmake/q1x)
+
+include(CMakePackageConfigHelpers)
+
+# 生成版本文件
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/q1x-config-version.cmake"
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+)
+
+install(EXPORT q1x
+    FILE q1x-targets.cmake
+    NAMESPACE quant1x::
+    DESTINATION lib/cmake/q1x
+)
+
+# 安装配置文件
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/q1x-config.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/q1x-config.cmake"
+    INSTALL_DESTINATION lib/cmake/q1x
+)
+
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/q1x-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/q1x-config-version.cmake"
+    DESTINATION lib/cmake/q1x
+)
+
 
 # 单元测试
 add_subdirectory(tests)

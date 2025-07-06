@@ -1,13 +1,22 @@
 {
-  "name": "api",
+  "name": "q1x",
   "version": "0.1.0",
-  "description": "quant1x engine",
+  "description": "quant1x v2",
   "dependencies": [
+    "openssl",
+    "libiconv",
+    "yaml-cpp",
+    "zlib",
+    "mimalloc",
+    "spdlog",
+    "cpr",
+    "date",
+    "fmt",
+    "duktape",
     "benchmark",
     "catch2",
     "gtest",
-    "capnproto",
-    "cpr",
-    "libiconv"
+    "flatbuffers",
+    "capnproto"
   ]
 }

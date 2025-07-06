@@ -16,9 +16,6 @@ void crash_function() {
 }
 
 int main() {
-    // 设置控制台输出和输入代码页为UTF-8
-    SetConsoleOutputCP(CP_UTF8);
-    SetConsoleCP(CP_UTF8);
     std::cout << "程序开始运行..." << std::endl;
     crash_function();
     return 0;

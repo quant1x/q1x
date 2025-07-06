@@ -1,0 +1,3 @@
+@PACKAGE_INIT@
+include("${CMAKE_CURRENT_LIST_DIR}/q1x-targets.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/q1x-config-version.cmake")

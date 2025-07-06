@@ -1,4 +1,7 @@
-function(get_latest_git_tag_info OUT_VERSION OUT_AUTHOR OUT_EMAIL OUT_DATE)
+# =============================
+# 通过git tag获取版本号, 作者, 邮箱, 日期
+# =============================
+function(get_latest_git_tag_info OUT_VERSION OUT_LATEST_TAG OUT_TAG_COMMIT_HASH OUT_AUTHOR OUT_EMAIL OUT_DATE)
     find_package(Git REQUIRED)
 
     execute_process(
@@ -7,6 +10,11 @@ function(get_latest_git_tag_info OUT_VERSION OUT_AUTHOR OUT_EMAIL OUT_DATE)
         OUTPUT_VARIABLE TAG_COMMIT_HASH
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
+    if (TAG_COMMIT_HASH)
+        message(STATUS "Found latest commit hash: ${TAG_COMMIT_HASH}")
+    else ()
+        message(WARNING "No commit found in Git repository")
+    endif ()
     execute_process(
         COMMAND git describe --tags ${TAG_COMMIT_HASH}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -34,7 +42,7 @@ function(get_latest_git_tag_info OUT_VERSION OUT_AUTHOR OUT_EMAIL OUT_DATE)
         )
         set(VERSION_FROM_GIT "0.0.0-dev+${GIT_COMMIT_HASH}")
     endif ()
-    message(STATUS "version = ${VERSION_FROM_GIT}")
+    message(STATUS "Version: ${VERSION_FROM_GIT}")
 
     execute_process(
         COMMAND git log -1 ${LATEST_TAG} --pretty=format:%an||%ae||%ai
@@ -46,10 +54,12 @@ function(get_latest_git_tag_info OUT_VERSION OUT_AUTHOR OUT_EMAIL OUT_DATE)
     list(GET GIT_INFO_LIST 1 GIT_AUTHOR_EMAIL)
     list(GET GIT_INFO_LIST 2 GIT_AUTHOR_DATE)
 
-    message(STATUS "Author: ${GIT_AUTHOR_NAME}")
-    message(STATUS " Email: ${GIT_AUTHOR_EMAIL}")
-    message(STATUS "  Date: ${GIT_AUTHOR_DATE}")
+    message(STATUS " Author: ${GIT_AUTHOR_NAME}")
+    message(STATUS "  Email: ${GIT_AUTHOR_EMAIL}")
+    message(STATUS "   Date: ${GIT_AUTHOR_DATE}")
 
+    set(${OUT_LATEST_TAG} "${LATEST_TAG}" PARENT_SCOPE)
+    set(${OUT_TAG_COMMIT_HASH} "${TAG_COMMIT_HASH}" PARENT_SCOPE)
     set(${OUT_VERSION} "${VERSION_FROM_GIT}" PARENT_SCOPE)
     set(${OUT_AUTHOR} "${GIT_AUTHOR_NAME}" PARENT_SCOPE)
     set(${OUT_EMAIL} "${GIT_AUTHOR_EMAIL}" PARENT_SCOPE)

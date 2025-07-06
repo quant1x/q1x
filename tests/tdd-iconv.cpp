@@ -1,5 +1,5 @@
-#include <api/test/test.h>
-#include <api/iconv.h>
+#include <q1x/test/test.h>
+#include <q1x/encoding/iconv.h>
 
 TEST_CASE("utf8_to_gbk converts UTF-8 to GBK", "[charsets]") {
     std::string utf8 = "Hello, 世界!";

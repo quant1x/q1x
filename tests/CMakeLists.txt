@@ -1,3 +1,4 @@
+
 # 定义一个宏，用于创建 一般性的测试 可执行文件
 macro(add_app_executable source_file)
     # 获取源文件名（不含扩展名）
@@ -91,7 +92,12 @@ macro(add_benchmark_executable source_file)
 endmacro()
 
 # crash测试
-add_catch2_executable(crash-windows.cpp)
+if (WIN32)
+    add_app_executable(crash-windows.cpp)
+elseif (LINUX)
+    add_app_executable(crash-linux.cpp)
+endif ()
+
 # 测试宿主目录
 add_catch2_executable(tdd-homedir.cpp)
 # 字符集测试

@@ -6,6 +6,14 @@ namespace strings {
         return ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r';
     }
 
+    char safe_toupper(char ch) {
+        return static_cast<char>(std::toupper(static_cast<unsigned char>(ch)));
+    }
+
+    char safe_tolower(char ch) {
+        return static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+    }
+
     std::string trim(const std::string& str) {
         size_t start = 0;
         size_t end = str.size();
@@ -138,13 +146,13 @@ namespace strings {
             char lowChar = hex[i + 1];
 
             // 验证是否为有效十六进制字符
-            if (!isxdigit(highChar) || !isxdigit(lowChar)) {
+            if (!std::isxdigit(highChar) || !std::isxdigit(lowChar)) {
                 throw std::invalid_argument("Invalid hex character detected");
             }
 
             // 转换为大写统一处理
-            highChar = toupper(highChar);
-            lowChar = toupper(lowChar);
+            highChar = safe_toupper(highChar);
+            lowChar = safe_toupper(lowChar);
 
             // 计算高四位和低四位的值
             unsigned char high = (highChar >= 'A') ? (highChar - 'A' + 10) : (highChar - '0');

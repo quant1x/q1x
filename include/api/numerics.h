@@ -4,6 +4,7 @@
 
 #include <api/std.h>
 #include <ostream>
+#include <cmath>
 
 namespace numerics {
 

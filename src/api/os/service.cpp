@@ -23,7 +23,7 @@ namespace service {
         return result;
     }
 
-    static std::string utf16_to_utf8(const std::wstring& wstr) {
+    [[maybe_unused]] static std::string utf16_to_utf8(const std::wstring& wstr) {
         if (wstr.empty()) return {};
         int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
         std::string result(size_needed, 0);
@@ -78,7 +78,7 @@ namespace service {
         return oss.str();
     }
 
-    static bool v1_current_user_is_administrator() {
+    [[maybe_unused]] static bool v1_current_user_is_administrator() {
         HANDLE hToken = nullptr;
         if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken)) {
             return false;

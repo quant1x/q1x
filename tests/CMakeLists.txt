@@ -90,6 +90,10 @@ macro(add_benchmark_executable source_file)
     )
 endmacro()
 
+# crash测试
+add_catch2_executable(crash-windows.cpp)
+# 测试宿主目录
+add_catch2_executable(tdd-homedir.cpp)
 # 字符集测试
 add_catch2_executable(tdd-iconv.cpp)
 

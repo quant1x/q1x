@@ -57,11 +57,11 @@ namespace crash {
 } // namespace crash
 
 #include <csignal>
-#if defined(OS_IS_WINDOWS)
+#if defined(_WIN32) || defined(_WIN64)
 //#define BACKWARD_HAS_DWARF 1 // 并不好用
-#elif defined(OS_IS_LINUX)
+#elif defined(__linux__)
 #define BACKWARD_HAS_DW 1 // dw
-#elif defined(OS_IS_APPLE)
+#elif defined(__APPLE__) && defined(__MACH__)
 #define BACKWARD_HAS_DWARF 1
 #else
 #error "not support this platform"

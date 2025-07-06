@@ -9,6 +9,9 @@ namespace strings {
     // 判断是否空白字符
     bool is_whitespace(char ch);
 
+    char safe_toupper(char ch);
+    char safe_tolower(char ch);
+
     inline std::string from(const char *const start, size_t len) {
         size_t actual_len = strnlen(start, len); // 查找第一个 '\0' 或最大长度
         return std::string(start, actual_len); // 截断到第一个 '\0'

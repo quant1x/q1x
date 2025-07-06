@@ -79,13 +79,27 @@
 // == 操作系统检测 ==
 // ==================================================================
 
-#define OS_IS_WINDOWS   (defined(_WIN32) || defined(_WIN64))
-#define OS_IS_LINUX     (defined(__linux__))
-#define OS_IS_APPLE     (defined(__APPLE__) && defined(__MACH__))
-#define OS_IS_MACOS     (OS_IS_APPLE && defined(TARGET_OS_MAC) && TARGET_OS_MAC)
-#define OS_IS_IOS       (OS_IS_APPLE && defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE)
-#define OS_IS_ANDROID   (defined(__ANDROID__))
-#define OS_IS_UNIX      (OS_IS_LINUX || OS_IS_MACOS || OS_IS_IOS || OS_IS_ANDROID)
+// windows 平台检测
+#if (defined(_WIN32) || defined(_WIN64))
+#define OS_IS_WINDOWS 1
+#else
+#define OS_IS_WINDOWS 0
+#endif
+
+// linux 平台检测
+
+#if defined(__linux__) || defined(__linux) || defined(linux)
+#define OS_IS_LINUX 1
+#else
+#define OS_IS_LINUX 0
+#endif
+
+// macOS 平台检测
+#if defined(__APPLE__) && defined(__MACH__)
+#define OS_IS_APPLE 1
+#else
+#define OS_IS_APPLE 0
+#endif
 
 // ==================================================================
 // == CPU 架构检测 ==

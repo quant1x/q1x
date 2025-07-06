@@ -18,6 +18,26 @@
 
 namespace util {
 
+    // 跨平台安全获取环境变量
+    static std::optional<std::string> getenv_str(const char* name) {
+#ifdef _WIN32
+        char* value = nullptr;
+        size_t len = 0;
+        if (_dupenv_s(&value, &len, name) == 0 && value != nullptr) {
+            std::string result(value);
+            free(value);
+            return result;
+        }
+        return std::nullopt;
+#else
+        const char* value = std::getenv(name);
+        if (value) {
+            return std::string(value);
+        }
+        return std::nullopt;
+#endif
+    }
+
     //============================================================
     // 文件系统                                                   //
     //============================================================
@@ -25,28 +45,22 @@ namespace util {
     namespace fs = std::filesystem;
 
     std::string homedir() {
-        const char *home = nullptr;
-        home = std::getenv("QUANT1X_HOME");
-        if (home) {
-            return home;
+        auto homeOpt = getenv_str("QUANT1X_HOME");
+        if (homeOpt) {
+            return *homeOpt;
         }
-        home = std::getenv("GOX_HOME");
-        if (home) {
-            return home;
+        homeOpt = getenv_str("GOX_HOME");
+        if (homeOpt) {
+            return *homeOpt;
+        }
+        homeOpt = getenv_str("HOME");
+        if (homeOpt) {
+            return *homeOpt;
         }
 #ifdef _WIN32
-        home = std::getenv("HOME");
-        if (home) {
-            return home;
-        }
-        home = std::getenv("USERPROFILE");
-        if (home) {
-            return home;
-        }
-#else
-        home = std::getenv("HOME");
-        if (home) {
-            return home;
+        homeOpt = getenv_str("USERPROFILE");
+        if (homeOpt) {
+            return *homeOpt;
         }
 #endif
         return fs::temp_directory_path().generic_string();

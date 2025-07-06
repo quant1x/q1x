@@ -21,7 +21,7 @@
 
 namespace runtime {
 
-    static std::string global_logs_path("");
+    static std::string global_logs_path;
 
 	/// 初始化日志路径, 如果全局路径为空且入参非空, 则设置全局路径
     static void init_logs_path(const std::string& logs_path) {

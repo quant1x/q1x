@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <thread>
 #include <cstring>
+#include <cstdio> // Ensure proper inclusion for printf
+#include <cerrno> // Ensure proper inclusion for errno and strerror
 
 /// 编码
 namespace charsets {
@@ -15,7 +17,9 @@ namespace charsets {
             IconvInstance(const char* to, const char* from) {
                 cd_ = iconv_open(to, from);
                 if (cd_ == (iconv_t)-1) {
-                    printf("Error: %s (Code: %d)\n", strerror(errno), errno);
+                    char errbuf[128];
+                    strerror_s(errbuf, sizeof(errbuf), errno);
+                    fprintf(stderr, "Error: %s (Code: %d)\n", errbuf, errno);
                     throw std::runtime_error("iconv_open failed");
                 }
             }

@@ -42,10 +42,32 @@ namespace fmt {
 
 namespace api {
 
+    inline static std::tm safe_localtime(std::time_t t) {
+        std::tm result{};
+#ifdef _WIN32
+        localtime_s(&result, &t);
+#else
+        localtime_r(&t, &result);
+#endif
+        return result;
+    }
+
+    inline static std::tm safe_gmtime(std::time_t t) {
+        std::tm result{};
+#ifdef _WIN32
+        gmtime_s(&result, &t);
+#else
+        gmtime_r(&t, &result);
+#endif
+        return result;
+    }
+
     int64_t zone_offset_milliseconds() {
         std::time_t now = std::time(nullptr);
-        std::tm local = *std::localtime(&now);
-        std::tm utc = *std::gmtime(&now);
+        std::tm local{};
+        local = safe_localtime(now);
+        std::tm utc{};
+        utc = safe_gmtime(now);
         return (mktime(&local) - mktime(&utc)) * 1000LL;
     }
 
@@ -198,21 +220,7 @@ namespace api {
         return str;
     }
 
-//    // 本地时间字符串 解析成 utc时间
-//    std::chrono::system_clock::time_point from_string(const char * str) {
-//        std::istringstream iss(str);
-//        std::chrono::sys_time<std::chrono::milliseconds> tp; // 毫秒精度
-//
-//        if (iss >> parse(default_chrono_parse, tp)) {
-//            //std::cout << "UTC time with ms: " << tp << "\n";
-//        } else {
-//            std::string msg(str);
-//            THROW_EXCEPTION("解析<"+msg+">失败");
-//        }
-//        return tp-std::chrono::seconds(_zone_offset_seconds);
-//    }
-
-    std::string to_string(std::time_t tm, const char * const format = layout_only_date) {
+    static std::string to_string(std::time_t tm, const char * const format = layout_only_date) {
         std::tm local_time{};
         // 线程安全的方式获取本地时间
 #ifdef _WIN32
@@ -225,24 +233,8 @@ namespace api {
         return {date_str, std::strlen(date_str)};
     }
 
-//    std::time_t from_string(const std::string& tm, const char * const format = layout_only_date) {
-//        std::tm tm_time = {};
-//        // 解析字符串到 tm 结构（C++11 使用 get_time）
-//        std::istringstream ss(tm);
-//        ss >> std::get_time(&tm_time, format);
-//        if (ss.fail()) {
-//            return std::time_t(0);
-//        }
-//        // 转换为 time_t（假设输入为本地时间）
-//        std::time_t time_parsed = std::mktime(&tm_time);
-//        if (time_parsed == -1) {
-//            return std::time_t(0);
-//        }
-//        return time_parsed;
-//    }
-
     /// 获取当前时间
-    std::time_t current_time() {
+    static std::time_t current_time() {
         return std::time(nullptr);
     }
 
@@ -262,7 +254,7 @@ namespace api {
         // 获取当前时间点，并减去若干个月
         auto now = std::chrono::system_clock::now();
         auto now_time_t = std::chrono::system_clock::to_time_t(now);
-        std::tm tm = *std::localtime(&now_time_t);
+        std::tm tm = safe_localtime(now_time_t);
 
         // 减去 months 个月
         tm.tm_mon -= months;
@@ -292,7 +284,7 @@ namespace api {
     }
 
     // 尝试用指定格式解析日期时间字符串
-    std::optional<tm> tryParse(const std::string& str, const char* fmt) {
+    static std::optional<tm> try_parse_tm(const std::string& str, const char* fmt) {
         tm tm = {};
         std::istringstream ss(str);
         ss >> std::get_time(&tm, fmt);
@@ -302,11 +294,11 @@ namespace api {
         return tm;
     }
 
-    // 改进后的 parseTime 函数，支持多种日期格式
-    tm parseTime(const std::string& date) {
+    // 改进后的 parse_tm 函数，支持多种日期格式
+    static tm parse_tm(const std::string& date) {
         // 尝试所有支持的格式
         for (const auto& fmt : layout_supports) {
-            auto result = tryParse(date, fmt);
+            auto result = try_parse_tm(date, fmt);
             if (result) {
                 // 确保年份是完整的（如将23转换为2023）
                 if (result->tm_year < 100) {
@@ -318,11 +310,11 @@ namespace api {
 
         // 所有格式都失败时返回当前时间
         time_t now = time(nullptr);
-        return *localtime(&now);
+        return safe_localtime(now);
     }
 
     std::tuple<std::string, std::string, std::string> GetQuarterByDate(const std::string& date, int diffQuarters) {
-        tm now = parseTime(date);
+        tm now = parse_tm(date);
 
         // Apply quarter offset
         now.tm_mon -= 3 * diffQuarters;

@@ -2,9 +2,9 @@
 #include <api/formula.h>
 #include <api/algo.h>
 #include <api/runtime.h>
-//#ifdef _WIN32
-//#include <windows.h>
-//#endif
+#ifdef _WIN32
+#include <windows.h>
+#endif
 
 TEST_CASE("formula-hhv", "[formula]") {
     runtime::console_set_utf8();

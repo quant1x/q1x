@@ -32,6 +32,12 @@ project(quant1x-api VERSION ${GIT_VERSION} LANGUAGES CXX)
 # ============================================================
 # 设置 C++ 标准为 C++20
 # ============================================================
+# 2. 全局配置, 预设c/c++执行标准17
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_COMPILER_WORKS TRUE)
+set(CMAKE_CXX_COMPILER_WORKS TRUE)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF) # 可选：禁用编译器扩展（如 MSVC 的 /Zc:__cplusplus）
@@ -45,6 +51,17 @@ message(STATUS "Build Type: \"${CMAKE_BUILD_TYPE}\"")
 set(CMAKE_INSTALL_CONFIG_NAME ${CMAKE_BUILD_TYPE})
 message(STATUS "Install configuration: \"${CMAKE_INSTALL_CONFIG_NAME}\"")
 
+
+if (BUILD_SHARED_LIBS)
+  set(quant1x_BUILD_SHARED_LIBS_DEFAULT ON)
+else (BUILD_SHARED_LIBS)
+  set(quant1x_BUILD_SHARED_LIBS_DEFAULT OFF)
+endif (BUILD_SHARED_LIBS)
+option(quant1x_BUILD_SHARED_LIBS "Build Shared Libraries" ${quant1x_BUILD_SHARED_LIBS_DEFAULT})
+include(CMakeDependentOption)
+cmake_dependent_option(quant1x_MSVC_STATIC_RUNTIME "Link static runtime libraries" ON
+  "NOT quant1x_BUILD_SHARED_LIBS" OFF)
+
 # ============================================================
 # 全局编码设置
 # ============================================================
@@ -54,6 +71,100 @@ if(MSVC)
 else()
     add_compile_options(-finput-charset=UTF-8 -fexec-charset=UTF-8)
 endif()
+
+# 6. 编译器选项
+# 6.1 检测编译器类型
+# ============================================================
+# 编译器选项
+# ============================================================
+include(CheckCCompilerFlag)
+include(CheckCXXCompilerFlag)
+
+message(STATUS "CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    # 检查是否是 MinGW
+    execute_process(
+        COMMAND ${CMAKE_CXX_COMPILER} -dumpmachine
+        OUTPUT_VARIABLE MACHINE_DUMP
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if (MACHINE_DUMP MATCHES "mingw" OR
+        MACHINE_DUMP MATCHES "windows" OR
+        CMAKE_CXX_COMPILER MATCHES "mingw")
+        set(IS_MINGW TRUE)
+        message(STATUS "Detected MinGW GCC (${MACHINE_DUMP})")
+    else ()
+        set(IS_MINGW FALSE)
+        message(STATUS "Detected regular GCC (${MACHINE_DUMP})")
+    endif ()
+endif ()
+
+# 6.2 特定所有权相关警告
+# Windows 路径处理
+if (IS_MINGW)
+    # 转换 Windows 路径到 MinGW 兼容格式
+    file(TO_CMAKE_PATH "$ENV{PATH}" MINGW_PATH)
+    string(REPLACE "\\" "/" MINGW_PATH "${MINGW_PATH}")
+endif ()
+
+# 编译器警告选项
+if (MSVC)
+    # 对于MSVC编译器
+    #add_compile_options(/W4 /WX)  # /W4显示所有警告，/WX将警告视为错误
+else ()
+    # 对于GCC/Clang等编译器
+    add_compile_options(-Wall -Wextra)
+    add_compile_options(-Wuninitialized)
+    add_compile_options(-pedantic -Werror)
+    # 对于GCC/Clang等编译器
+    add_compile_options(-Wunused -Wno-shadow)
+
+    # GNU 特有选项
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+        add_compile_options(-Wmaybe-uninitialized)
+        add_compile_options(-Wreturn-local-addr)
+        add_compile_options(-ftrivial-auto-var-init=zero)
+        if (IS_MINGW)
+            # MinGW 特有设置
+            add_definitions(-DMINGW_COMPILER)
+        else ()
+            # 其他系统 GCC 设置
+        endif ()
+    endif ()
+    # Clang 特有选项
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        add_compile_options(-Wmove)
+    endif ()
+endif ()
+
+if (NOT MSVC)
+    # 全局启用异常
+    add_compile_options(-fexceptions)
+    # 启用 function/data sections
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffunction-sections -fdata-sections")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
+    # 编译优化
+    add_compile_options(-O2)
+endif ()
+
+# 对于MinGW/GCC
+if (MINGW OR GNU)
+    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O2 -gdwarf-3")
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g")
+    # 确保生成.map文件用于符号解析
+    #set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -Wl,-Map=output.map")
+endif ()
+
+if (MINGW OR GNU)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++" CACHE STRING "Use libstdc++")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libstdc++" CACHE STRING "")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libstdc++" CACHE STRING "")
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "Use libstdc++")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++" CACHE STRING "")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++" CACHE STRING "")
+endif ()
 
 # ============================================================
 # vcpkg Options/Dependencies
@@ -123,6 +234,13 @@ link_directories(${CMAKE_PREFIX_PATH}/lib)
 set(VCPKG_INCLUDE_DIRS ${VCPKG_LIBS_PATH}/include)
 set(VCPKG_LIBRARY_DIRS ${VCPKG_LIBS_PATH}/lib)
 
+# 项目内聚合的第三方库
+set(inner_third_party_dir "${CMAKE_SOURCE_DIR}/include/api-third-party")
+set(INNER_THIRD_PARTY_INCLUDE_DIRS ${inner_third_party_dir})
+set(INNER_THIRD_PARTY_LIBRARY_DIRS ${inner_third_party_dir})
+
+message(STATUS "================== 基础功能库 ==================")
+
 # libiconv
 find_package(Iconv REQUIRED)  # CMake 官方模块名称是 Iconv（大写 I）
 if (NOT DEFINED Iconv_VERSION) # 如果没有定义Iconv_VERSION变量, 去查找iconv.h文件路径
@@ -187,6 +305,46 @@ endif ()
 find_package(cpr CONFIG REQUIRED)
 target_link_libraries(third_libs INTERFACE cpr::cpr)
 echo_lib_version(cpr ${cpr_VERSION})
+
+# ==============================
+# xsimd 13.2.0
+# find_package(xsimd CONFIG REQUIRED)
+# ==============================
+#message("xsimd_INCLUDE_DIRS = ${xsimd_INCLUDE_DIRS}")
+file(STRINGS "${INNER_THIRD_PARTY_INCLUDE_DIRS}/xsimd/config/xsimd_config.hpp" xsimd_version_defines
+    REGEX "#define XSIMD_VERSION_(MAJOR|MINOR|PATCH)")
+foreach (ver ${xsimd_version_defines})
+    if (ver MATCHES "#define XSIMD_VERSION_(MAJOR|MINOR|PATCH) +([^ ]+)$")
+        set(XSIMD_VERSION_${CMAKE_MATCH_1} "${CMAKE_MATCH_2}" CACHE INTERNAL "")
+    endif ()
+endforeach ()
+set(xsimd_VERSION ${XSIMD_VERSION_MAJOR}.${XSIMD_VERSION_MINOR}.${XSIMD_VERSION_PATCH})
+
+echo_lib_version(xsimd ${xsimd_VERSION})
+#target_include_directories(third_libs INTERFACE ${INNER_THIRD_PARTY_INCLUDE_DIRS})
+#set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -mavx -mavx2 -march=native -mtune=native -fno-tree-vectorize")
+#set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mavx -mavx2 -march=native -mtune=native -fno-tree-vectorize")
+#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -mavx -mavx2 -march=native -mtune=native -fno-tree-vectorize")
+#set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mavx -mavx2 -march=native -mtune=native -fno-tree-vectorize")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -mavx -mavx2 -march=native -mtune=native")
+set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -mavx -mavx2 -march=native -mtune=native")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -mavx -mavx2 -march=native -mtune=native")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -mavx -mavx2 -march=native -mtune=native")
+add_library(xtensor::optimize INTERFACE IMPORTED)
+
+if (MSVC)
+    # Microsoft compiler
+    target_compile_options(xtensor::optimize INTERFACE /EHsc /MP /bigobj)
+else ()
+    # GNU or Clang compiler
+    add_compile_options(-Wno-deprecated-copy)
+    include(CheckCXXCompilerFlag)
+    CHECK_CXX_COMPILER_FLAG(-march=native arch_native_supported)
+    if (arch_native_supported)
+        target_compile_options(xtensor::optimize INTERFACE -march=native)
+    endif ()
+endif ()
+target_link_libraries(third_libs INTERFACE xtensor::optimize)
 
 # ============================================================
 # api 基础设施库
@@ -307,6 +465,7 @@ MESSAGE(STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
 if (MINGW)
     # MinGW (GCC)，Windows 下使用 -mthreads
     target_link_options(api PUBLIC -mthreads)
+    target_link_options(api-static PUBLIC -mthreads)
 elseif (MSVC)
     # Visual Studio，不需要 -mthreads 或 -pthread
     # Windows 上 MSVC 的多线程由编译器自动处理
@@ -315,7 +474,9 @@ elseif (MSVC)
 else ()
     # Linux/macOS 使用 -pthread
     target_compile_options(api PUBLIC -pthread)
+    target_compile_options(api-static PUBLIC -pthread)
     target_link_options(api PUBLIC -pthread)
+    target_link_options(api-static PUBLIC -pthread)
 endif ()
 target_link_libraries(api PUBLIC
     third_libs
@@ -336,6 +497,7 @@ target_link_libraries(api-static PUBLIC
 if(MSVC)
     # 仅在 MSVC 下设置符号生成选项
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /Zi")
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} /Zi")
 endif()
 if (WIN32)

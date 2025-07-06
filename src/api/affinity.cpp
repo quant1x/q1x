@@ -118,7 +118,7 @@ namespace affinity {
         }
     }  // namespace
 
-    static bool bind_current_thread_to_cpu(unsigned cpu_index, std::error_code &ec) {
+    bool bind_current_thread_to_cpu(unsigned cpu_index, std::error_code &ec) {
         return set_affinity(get_current_thread_handle(), cpu_index, ec);
     }
 
@@ -130,11 +130,11 @@ namespace affinity {
         return set_affinity(get_current_thread_handle(), cpu_index, ec);
     }
 
-    static bool bind_thread_to_cpu(std::thread &thread, unsigned cpu_index, std::error_code &ec) {
+    bool bind_thread_to_cpu(std::thread &thread, unsigned cpu_index, std::error_code &ec) {
         return set_affinity(reinterpret_cast<uintptr_t>(thread.native_handle()), cpu_index, ec);
     }
 
-    static bool bind_thread_to_optimal_cpu(std::thread &thread, std::error_code &ec) {
+    bool bind_thread_to_optimal_cpu(std::thread &thread, std::error_code &ec) {
         unsigned cpu_index = get_next_cpu_index(ec);
         if (ec) {
             return false;

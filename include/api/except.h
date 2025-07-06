@@ -42,6 +42,7 @@ public:
     }
 
     std::string message(int ev) const override {
+        (void)ev;
         return msg_;
     }
 
@@ -83,5 +84,18 @@ inline std::error_code make_error_code(int err_code, std::string message) {
     auto category = category_cache::instance().get_or_create(message);
     return {err_code, *category};
 }
+
+//#if std_cplusplus < 20
+//FORCE_INLINE std::runtime_error make_system_error() {
+//    const int err = errno;  // 立即保存当前 errno
+//    return std::runtime_error("exception: " + std::string(std::strerror(err)) + " (code: " + std::to_string(err) + ")");
+//}
+//#else
+//// 通用错误生成函数（C++20）
+//FORCE_INLINE auto make_system_error(int err = errno) {
+//    return std::runtime_error(std::format("exception: {} (code: {})", std::strerror(err), err));
+//}
+//#endif
+
 
 #endif //API_EXCEPT_H

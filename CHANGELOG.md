@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.0.6] - 2025-07-07
+### Changed
+- 兼容msvc
+- 调整包路径, 输出quant1x::q1x工具库
+- 更新全部组件
+- 调整cmake测试宏
+- 新增崩溃测试应用
+- 新增安全的strerror
+- 补充缺少的头文件
+
 ## [0.0.5] - 2025-06-29
 ### Changed
 - 强制MSVC使用静态编译
@@ -23,6 +33,7 @@ All notable changes to this project will be documented in this file.
 - 构建cmake find_package机制
 - 封装通过git tag检查版本的cmake工具函数
 - 修订部分函数
+- update changelog
 
 ## [0.0.4] - 2025-06-26
 ### Changed
@@ -48,10 +59,11 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/api.git/compare/v0.0.5...HEAD
-[0.0.5]: https://gitee.com/quant1x/api.git/compare/v0.0.4...v0.0.5
-[0.0.4]: https://gitee.com/quant1x/api.git/compare/v0.0.3...v0.0.4
-[0.0.3]: https://gitee.com/quant1x/api.git/compare/v0.0.2...v0.0.3
-[0.0.2]: https://gitee.com/quant1x/api.git/compare/v0.0.1...v0.0.2
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.0.6...HEAD
+[0.0.6]: https://gitee.com/quant1x/q1x.git/compare/v0.0.5...v0.0.6
+[0.0.5]: https://gitee.com/quant1x/q1x.git/compare/v0.0.4...v0.0.5
+[0.0.4]: https://gitee.com/quant1x/q1x.git/compare/v0.0.3...v0.0.4
+[0.0.3]: https://gitee.com/quant1x/q1x.git/compare/v0.0.2...v0.0.3
+[0.0.2]: https://gitee.com/quant1x/q1x.git/compare/v0.0.1...v0.0.2
 
-[0.0.1]: https://gitee.com/quant1x/api.git/releases/tag/v0.0.1
+[0.0.1]: https://gitee.com/quant1x/q1x.git/releases/tag/v0.0.1

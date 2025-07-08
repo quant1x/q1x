@@ -17,9 +17,11 @@ project(quant1x-q1x
 # -----------------------------------------------------------------------------
 # Convenience: set default build type and compiler depending on the build directory
 # -----------------------------------------------------------------------------
-if(NOT CMAKE_BUILD_TYPE)
+if(NOT DEFINED CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
+    message(STATUS "Build type is not set or empty, defaulting to Debug")
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
-        "Choose the default build type: Debug, Release, RelWithDebInfo, MinSizeRel")
+        "Choose the build type: Debug, Release, RelWithDebInfo, MinSizeRel"
+        FORCE)
 endif()
 
 message(STATUS "Build Type: \"${CMAKE_BUILD_TYPE}\"")
@@ -233,12 +235,15 @@ endif ()
 # ============================================================
 if(MSVC)
     # Release flags
-    string(APPEND CMAKE_C_FLAGS_RELEASE " /O2 /Gy /GF /GS")
-    string(APPEND CMAKE_CXX_FLAGS_RELEASE " /O2 /Gy /GF /GS")
+    set(windows_flags "/O2 /Gy /GF /GS")
+    string(APPEND CMAKE_C_FLAGS_RELEASE " ${windows_flags}")
+    string(APPEND CMAKE_CXX_FLAGS_RELEASE " ${windows_flags}")
 
     # Debug flags
-    string(APPEND CMAKE_C_FLAGS_DEBUG " /Od /GS")
-    string(APPEND CMAKE_CXX_FLAGS_DEBUG " /Od /GS")
+    unset(windows_flags)
+    set(windows_flags "/Od /GS")
+    string(APPEND CMAKE_C_FLAGS_RELEASE " ${windows_flags}")
+    string(APPEND CMAKE_CXX_FLAGS_RELEASE " ${windows_flags}")
 else ()
     set(unix_flags "-O2 -m64 -march=native -mtune=native -fstack-protector-strong")
     string(APPEND CMAKE_C_FLAGS " ${unix_flags}")
@@ -265,13 +270,15 @@ else()
     add_definitions(-DSTATIC_VAR_PROTECTION)
 endif()
 
-# 编译优化
-# 对于MSVC
+# 关于debug和release模式的编译选项
 if (MSVC)
     set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /Zi /DEBUG")
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi /DEBUG")
     set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG")
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+else ()
+    string(APPEND CMAKE_C_FLAGS "$<$<CONFIG:Debug>:-g>")
+    string(APPEND CMAKE_CXX_FLAGS "$<$<CONFIG:Debug>:-g>")
 endif ()
 
 # 对于MinGW/GCC

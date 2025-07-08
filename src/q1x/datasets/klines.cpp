@@ -201,9 +201,9 @@ namespace datasets {
             // 6.1.2 如果隔日更新, 会有2条数据, 缓存中因为偏移是有一条从服务器获取的未复权数据, 第二条数据是当日不需要前复权的记录
             // 6.1.3 只需要判断缓存中的最后一条数据是否除权, 即增量的日线数据的第一条是否需要除权, 如果已除权, 说明缓存内的数据已经全部复权,
             //       只需要复权增量数据的复权即可, 如果没有除权, 则需要对全部的K线数据进行全量处理是否复权
-            bool adjusted = /*incremental_klines.size() == 1 && */adjust_times == 1;
+            bool isFreshFetchRequireAdjustment = /*incremental_klines.size() == 1 && */ adjust_times == 1;
             auto dividends = load_xdxr(code);
-            if (adjusted) {
+            if (isFreshFetchRequireAdjustment) {
                 // 只除权除息最新的一条记录
                 calculate_pre_adjust(incremental_klines, current_start_date, dividends);
             }
@@ -221,7 +221,7 @@ namespace datasets {
                 klines.insert(klines.end(), incremental_klines.begin(), incremental_klines.end());
             }
             // 8. 前复权
-            if(!adjusted) {
+            if (!isFreshFetchRequireAdjustment) {
                 calculate_pre_adjust(klines, current_start_date, dividends);
             }
             // 9. 刷新缓存文件

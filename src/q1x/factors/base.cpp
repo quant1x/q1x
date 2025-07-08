@@ -1,5 +1,5 @@
-#include <q1x/factors/base.h>
-#include <q1x/exchange.h>
+#include "q1x/factors/base.h"
+#include "q1x/exchange.h"
 
 namespace factors {
 
@@ -18,7 +18,7 @@ namespace factors {
                           [](level1::XdxrInfo& a, level1::XdxrInfo& b) {
                               return a.Date < b.Date;
                           });
-                xdxrs_map.emplace(security_code, std::move(xdxr_infos));
+                xdxrs_map.insert_or_assign(security_code, std::move(xdxr_infos));
             }
         }
     }

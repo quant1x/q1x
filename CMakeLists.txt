@@ -1220,7 +1220,7 @@ message(STATUS "Library 'q1x' requires: ${_libs}")
 
 # 检查编译器选项
 get_target_property(_includes q1x INCLUDE_DIRECTORIES)
-get_target_property(_libs q1x LIB_DIRECTORIES)
+get_target_property(_libs q1x LINK_LIBRARIES)
 get_target_property(_defines q1x COMPILE_DEFINITIONS)
 get_target_property(_options q1x COMPILE_OPTIONS)
 

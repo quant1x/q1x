@@ -240,11 +240,14 @@ if(MSVC)
     string(APPEND CMAKE_C_FLAGS_DEBUG " /Od /GS")
     string(APPEND CMAKE_CXX_FLAGS_DEBUG " /Od /GS")
 else ()
-    set(CMAKE_C_FLAGS "-O2 -m64 -march=native -mtune=native -fstack-protector-strong")
-    set(CMAKE_CXX_FLAGS "-O2 -m64 -march=native -mtune=native -fstack-protector-strong")
+    set(unix_flags "-O2 -m64 -march=native -mtune=native -fstack-protector-strong")
+    string(APPEND CMAKE_C_FLAGS " ${unix_flags}")
+    string(APPEND CMAKE_CXX_FLAGS " ${unix_flags}")
     # 启用 function/data sections
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ffunction-sections -fdata-sections")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ffunction-sections -fdata-sections")
+    unset(unix_flags)
+    set(unix_flags "-ffunction-sections -fdata-sections")
+    string(APPEND CMAKE_C_FLAGS " ${unix_flags}")
+    string(APPEND CMAKE_CXX_FLAGS " ${unix_flags}")
 endif()
 
 # 仅对新版MSVC添加高级保护（需版本检测）

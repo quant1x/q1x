@@ -1229,6 +1229,29 @@ message(STATUS "Libs: ${_libs}")
 message(STATUS "Defines: ${_defines}")
 message(STATUS "Options: ${_options}")
 
+function(get_all_linked_targets target result_var)
+    set(result "")
+
+    # 获取该目标直接链接的库
+    get_target_property(libs ${target} LINK_LIBRARIES)
+
+    foreach(lib IN LISTS libs)
+        if(TARGET ${lib})
+            list(APPEND result ${lib})
+            # 递归处理子依赖
+            get_all_linked_targets(${lib} sub_result)
+            list(APPEND result ${sub_result})
+        endif()
+    endforeach()
+
+    list(REMOVE_DUPLICATES result)
+    set(${result_var} ${result} PARENT_SCOPE)
+endfunction()
+
+# 使用函数
+get_all_linked_targets(q1x ALL_LINKED_TARGETS)
+message(STATUS "All linked targets (recursive): ${ALL_LINKED_TARGETS}")
+
 # 清除DLL文件的前缀
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
 set(CMAKE_IMPORT_LIBRARY_PREFIX "")

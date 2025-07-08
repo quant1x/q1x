@@ -4,9 +4,9 @@
 
 namespace trader {
 
-    static std::unordered_map<std::string, Position> mapPositions;
-    static std::mutex positionsMutex;
-    static auto positionOnce = RollingOnce::create("trader-position", exchange::cron_expr_daily_9am);
+    static inline std::unordered_map<std::string, Position> mapPositions;
+    static inline std::mutex                                positionsMutex;
+    static inline auto positionOnce = RollingOnce::create("trader-position", exchange::cron_expr_daily_9am);
 
     const std::string qmtPositionsPath = "qmt";           // 持仓缓存路径
     const std::string qmtPositionsFilename = "positions.csv"; // 持仓数据文件名

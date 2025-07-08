@@ -238,9 +238,9 @@ std::ostream &operator<<(std::ostream &os, const History &history) {
 namespace factors {
 
     namespace {
-        std::mutex g_factor_history_mutex{};
-        tsl::robin_map<std::string, History> g_factor_history_map{};
-        exchange::timestamp g_factor_history_date{};
+        inline std::mutex g_factor_history_mutex{};
+        inline tsl::robin_map<std::string, History> g_factor_history_map{};
+        inline exchange::timestamp                  g_factor_history_date{};
     }
 
     void check_and_update(const exchange::timestamp& timestamp) {
@@ -256,7 +256,7 @@ namespace factors {
             }
             std::vector<History> list = encoding::csv::csv_to_slices<History>(cache_filename);
             for(auto const &v : list) {
-                g_factor_history_map.emplace(v.Code, v);
+                g_factor_history_map.insert_or_assign(v.Code, v);
             }
         }
     }

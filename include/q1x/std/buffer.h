@@ -1,6 +1,6 @@
 #pragma once
-#ifndef API_BUFFER_H
-#define API_BUFFER_H 1
+#ifndef QUANT1X_STD_BUFFER_H
+#define QUANT1X_STD_BUFFER_H 1
 
 #include <algorithm>
 #include <cstdint>
@@ -262,4 +262,4 @@ public:
     }
 };
 
-#endif //API_BUFFER_H
+#endif //QUANT1X_STD_BUFFER_H

@@ -19,24 +19,24 @@
 namespace trader {
 
     void tracker(void) {
-        uint64_t strategyId = 1;
+        uint64_t strategy_id = 1;
         auto const & traderParameter = config::TraderConfig();
-        auto opt_strategy = traderParameter->GetStrategyParameterByCode(strategyId);
+        auto opt_strategy = traderParameter->GetStrategyParameterByCode(strategy_id);
         if(!opt_strategy.has_value()) {
-            spdlog::error("[tracker] {}号策略不存在, 忽略交易", strategyId);
+            spdlog::error("[tracker] {}号策略不存在, 忽略交易", strategy_id);
             return;
         }
-        auto strategyParameter = opt_strategy.value();
+        auto &strategyParameter = opt_strategy.value();
         if(!strategyParameter.Session.IsTrading()) {
-            spdlog::warn("[tracker] {}号策略非交易时段[{}], 不交易", strategyId, strategyParameter.Session.ToString());
+            spdlog::warn("[tracker] {}号策略非交易时段[{}], 不交易", strategy_id, strategyParameter.Session.ToString());
             // 不在交易时段, 退出
             return;
         }
-        spdlog::warn("[tracker] {}号策略, 交易流程, 开始", strategyId);
+        spdlog::warn("[tracker] {}号策略, 交易流程, 开始", strategy_id);
         realtime::load_snapshots();
         StrategyManager& manager = StrategyManager::Instance();
         //auto strategy = std::make_unique<HousNo1Strategy>();
-        auto strategy = manager.GetStrategy(strategyId);
+        auto strategy = manager.GetStrategy(strategy_id);
         auto all_codes = exchange::GetCodeList();
         auto codeCount = all_codes.size();
         {
@@ -109,12 +109,12 @@ namespace trader {
             // 9.2 判断可交易标的数量
             int quotaForTheNumberOfTargets = std::min(strategyParameter.Total, int(result_buys.size()));
             if (quotaForTheNumberOfTargets < 1) {
-                spdlog::error("{}[{}]: 可交易标的数为0, 放弃", strategy_name, strategyId);
+                spdlog::error("{}[{}]: 可交易标的数为0, 放弃", strategy_name, strategy_id);
             } else {
                 // 5. 统计指定交易日的策略已执行买入的标的数量
                 int numberOfStrategy = CountStrategyOrders(date, *strategy, Direction::BUY);
                 if (numberOfStrategy >= strategyParameter.Total) {
-                    spdlog::error("{} {}: 计划买入=%d, 已完成=%d. ", date, strategy_name, strategyParameter.Total, numberOfStrategy);
+                    spdlog::error("{} {}: 计划买入={}, 已完成={}. ", date, strategy_name, strategyParameter.Total, numberOfStrategy);
                 } else {
                     // 9.3 调用接口计算单只标的可用资金量
                     auto singleFundsAvailable = trader::CalculateAvailableFundsForSingleTarget(
@@ -123,7 +123,7 @@ namespace trader {
                         strategyParameter.FeeMax,
                         strategyParameter.FeeMin);
                     if (singleFundsAvailable <= trader::InvalidFee) {
-                        spdlog::error("{}[{}]: 可用资金为0, 放弃", strategy_name, strategyId);
+                        spdlog::error("{}[{}]: 可用资金为0, 放弃", strategy_name, strategy_id);
                     } else {
                         // 假定订单顺序没有变化, 跳过一斤执行买入的次数numberOfStrategy
                         for (int i = 0; i < int(result_buys.size()) && numberOfStrategy < quotaForTheNumberOfTargets; ++i) {
@@ -142,11 +142,12 @@ namespace trader {
                                 // 写入失败, 不交易
                                 continue;
                             }
+                            // 10.5 启用价格笼子的计算方法
+                            auto buy_price = trader::calculate_price_cage(strategy_id, direction, info.fee_buy.Price);
                             // 10.6 计算买入费用
-                            auto tradeFee = trader::EvaluateFeeForBuy(info.code, singleFundsAvailable,
-                                                                      info.fee_buy.Price);
+                            auto tradeFee = trader::EvaluateFeeForBuy(info.code, singleFundsAvailable, buy_price);
                             if (tradeFee.Volume <= trader::InvalidVolume) {
-                                spdlog::error("{}[{}]: {} 可买数量为0, 放弃", strategy_name, strategyId, info.code);
+                                spdlog::error("{}[{}]: {} 可买数量为0, 放弃", strategy_name, strategy_id, info.code);
                                 continue;
                             }
                             // 买入
@@ -185,16 +186,16 @@ namespace trader {
                 }
 
                 int volume = int(it->second.CanUseVolume);
-
+                // 修正卖出价格
+                auto sell_price = trader::calculate_price_limit_for_sell(info.fee_sell.Price, strategyParameter.FixedSlippageForSell);
                 // 买入
-                int64_t order_id = trader::PlaceOrder(direction, strategy_name, strategy_remark, info.code,
-                                                      PriceType::LATEST_PRICE, info.fee_sell.Price, volume);
+                int64_t order_id = trader::PlaceOrder(direction, strategy_name, strategy_remark, info.code, PriceType::LATEST_PRICE, sell_price, volume);
                 spdlog::info("[tracker] order_id={}", order_id);
 
             }
             auto tp_end = std::chrono::high_resolution_clock::now();
             auto diff = tp_end - tp_start;
-            spdlog::info("[tracker] strategy id={}, cross time:{}", strategyId, util::format_duration_auto(diff));
+            spdlog::info("[tracker] strategy id={}, cross time:{}", strategy_id, util::format_duration_auto(diff));
             spdlog::info("[tracker] buy signal total: {}", result_buys.size());
             for(auto const &v : result_buys) {
                 spdlog::warn("[tracker] buy signal: code={}, price={}", v.code, v.fee_buy.Price);
@@ -204,7 +205,7 @@ namespace trader {
                 spdlog::warn("[tracker] sell signal: code={}, price={}", v.code, v.fee_buy.Price);
             }
         }
-        spdlog::warn("[tracker] {}号策略, 交易流程, 结束", strategyId);
+        spdlog::warn("[tracker] {}号策略, 交易流程, 结束", strategy_id);
     }
 
 } // namespace trader

@@ -8,7 +8,7 @@
 #include <functional>
 #include <optional>
 #include <format>
-#include <q1x/runtime/core.h>
+#include "q1x/runtime/core.h"
 
 /**
  * 在固定时间窗口内保证操作只执行一次，窗口通过 cron 表达式或时间间隔定义。

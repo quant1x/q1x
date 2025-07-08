@@ -10,10 +10,10 @@
 namespace trader {
 
     // 全局交易参数
-    static double trader_account_theoretical_fund = 0.0;
-    static double trader_account_remaining_cash = 0.0;
+    static inline double trader_account_theoretical_fund = 0.0;
+    static inline double trader_account_remaining_cash   = 0.0;
 
-    auto account_once =  RollingOnce::create("trader-account", exchange::cron_expr_daily_9am);
+    static inline auto account_once = RollingOnce::create("trader-account", exchange::cron_expr_daily_9am);
 
     void lazy_init_fund_pool() {
         calculateTheoreticalFund(&trader_account_theoretical_fund, &trader_account_remaining_cash);

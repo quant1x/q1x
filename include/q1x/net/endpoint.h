@@ -2,8 +2,8 @@
 #ifndef API_NET_ENDPOINT_H
 #define API_NET_ENDPOINT_H 1
 
-#include <q1x/net/base.h>
-#include <q1x/runtime/core.h>
+#include "q1x/net/base.h"
+#include "q1x/runtime/core.h"
 
 class EndpointManager {
 public:

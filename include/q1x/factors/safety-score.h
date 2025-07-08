@@ -2,7 +2,7 @@
 #ifndef QUANT1X_FACTOR_F10_SAFETY_SCORE_H
 #define QUANT1X_FACTOR_F10_SAFETY_SCORE_H 1
 
-#include <q1x/std/api.h>
+#include "q1x/std/api.h"
 
 namespace risks {
 

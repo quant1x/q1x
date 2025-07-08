@@ -2,7 +2,7 @@
 #ifndef QUANT1X_BACKTEST_ORDER_H
 #define QUANT1X_BACKTEST_ORDER_H 1
 
-#include <q1x/strategies/strategy.h>
+#include "q1x/strategies/strategy.h"
 
 namespace backtest {
 

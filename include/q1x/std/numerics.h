@@ -1,6 +1,6 @@
 #pragma once
-#ifndef API_NUMERICS_H
-#define API_NUMERICS_H 1
+#ifndef QUANT1X_STD_NUMERICS_H
+#define QUANT1X_STD_NUMERICS_H 1
 
 #include <q1x/std/api.h>
 #include <ostream>
@@ -116,4 +116,4 @@ namespace numerics {
     };
 }
 
-#endif // API_NUMERICS_H
+#endif // QUANT1X_STD_NUMERICS_H

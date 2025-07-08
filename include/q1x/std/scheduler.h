@@ -2,7 +2,7 @@
 #ifndef QUANT1X_STD_SCHEDULER_H
 #define QUANT1X_STD_SCHEDULER_H 1
 
-#include <q1x/runtime/core.h>
+#include "q1x/runtime/core.h"
 #include <croncpp.h>
 
 #include <BS_thread_pool.hpp>

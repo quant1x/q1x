@@ -2,9 +2,9 @@
 #ifndef QUANT1X_REALTIME_SNAPSHOT_H
 #define QUANT1X_REALTIME_SNAPSHOT_H 1
 
-#include <q1x/runtime/core.h>
-#include <q1x/level1/security_quote.h>
-#include <q1x/proto/data.h>
+#include "q1x/runtime/core.h"
+#include "q1x/level1/security_quote.h"
+#include "q1x/proto/data.h"
 
 namespace realtime {
 

@@ -135,8 +135,8 @@ namespace risks {
         }
     };
 
-    std::map<std::string, int> mapSafetyScore;
-    std::mutex mapMutex;  // 用于线程安全访问mapSafetyScore
+    static inline std::map<std::string, int> mapSafetyScore;
+    static std::mutex mapMutex;  // 用于线程安全访问mapSafetyScore
 
     // 获取个股安全分
     std::tuple<int, std::string> GetSafetyScore(const std::string &securityCode) {

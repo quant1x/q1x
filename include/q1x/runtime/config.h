@@ -2,7 +2,7 @@
 #ifndef QUANT1X_CONFIG_H
 #define QUANT1X_CONFIG_H 1
 
-#include <q1x/std/api.h>
+#include "q1x/std/api.h"
 #include <mutex>
 
 // 全部的配置信息

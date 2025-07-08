@@ -13,6 +13,7 @@
 #include <q1x/std/numerics.h>
 #include <q1x/trader/fee.h>
 #include <q1x/datasets/kline.h>
+#include <q1x/std/except.h>
 
 // 前向声明
 struct ResultInfo;
@@ -73,10 +74,11 @@ struct ResultInfo {
 class Filterable {
 public:
     virtual ~Filterable() = default;
-    virtual std::error_code Filter(const config::StrategyParameter& parameter, const Snapshot::Reader& snapshot) const {
-        return make_error_code(0, "no problem");
+    virtual q1x::error Filter(const config::StrategyParameter &parameter, const Snapshot::Reader &snapshot) const {
+        return q1x::make_error_code(0, "no problem");
     }
-    virtual std::error_code Filter(const config::StrategyParameter& parameter, const level1::SecurityQuote& snapshot) const = 0;
+    virtual q1x::error Filter(const config::StrategyParameter &parameter,
+                                 const level1::SecurityQuote     &snapshot) const = 0;
 };
 
 /**

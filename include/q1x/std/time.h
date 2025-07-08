@@ -1,6 +1,6 @@
 #pragma once
-#ifndef API_TIME_H
-#define API_TIME_H 1
+#ifndef QUANT1X_STD_TIME_H
+#define QUANT1X_STD_TIME_H 1
 
 #include <q1x/std/base.h>
 
@@ -46,4 +46,4 @@ namespace api {
 }
 
 
-#endif //API_TIME_H
+#endif //QUANT1X_STD_TIME_H

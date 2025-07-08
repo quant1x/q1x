@@ -23,7 +23,7 @@ namespace exchange {
     // 常量定义
     const std::string marginTradingFilename = "margin-trading.csv";
     const std::string urlEastMoneyApiRZRQ = "https://datacenter-web.eastmoney.com/api/data/v1/get";
-    const int rzrqPageSize = 500;
+    constexpr const int rzrqPageSize = 500;
 
     // 融资融券数据结构
     struct SecurityMarginTrading {
@@ -272,10 +272,10 @@ namespace exchange {
     }
 
     // 全局变量
-    static auto _margin_trading_once = RollingOnce::create("exchange-margin-trading", cron_expr_daily_9am);
-    static std::vector<std::string> _margin_trading_cache_list;
-    static std::map<std::string, bool> _margin_trading_cache_map;
-    static std::mutex _margin_trading_cache_mutex;
+    static inline auto _margin_trading_once = RollingOnce::create("exchange-margin-trading", cron_expr_daily_9am);
+    static inline std::vector<std::string> _margin_trading_cache_list;
+    static inline std::unordered_map<std::string, bool> _margin_trading_cache_map;
+    static inline std::mutex _margin_trading_cache_mutex;
 
     // 懒加载融资融券数据
     void lazyLoadMarginTrading() {

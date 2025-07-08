@@ -13,8 +13,8 @@ namespace trader {
 
     namespace {
         // 全局变量
-        static std::vector<HoldingPosition> holdingOrders;
-        static auto holdingOnce = RollingOnce::create("trader-holding",  exchange::cron_expr_daily_9am);
+        static inline std::vector<HoldingPosition> holdingOrders;
+        static inline auto holdingOnce = RollingOnce::create("trader-holding", exchange::cron_expr_daily_9am);
 
         template<typename T, typename Pred>
         std::vector<T> Filter(const std::vector<T> &input, Pred predicate) {

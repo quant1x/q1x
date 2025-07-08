@@ -8,20 +8,69 @@
 
 namespace trader {
 
-    // 计算价格笼子
-    double calculate_price_cage(Direction direction, double price) {
-        double priceLimit = 0.000;
-        double priceCage, minimumPriceFluctuation;
-        auto const &traderParameter = config::TraderConfig();
+    /**
+     * @brief 计算价格笼子
+     * @param price_cage_ratio 价格笼子比例
+     * @param minimum_price_fluctuation_unit 价格最小变动单位
+     * @param direction 交易方向
+     * @param price 当前价格
+     * @return 通过价格笼子计算方法, 返回修正后的委托价格
+     */
+    double calculate_price_cage(double price_cage_ratio, double minimum_price_fluctuation_unit, Direction direction, double price) {
+        double price_limit = 0.000;
+        double price_cage = 0.000;
+        double minimum_price_fluctuation = 0;
         if (direction == Direction::BUY) {
-            priceCage = price * (1 + traderParameter->PriceCageRatio);
-            minimumPriceFluctuation = price + traderParameter->MinimumPriceFluctuationUnit;
-            priceLimit = std::max(priceCage, minimumPriceFluctuation);
+            price_cage               = price * (1 + price_cage_ratio);
+            minimum_price_fluctuation = price + minimum_price_fluctuation_unit;
+            price_limit              = std::max(price_cage, minimum_price_fluctuation);
         } else {
-            priceCage = price * (1 - traderParameter->PriceCageRatio);
-            minimumPriceFluctuation = price - traderParameter->MinimumPriceFluctuationUnit;
-            priceLimit = std::min(priceCage, minimumPriceFluctuation);
+            price_cage               = price * (1 - price_cage_ratio);
+            minimum_price_fluctuation = price - minimum_price_fluctuation_unit;
+            price_limit              = std::min(price_cage, minimum_price_fluctuation);
         }
+        return price_limit;
+    }
+
+    /**
+     * @brief 计算价格笼子, 默认从trader配置中获取参数
+     * @param direction 交易方向
+     * @param price 当前价格
+     * @return 通过价格笼子计算方法, 返回修正后的委托价格
+     */
+    double calculate_price_cage(Direction direction, double price) {
+        auto const &traderParameter = config::TraderConfig();
+        double price_cage_ratio = traderParameter->PriceCageRatio;
+        double minimum_price_fluctuation_unit = traderParameter->MinimumPriceFluctuationUnit;
+        return calculate_price_cage(price_cage_ratio, minimum_price_fluctuation_unit, direction, price);
+    }
+
+    /**
+     * @brief 计算价格笼子, 默认从strategy配置中获取参数
+     * @param strategy_id 策略ID
+     * @param direction 交易方向
+     * @param price 当前价格
+     * @return 通过价格笼子计算方法, 返回修正后的委托价格
+     */
+    double calculate_price_cage(uint64_t strategy_id, Direction direction, double price) {
+        double priceLimit = 0.000;
+        double price_cage_ratio = trader::InvalidFee;
+        double minimum_price_fluctuation_unit = trader::InvalidFee;
+        auto const &traderParameter = config::TraderConfig();
+        auto const& opt = traderParameter->GetStrategyParameterByCode(strategy_id);
+        if(opt.has_value()) {
+            // 策略存在
+            auto &strategyParameter = *opt;
+            price_cage_ratio = strategyParameter.PriceCageRatio;
+            minimum_price_fluctuation_unit = strategyParameter.MinimumPriceFluctuationUnit;
+        }
+        if(numerics::isEqual(price_cage_ratio, trader::InvalidFee) && numerics::isEqual(minimum_price_fluctuation_unit, trader::InvalidFee)) {
+            // 策略不存在, 或者没有配置价格笼子参数, 从交易参数上参数
+            price_cage_ratio = traderParameter->PriceCageRatio;
+            minimum_price_fluctuation_unit = traderParameter->MinimumPriceFluctuationUnit;
+        }
+
+        return calculate_price_cage(price_cage_ratio, minimum_price_fluctuation_unit, direction, price);
         return priceLimit;
     }
 
@@ -47,6 +96,13 @@ namespace trader {
         return priceLimit;
     }
 
+    // 按照配置滑点, 计算合适的卖出价格
+    double calculate_price_limit_for_sell(double last_price, double fixed_slippage_for_sell) {
+        double      price_cage_ratio               = 0.00;
+        double      minimum_price_fluctuation_unit = fixed_slippage_for_sell;
+        return calculate_price_cage(price_cage_ratio, minimum_price_fluctuation_unit, trader::Direction::SELL, last_price);
+    }
+
     // 计算买入总费用
     struct TransactionFeeResult {
         double TotalFee = 0;
@@ -61,7 +117,7 @@ namespace trader {
             return {InvalidFee, 0, 0, 0, 0};
         }
 
-        double vol = static_cast<double>(volume);
+        auto vol = static_cast<double>(volume);
         double amount = vol * price;
         auto const &traderParameter = config::TraderConfig();
         // 1. 印花税

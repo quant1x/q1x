@@ -14,7 +14,7 @@
 #include <string>
 
 namespace config {
-    
+
 //    ConfigMemoryGuard g_config_guard{};
 //
 //    void init_memory_guard() {
@@ -50,7 +50,7 @@ namespace config {
 
     namespace fs = std::filesystem;
 
-    
+
     // 默认的数据路径
     constexpr const char* const defaultQuant1xDataPath = "~/.q2x";
 
@@ -108,8 +108,8 @@ namespace config {
                   << global_config().filename << "]\n";
     }
 
-    std::once_flag global_config_once;
-    std::shared_ptr<TraderParameter> global_trader_parameter;  // 交易配置
+    static inline std::once_flag     global_config_once;
+    static inline std::shared_ptr<TraderParameter> global_trader_parameter;  // 交易配置
 
     config::TraderParameter load_config_from_yaml(const std::string& filename) {
         spdlog::info("config file: {}", filename);

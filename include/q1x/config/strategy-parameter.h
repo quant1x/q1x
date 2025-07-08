@@ -2,16 +2,17 @@
 #ifndef QUANT1X_CONFIG_DETAIL_STRATEGY_PARAMETER_H
 #define QUANT1X_CONFIG_DETAIL_STRATEGY_PARAMETER_H 1
 
-#include <q1x/std/strings.h>
-#include <q1x/encoding/yaml.h>
+#include "q1x/std/strings.h"
+#include "q1x/encoding/yaml.h"
+#include "rule-parameter.h"
+#include "trading-session.h"
+#include "price_cage.h"
 #include <string>
 #include <vector>
 #include <algorithm>
 #include <cstdint>
 #include <unordered_set>
 #include <ostream>
-#include "rule-parameter.h"
-#include "trading-session.h"
 
 namespace config {
 
@@ -39,10 +40,13 @@ namespace config {
         double Weight = 0.0;
         // 订单总数, 默认是3
         int Total = 3;
-        // 价格笼子比例, 默认0%
+        // 价格笼子比例, 默认0%, 推荐在配置文件中明确配置, 如何不配置则从交易参数中获取
         double PriceCageRatio = 0.00;
-        // 价格最小变动单位, 默认0.05
-        double MinimumPriceFluctuationUnit = 0.05;
+        // 价格最小变动单位, 默认0.00, 推荐在配置文件中明确配置, 如何不配置则从交易参数中获取
+        double MinimumPriceFluctuationUnit = 0.00;
+
+        // 卖出滑点比例, 默认0.01
+        double FixedSlippageForSell = config::FixedSlippageForSell;
 
         // 可投入资金-最大
         double FeeMax = 20000.00;
@@ -158,6 +162,7 @@ namespace YAML {
             // 价格参数
             encoding::safe_yaml::try_parse_field(node, "price_cage_ratio", param.PriceCageRatio);
             encoding::safe_yaml::try_parse_field(node, "minimum_price_fluctuation_unit", param.MinimumPriceFluctuationUnit);
+            encoding::safe_yaml::parse_field(node, "fixed_slippage_for_sell", param.FixedSlippageForSell, config::FixedSlippageForSell);
 
             // 资金参数
             encoding::safe_yaml::try_parse_field(node, "fee_max", param.FeeMax);

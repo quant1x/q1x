@@ -1,4 +1,4 @@
-#include <q1x/std/scheduler.h>
+#include "q1x/std/scheduler.h"
 
  AsyncScheduler::AsyncScheduler(size_t thread_count) : pool_(thread_count), running_(true), next_id_(1) {
     spdlog::info("start scheduler...");
@@ -62,15 +62,14 @@ void AsyncScheduler::scheduler_loop() {
         const auto& top_task = task_queue_.top();
         if (Clock::now() >= top_task.next_run) {
             spdlog::info("执行任务: id={}, name={}", top_task.id, top_task.name);
-            auto task = top_task;
             task_queue_.pop();
             lock.unlock();
 
-            if (!canceled_tasks_.count(task.id)) {
+            if (!canceled_tasks_.count(top_task.id)) {
                 // 在线程池任务中添加运行状态检查
-                pool_.detach_task([this, task] {
+                pool_.detach_task([this, top_task] {
                     if (running_) {
-                        task.task();
+                        top_task.task();
                     }
                 });
             }

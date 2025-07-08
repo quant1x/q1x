@@ -370,17 +370,19 @@ if (DEFINED ENV{MSF_RUNTIME})
 else ()
     message(FATAL_ERROR "NOT found ENV MSF_RUNTIME")
 endif ()
-
-include_directories(${RUNTIME}/include)
-link_directories(${RUNTIME}/lib)
 MESSAGE(STATUS "RUNTIME = ${RUNTIME}")
-set(RUNTIME_INCLUDE_DIRS ${RUNTIME}/include)
-set(RUNTIME_LIBRARY_DIRS ${RUNTIME}/lib)
+
+#include_directories(${RUNTIME}/include)
+#link_directories(${RUNTIME}/lib)
+#set(RUNTIME_INCLUDE_DIRS ${RUNTIME}/include)
+#set(RUNTIME_LIBRARY_DIRS ${RUNTIME}/lib)
 
 # 项目内聚合的第三方库
-set(inner_third_party_dir "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
+set(inner_third_party_dir "${CMAKE_SOURCE_DIR}/third_party")
 set(INNER_THIRD_PARTY_INCLUDE_DIRS ${inner_third_party_dir}/include)
 set(INNER_THIRD_PARTY_LIBRARY_DIRS ${inner_third_party_dir}/lib)
+#target_link_directories(third_libs INTERFACE ${INNER_THIRD_PARTY_LIBRARY_DIRS})
+link_directories(${CMAKE_PREFIX_PATH}/lib ${INNER_THIRD_PARTY_LIBRARY_DIRS})
 
 message(STATUS "================== Crash Report Integration ==================")
 #add_library(CrashReport INTERFACE)
@@ -590,19 +592,17 @@ echo_lib_version(xtl ${xtl_VERSION})
 # nlohmann-json 依赖 inja:x64-mingw-static@3.4.0
 set(inja_VERSION 3.4.0)
 set(nlohmann_json_VERSION "3.1.1")
-add_library(xtensor::optimize INTERFACE IMPORTED)
-if (MSVC)
-    # Microsoft compiler
-    target_compile_options(xtensor::optimize INTERFACE /EHsc /MP /bigobj)
-else ()
-    # gcc, clang, ...
+add_library(xtensor_optimize INTERFACE)
+if(MSVC)
+    target_compile_options(xtensor_optimize INTERFACE /EHsc /MP /bigobj)
+else()
     include(CheckCXXCompilerFlag)
     CHECK_CXX_COMPILER_FLAG(-march=native arch_native_supported)
-    if (arch_native_supported)
-        target_compile_options(xtensor::optimize INTERFACE -march=native)
-    endif ()
-endif ()
-target_link_libraries(third_libs INTERFACE xtensor::optimize)
+    if(arch_native_supported)
+        target_compile_options(xtensor_optimize INTERFACE -march=native)
+    endif()
+endif()
+target_link_libraries(third_libs INTERFACE xtensor_optimize)
 
 ## ==============================
 ## DataFrame
@@ -649,18 +649,20 @@ else ()
         message(WARNING "Protobuf headers not found.")
     endif ()
 endif ()
+
 if (MSVC)
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         # Debug模式下链接
-        set(PROTOBUF_LIB_NAME "libprotobufd.lib")
+        set(PROTOBUF_LIB_NAME "libprotobufd")
     else ()
         # Release模式下链接
-        set(PROTOBUF_LIB_NAME "libprotobuf.lib")
+        set(PROTOBUF_LIB_NAME "libprotobuf")
     endif ()
-    target_link_libraries(third_libs INTERFACE ${PROTOBUF_LIB_NAME})
 else ()
-    target_link_libraries(third_libs INTERFACE protobuf)
+    set(PROTOBUF_LIB_NAME "protobuf")
 endif ()
+
+target_link_libraries(third_libs INTERFACE ${PROTOBUF_LIB_NAME})
 echo_lib_version(protobuf ${Protobuf_VERSION})
 
 # ==============================
@@ -1228,7 +1230,7 @@ install(
 )
 
 # 安装配置（可选）
-install(TARGETS q1x third_libs EXPORT q1x
+install(TARGETS q1x third_libs xtensor_optimize EXPORT q1x
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin

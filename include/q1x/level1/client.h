@@ -2,15 +2,14 @@
 #ifndef QUANT1X_LEVEL1_CLIENT_H
 #define QUANT1X_LEVEL1_CLIENT_H 1
 
-#include <q1x/net/connection_pool.h>
+#include "q1x/net/connection_pool.h"
+#include "q1x/std/util.h"
+#include "q1x/std/api.h"
+#include "q1x/encoding/iconv.h"
+#include "q1x/std/buffer.h"
 
-#include <q1x/std/util.h>
-#include <q1x/std/api.h>
-#include <q1x/encoding/iconv.h>
-#include <q1x/std/buffer.h>
-
-#include <q1x/exchange/code.h>
-#include <q1x/exchange/session.h>
+#include "q1x/exchange/code.h"
+#include "q1x/exchange/session.h"
 #include "protocol.h"
 #include "encoding.h"
 #include "hello1.h"

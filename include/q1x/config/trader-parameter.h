@@ -2,13 +2,14 @@
 #ifndef QUANT1X_CONFIG_DETAIL_TRADER_PARAMETER_H
 #define QUANT1X_CONFIG_DETAIL_TRADER_PARAMETER_H 1
 
-#include <q1x/encoding/yaml.h>
+#include "q1x/encoding/yaml.h"
 #include <string>
 #include <vector>
 #include <algorithm>
 #include <ostream>
 #include "trading-session.h"
 #include "strategy-parameter.h"
+#include "price_cage.h"
 
 namespace config {
 
@@ -34,11 +35,14 @@ namespace config {
         // 是否包含ETF
         bool HaveETF = false;
 
-        // 价格笼子比例, 默认2%, 小于0就是无限制
-        double PriceCageRatio = 0.02;
+        // 价格笼子比例, 默认0%
+        double PriceCageRatio = config::ValidDeclarationPriceRange;
 
-        // 价格最小变动单位, 默认0.10
-        double MinimumPriceFluctuationUnit = 0.10;
+        // 价格最小变动单位, 默认0.00
+        double MinimumPriceFluctuationUnit = config::MinimumPriceFluctuationUnit;
+
+        // 卖出滑点比例, 默认0.01
+        double FixedSlippageForSell = config::FixedSlippageForSell;
 
         // 2024年2月18日建设银行1年期存款利率1.65%
         double AnnualInterestRate = 1.65;
@@ -184,6 +188,7 @@ namespace YAML {
             // 价格相关
             encoding::safe_yaml::try_parse_field(node, "price_cage_ratio", param.PriceCageRatio);
             encoding::safe_yaml::try_parse_field(node, "minimum_price_fluctuation_unit", param.MinimumPriceFluctuationUnit);
+            encoding::safe_yaml::parse_field(node, "fixed_slippage_for_sell", param.FixedSlippageForSell, config::FixedSlippageForSell);
 
             // 费率相关
             encoding::safe_yaml::try_parse_field(node, "annual_interest_rate", param.AnnualInterestRate);

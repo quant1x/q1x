@@ -349,9 +349,9 @@ void F10Feature::init(const exchange::timestamp &timestamp) {
 namespace factors {
 
     namespace {
-        std::mutex g_factor_f10_mutex{};
-        tsl::robin_map<std::string, F10> g_factor_f10_map{};
-        exchange::timestamp g_factor_f10_date{};
+        static inline std::mutex g_factor_f10_mutex{};
+        static inline tsl::robin_map<std::string, F10> g_factor_f10_map{};
+        static inline exchange::timestamp              g_factor_f10_date{};
     }
 
     /// 获取指定日期的F10数据
@@ -369,7 +369,7 @@ namespace factors {
                 }
                 std::vector<F10> list = encoding::csv::csv_to_slices<F10>(cache_filename);
                 for(auto const &v : list) {
-                    g_factor_f10_map.emplace(v.Code, v);
+                    g_factor_f10_map.insert_or_assign(v.Code, v);
                 }
             }
         }

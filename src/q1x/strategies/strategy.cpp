@@ -1,9 +1,9 @@
-#include <q1x/strategies/strategy.h>
-#include <q1x/factors/base.h>
-#include <q1x/formula.h>
-#include <q1x/dataframe/dataframe.h>
-#include <q1x/trader/fee.h>
-#include <q1x/factors/history.h>
+#include "q1x/strategies/strategy.h"
+#include "q1x/factors/base.h"
+#include "q1x/formula.h"
+#include "q1x/dataframe/dataframe.h"
+#include "q1x/trader/fee.h"
+#include "q1x/factors/history.h"
 
 std::string StrategyInfo::QmtStrategyName() const {
     std::string result = "S";

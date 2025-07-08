@@ -3,8 +3,8 @@
 #define QUANT1X_LEVEL1_HELLO2_H 1
 
 #include "protocol.h"
-#include <q1x/std/util.h>
-#include <q1x/encoding/iconv.h>
+#include "q1x/std/util.h"
+#include "q1x/encoding/iconv.h"
 
 // ==============================
 // 第二次协议握手

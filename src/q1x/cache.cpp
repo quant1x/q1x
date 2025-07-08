@@ -69,16 +69,16 @@ namespace cache {
         io::CSVReader<6,io::trim_chars<' ', '\t'>,io::double_quote_escape<',','"'>> csvReader(cache_filename);
         csvReader.read_header(io::ignore_extra_column, "time", "price", "vol", "num", "amount", "buyorsell");
         std::string Time;      // 时间 hh:mm
-        f64 Price;     // 价格
-        f64 Vol;          // 成交量, 股数
-        i64 Num;          // 历史成交数据中无该字段，但仍保留
-        f64 Amount;    // 金额
-        int BuyOrSell;    // 交易方向
+        f64 Price = 0;     // 价格
+        f64 Vol = 0;          // 成交量, 股数
+        i64 Num = 0;          // 历史成交数据中无该字段，但仍保留
+        f64 Amount = 0;    // 金额
+        int BuyOrSell = TradeDirection::TICK_NEUTRAL;    // 交易方向
         tsl::robin_map<int32_t, PriceLine> chipDistributionMap;
         int32_t front = 0;
         bool is_first = true;
         while (csvReader.read_row(Time, Price, Vol, Num, Amount, BuyOrSell)) {
-            int32_t price = int32_t(Price * 100);
+            auto price = int32_t(Price * 100);
             PriceLine pl{};
             pl.price = price;
             if (is_first) {

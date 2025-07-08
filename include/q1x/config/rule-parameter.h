@@ -2,9 +2,9 @@
 #ifndef QUANT1X_CONFIG_DETAIL_RULE_PARAMETER_H
 #define QUANT1X_CONFIG_DETAIL_RULE_PARAMETER_H 1
 
-#include <q1x/encoding/yaml.h>
-#include <q1x/std/strings.h>
-#include <q1x/std/numerics.h>
+#include "q1x/encoding/yaml.h"
+#include "q1x/std/strings.h"
+#include "q1x/std/numerics.h"
 
 namespace config {
 

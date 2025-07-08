@@ -2,8 +2,8 @@
 #ifndef QUANT1X_ENCODING_CSV_H
 #define QUANT1X_ENCODING_CSV_H 1
 
-#include <q1x/std/api.h>
-#include <q1x/std/util.h>
+#include "q1x/std/api.h"
+#include "q1x/std/util.h"
 #include <csv2/reader.hpp>
 #include <csv2/writer.hpp>
 #include <boost/pfr.hpp>

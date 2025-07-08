@@ -1,6 +1,6 @@
 #pragma once
-#ifndef API_FORMAT_H
-#define API_FORMAT_H 1
+#ifndef QUANT1X_STD_FORMAT_H
+#define QUANT1X_STD_FORMAT_H 1
 
 #include <vector>
 #include <string>
@@ -57,4 +57,4 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& vec) {
     return os;
 }
 
-#endif // API_FORMAT_H
+#endif // QUANT1X_STD_FORMAT_H

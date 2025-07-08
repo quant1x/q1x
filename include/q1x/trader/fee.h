@@ -3,27 +3,20 @@
 #define QUANT1X_TRADER_FEE_H 1
 
 #include <q1x/std/api.h>
+#include <q1x/std/numerics.h>
 
 // ==============================
 // 交易费用
 // ==============================
 
 namespace trader {
-    constexpr const double  InvalidFee     = 0.0;  // 无效的费用
+    constexpr const double  InvalidFloat64  = numerics::NaN;
+    constexpr const double  InvalidFee     = 0.00;  // 无效的费用
     constexpr const int64_t InvalidVolume  = 0;    // 无效的股数
     constexpr const int64_t UnknownVolume  = 1;    // 未知的股数
     constexpr const int64_t InvalidOrderId = -1;   // 无效的订单ID
     constexpr const int64_t MinimumNumberOfOrders = 2;  // 最小订单数为2, 预防一个策略资金都打到一个标的上面
-    constexpr const double backtestAccountTheoreticalFund = 10000.00;  // 测试可用10000.00元
-
-    // 价格笼子
-    //
-    //	价格笼子是买卖股票申报价格限制的一种制度
-    //	对于主板, 本次新增2%有效申报价格范围要求, 同时增加10个申报价格最小变动单位的安排
-    //	A股最小交易变动单位是0.01元，10个也就是0.1元
-    //	买入价取两者高值，卖出价取两者低值.
-    constexpr const double validDeclarationPriceRange  = 0.02;  // 价格限制比例
-    constexpr const double minimumPriceFluctuationUnit = 0.10;  // 价格浮动最大值
+    constexpr const double BacktestAccountTheoreticalFund = 10000.00;  // 测试可用10000.00元
 
     // 交易方向
     enum class Direction {
@@ -53,6 +46,40 @@ namespace trader {
 
         std::string toString() const;
     };
+
+    /**
+     * @brief 计算价格笼子
+     * @param price_cage_ratio 价格笼子比例
+     * @param minimum_price_fluctuation_unit 价格最小变动单位
+     * @param direction 交易方向
+     * @param price 当前价格
+     * @return 通过价格笼子计算方法, 返回修正后的委托价格
+     */
+    double calculate_price_cage(double price_cage_ratio, double minimum_price_fluctuation_unit, Direction direction, double price);
+
+    /**
+     * @brief 计算价格笼子, 默认从trader配置中获取参数
+     * @param direction 交易方向
+     * @param price 当前价格
+     * @return 通过价格笼子计算方法, 返回修正后的委托价格
+     */
+    double calculate_price_cage(Direction direction, double price);
+
+    /**
+     * @brief 计算价格笼子, 默认从strategy配置中获取参数
+     * @param strategy_id 策略ID
+     * @param direction 交易方向
+     * @param price 当前价格
+     * @return 通过价格笼子计算方法, 返回修正后的委托价格
+     */
+    double calculate_price_cage(uint64_t strategy_id, Direction direction, double price);
+
+    // 计算合适的买入价格
+    double calculate_price_limit_for_buy(double last_price, double price_cage_ratio, double minimum_price_fluctuation_unit);
+    // 计算合适的卖出价格
+    double calculate_price_limit_for_sell(double last_price, double price_cage_ratio, double minimum_price_fluctuation_unit);
+    // 计算合适的卖出价格
+    double calculate_price_limit_for_sell(double last_price, double fixed_slippage_for_sell);
 
     // 评估买入总费用
     TradeFee EvaluateFeeForBuy(const std::string &securityCode, double fund, double price);

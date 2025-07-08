@@ -1,4 +1,4 @@
-#include <q1x/strategies/rule-engine.h>
+#include "q1x/strategies/rule-engine.h"
 #include <spdlog/spdlog.h>
 
 namespace engine {
@@ -47,7 +47,7 @@ namespace engine {
                 break;
             }
 
-            auto rule = it->second;
+            auto &rule = it->second;
             error = rule->Execute(ctx);
             if (error != RuleError::OK) {
                 spdlog::error("规则失败: " + rule->GetName() + ", 错误: " + to_string(error));

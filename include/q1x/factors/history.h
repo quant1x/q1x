@@ -2,9 +2,9 @@
 #ifndef QUANT1X_FACTOR_HISTORY_H
 #define QUANT1X_FACTOR_HISTORY_H 1
 
-#include <q1x/std/api.h>
-#include <q1x/engine/action.h>
-#include <q1x/factors/base.h>
+#include "q1x/std/api.h"
+#include "q1x/engine/action.h"
+#include "q1x/factors/base.h"
 
 struct History {
     std::string Date;                 // 日期, 数据落地的日期

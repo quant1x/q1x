@@ -99,6 +99,9 @@ elseif (LINUX)
 endif ()
 add_app_executable(test-crash.cpp)
 
+# 错误码测试
+add_catch2_executable(tdd-error.cpp)
+
 # 测试宿主目录
 add_catch2_executable(tdd-homedir.cpp)
 # 字符集测试

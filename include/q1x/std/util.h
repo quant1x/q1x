@@ -1,6 +1,6 @@
 #pragma once
-#ifndef API_UTIL_H
-#define API_UTIL_H 1
+#ifndef QUANT1X_STD_UTIL_H
+#define QUANT1X_STD_UTIL_H 1
 
 #include <q1x/std/base.h>
 #include <thread>
@@ -58,4 +58,4 @@ namespace util {
     uint64_t get_thread_id(const std::thread::id &tid);
 }
 
-#endif //API_UTIL_H
+#endif //QUANT1X_STD_UTIL_H

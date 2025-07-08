@@ -35,7 +35,7 @@ namespace level1 {
             tmp.push_arithmetic(market);
             tmp.push_arithmetic(start);
             auto buf = RequestHeader<SecurityListRequest>::headerSerialize();
-            auto& data = tmp.data();
+            auto data = tmp.data();
             buf.insert(buf.end(), data.begin(), data.end());
             return buf;
         }

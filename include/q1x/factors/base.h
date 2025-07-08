@@ -2,8 +2,8 @@
 #ifndef QUANT1X_FACTOR_BASE_H
 #define QUANT1X_FACTOR_BASE_H 1
 
-#include <q1x/datasets/kline.h>
-#include <q1x/datasets/kline_raw.h>
+#include "q1x/datasets/kline.h"
+#include "q1x/datasets/kline_raw.h"
 
 namespace factors {
 

@@ -1,6 +1,6 @@
 #pragma once
-#ifndef API_OBJECT_H
-#define API_OBJECT_H 1
+#ifndef QUANT1X_STD_OBJECT_H
+#define QUANT1X_STD_OBJECT_H 1
 
 #include <iostream>
 #include <filesystem>
@@ -207,4 +207,4 @@ private:
 };
 
 
-#endif //API_OBJECT_H
+#endif //QUANT1X_STD_OBJECT_H

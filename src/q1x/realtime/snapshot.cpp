@@ -76,7 +76,7 @@ namespace realtime {
     static constexpr const size_t capnp_cache_size = 64 * 1024 * 1024; // 64MB
     namespace fs = std::filesystem;
 
-    static void ensure_file_size(const std::string &path, size_t required_size) {
+    void ensure_file_size(const std::string &path, size_t required_size) {
         // 检查文件是否存在
         if (fs::exists(path)) {
             // 获取当前大小
@@ -116,8 +116,8 @@ namespace realtime {
     }
 
     namespace {
-        static inline tsl::robin_map<std::string, level1::SecurityQuote> mem_snapshots;
-        static inline std::shared_mutex mem_mutex;
+        inline tsl::robin_map<std::string, level1::SecurityQuote> mem_snapshots;
+        inline std::shared_mutex                                  mem_mutex;
     }
 
     void sync_snapshots() {
@@ -181,7 +181,7 @@ namespace realtime {
                 for (int j = 0; j < response.count; ++j) {
                     const auto &raw = response.list[j];
                     std::string security_code = exchange::GetSecurityCode(static_cast<exchange::MarketType>(raw.market), raw.code);
-                    mem_snapshots.emplace(security_code, raw);
+                    mem_snapshots.insert_or_assign(security_code, raw);
                     auto snap = snapshots[uint32_t(start) + j];
                     snap.setDate(current_day);
                     snap.setSecurityCode(security_code);
@@ -294,9 +294,9 @@ namespace realtime {
 
     namespace {
         static inline tsl::robin_map<std::string, Snapshot::Reader> cache_snapshots;
-        static inline std::shared_ptr<mio::mmap_sink> cache_snapshot_mmap;
+        static inline std::shared_ptr<mio::mmap_sink>               cache_snapshot_mmap;
         static inline std::unique_ptr<capnp::FlatArrayMessageReader> cache_reader;
-        static inline std::mutex cache_mutex;
+        static inline std::mutex                                     cache_mutex;
     }
 
     void load_snapshots() {
@@ -328,7 +328,7 @@ namespace realtime {
                 cache_snapshot_mmap = new_mmap; // 保持 mmap 存活
                 cache_reader = std::move(new_reader); // 转移 reader 所有权
                 for (auto v : quoteList.getSnapshots()) {
-                    cache_snapshots.emplace(v.getSecurityCode(), v);
+                    cache_snapshots.insert_or_assign(v.getSecurityCode(), v);
                 }
             }
             spdlog::info("[realtime-snapshot] Reloaded snapshot successfully");

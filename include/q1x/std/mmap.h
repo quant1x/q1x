@@ -1,6 +1,6 @@
 #pragma once
-#ifndef API_MMAP_H
-#define API_MMAP_H 1
+#ifndef QUANT1X_STD_MMAP_H
+#define QUANT1X_STD_MMAP_H 1
 
 #include <filesystem>
 #include <stdlib.h>
@@ -280,4 +280,4 @@ void mmap_reopen(mmap_t * mm) {
 }
 
 
-#endif //API_MMAP_H
+#endif //QUANT1X_STD_MMAP_H

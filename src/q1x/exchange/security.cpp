@@ -16,9 +16,9 @@ namespace exchange {
         return os;
     }
 
-    static auto global_security_once = RollingOnce::create("exchange-security", cron_expr_daily_9am);
-    static tsl::robin_map<std::string, SecurityInfo> global_security_map = {};
-    static std::string cache_security_filename = config::get_security_filename();
+    static inline auto global_security_once = RollingOnce::create("exchange-security", cron_expr_daily_9am);
+    static inline tsl::robin_map<std::string, SecurityInfo> global_security_map = {};
+    static inline std::string cache_security_filename = config::get_security_filename();
 
     void init_securities() {
         spdlog::debug("{}, begin", __FUNCTION__);
@@ -96,9 +96,10 @@ namespace exchange {
             uint16_t lotSize = 0;
             uint8_t pricePrecision = 0;
             std::string name;
+            global_security_map.clear();
             while (in.read_row(code, lotSize, pricePrecision, name)) {
                 auto v = SecurityInfo{code, name, lotSize, pricePrecision};
-                global_security_map.insert({code, v});
+                global_security_map.insert_or_assign(code, v);
             }
         }
         spdlog::debug("{}, end", __FUNCTION__);

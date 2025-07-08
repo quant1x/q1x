@@ -3,6 +3,17 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.0] - 2025-07-08
+### Changed
+- 调整默认安装路径
+- 新增clangd配置文件
+- 删除忽略静态库的git配置
+- 添加protobuf v3.12.11
+- 添加数据协议
+- 添加资源文件
+- 新增依赖库列表
+- 调整包含头文件的书写方式
+
 ## [0.0.6] - 2025-07-07
 ### Changed
 - 兼容msvc
@@ -12,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - 新增崩溃测试应用
 - 新增安全的strerror
 - 补充缺少的头文件
+- update changelog
 
 ## [0.0.5] - 2025-06-29
 ### Changed
@@ -59,7 +71,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.0.6...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.0...HEAD
+[0.1.0]: https://gitee.com/quant1x/q1x.git/compare/v0.0.6...v0.1.0
 [0.0.6]: https://gitee.com/quant1x/q1x.git/compare/v0.0.5...v0.0.6
 [0.0.5]: https://gitee.com/quant1x/q1x.git/compare/v0.0.4...v0.0.5
 [0.0.4]: https://gitee.com/quant1x/q1x.git/compare/v0.0.3...v0.0.4

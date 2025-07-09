@@ -40,7 +40,8 @@ void HistoryFeature::Update(const std::string &code, const exchange::timestamp &
     (void)code;
     (void)date;
     std::string feature_date = date.only_date();
-    history.Date = exchange::next_trading_day(date).only_date();
+    exchange::timestamp ts_cache = exchange::next_trading_day(date);
+    history.Date = ts_cache.only_date();
     history.Code = code;
     auto klines = factors::klines_forward_adjusted_to_date(code, feature_date);
     if(klines.size() < factors::KLineMin) {
@@ -140,7 +141,7 @@ void HistoryFeature::Update(const std::string &code, const exchange::timestamp &
 
     // 成交统计概要数据
     auto list = datasets::CheckoutTransactionData(code, date, true);
-    auto summary = datasets::CountInflow(list, code, date);
+    auto summary = datasets::CountInflow(list, code, ts_cache);
     history.OpenVolume = summary.OpenVolume;
 
     // 1号策略补充

@@ -14,7 +14,7 @@ namespace datasets {
 
     // CheckoutTransactionData 获取指定日期的分笔成交记录
     std::vector<level1::TickTransaction> CheckoutTransactionData(const std::string &securityCode,
-                                                                 const exchange::timestamp &cacheDate,
+                                                                 const exchange::timestamp &featureDate,
                                                                  bool ignorePreviousData);
 
     /**
@@ -42,7 +42,7 @@ namespace datasets {
     // 统计指定日期的内外盘
     TurnoverDataSummary CountInflow(const std::vector<level1::TickTransaction>& list,
                                     const std::string& securityCode,
-                                    const exchange::timestamp& timestamp);
+                                    const exchange::timestamp& featureDate);
 
 } // namespace datasets
 

@@ -46,12 +46,12 @@ namespace datasets {
 
     // 获取指定日期的分笔成交记录
     std::vector<level1::TickTransaction> CheckoutTransactionData(const std::string &securityCode,
-                                                                 const exchange::timestamp &cacheDate,
+                                                                 const exchange::timestamp &featureDate,
                                                                  bool ignorePreviousData) {
         std::vector<level1::TickTransaction> list;
         std::string correctedCode = exchange::CorrectSecurityCode(securityCode);
         // 对齐日期格式: YYYYMMDD
-        u32 tradeDate = cacheDate.yyyymmdd();
+        u32 tradeDate = featureDate.yyyymmdd();
 
         if (ignorePreviousData) {
             // 在默认日期之前的数据直接返回空
@@ -63,7 +63,7 @@ namespace datasets {
         }
 
         std::string startTime = HistoricalTransactionDataFirstTime;
-        std::string filename = config::get_historical_trade_filename(correctedCode, cacheDate.only_date());
+        std::string filename = config::get_historical_trade_filename(correctedCode, featureDate.only_date());
 
         if (std::filesystem::exists(filename)) {
             // 如果缓存存在
@@ -100,7 +100,7 @@ namespace datasets {
                 spdlog::error("[dataset::trans] code={}, trade-date={}, 没有有效数据", correctedCode, tradeDate);
             }
         }
-        auto today_is_last_trading_date = cacheDate.is_same_date(exchange::last_trading_day());
+        auto today_is_last_trading_date = featureDate.is_same_date(exchange::last_trading_day());
 
         uint16_t offset = level1::tick_transaction_max;
         uint32_t u32Date = tradeDate;
@@ -201,7 +201,7 @@ namespace datasets {
     // 统计指定日期的内外盘
     TurnoverDataSummary CountInflow(const std::vector<level1::TickTransaction>& list,
                                     const std::string& securityCode,
-                                    const exchange::timestamp& timestamp) {
+                                    const exchange::timestamp& featureDate) {
         TurnoverDataSummary summary;
 
         if (list.empty()) {
@@ -268,7 +268,7 @@ namespace datasets {
             lastPrice = price;
         }
 
-        auto f10 = factors::get_f10(correctedCode, timestamp);
+        auto f10 = factors::get_f10(correctedCode, featureDate);
         if (f10.has_value()) {
             summary.OpenTurnZ = f10->TurnZ(f64(summary.OpenVolume));
             summary.CloseTurnZ = f10->TurnZ(f64(summary.CloseVolume));

@@ -107,5 +107,8 @@ add_catch2_executable(tdd-homedir.cpp)
 # 字符集测试
 add_catch2_executable(tdd-iconv.cpp)
 
+# cron测试
+add_catch2_executable(tdd-cron.cpp)
+
 # formula测试
 add_catch2_executable(tdd-formula.cpp)

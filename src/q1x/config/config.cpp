@@ -104,7 +104,7 @@ namespace config {
         auto err                = util::mkdirs(global_config().logsDir, true);
         err.clear();
 
-        std::cerr << "lazy_init [DEBUG] (DLL) &global_config_filename = " << &global_config().filename << ",["
+        std::cerr << "lazy_init config_filename = " << &global_config().filename << ",["
                   << global_config().filename << "]\n";
     }
 
@@ -133,7 +133,7 @@ namespace config {
     void lazy_load_trader_config() {
         // 先检查内存
         //check_memory_guard();
-        std::cerr << "lazy_load_trader_config [DEBUG] (DLL) &global_config_filename = " << &global_config().filename
+        std::cerr << "lazy_load_trader_config config_filename = " << &global_config().filename
                   << ",[" << global_config().filename << "]\n";
         auto tmp_config_filename = config::config_filename();
         auto config              = load_config_from_yaml(tmp_config_filename);

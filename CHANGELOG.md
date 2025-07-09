@@ -3,6 +3,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.1] - 2025-07-09
+### Changed
+- 非windows环境, 从本地runtime链接lib
+- 调整非MSVC编译环境参数
+- 强制检测是否Debug
+- 输出编译器选项参数
+- 尝试查询编译选项
+- 调整查看链接库的参数
+- 新增查看所有链接库的方法
+- 非msvc的debug增加-g参数
+- 调整部分代码
+- 调整部分函数
+- 优化价格笼子字段
+
 ## [0.1.0] - 2025-07-08
 ### Changed
 - 调整默认安装路径
@@ -13,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - 添加资源文件
 - 新增依赖库列表
 - 调整包含头文件的书写方式
+- update changelog
 
 ## [0.0.6] - 2025-07-07
 ### Changed
@@ -71,7 +86,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.0...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.1...HEAD
+[0.1.1]: https://gitee.com/quant1x/q1x.git/compare/v0.1.0...v0.1.1
 [0.1.0]: https://gitee.com/quant1x/q1x.git/compare/v0.0.6...v0.1.0
 [0.0.6]: https://gitee.com/quant1x/q1x.git/compare/v0.0.5...v0.0.6
 [0.0.5]: https://gitee.com/quant1x/q1x.git/compare/v0.0.4...v0.0.5

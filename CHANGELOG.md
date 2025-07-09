@@ -3,10 +3,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.7] - 2025-07-09
+### Changed
+- 删除冗余的日志
+
 ## [0.1.6] - 2025-07-09
 ### Changed
 - 修复由于过渡优化出现的top task对象无效的bug
 - history调用f10必须日期对齐，使用cache日期, 即下一个交易日
+- update changelog
 
 ## [0.1.5] - 2025-07-09
 ### Changed
@@ -114,7 +119,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.6...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.7...HEAD
+[0.1.7]: https://gitee.com/quant1x/q1x.git/compare/v0.1.6...v0.1.7
 [0.1.6]: https://gitee.com/quant1x/q1x.git/compare/v0.1.5...v0.1.6
 [0.1.5]: https://gitee.com/quant1x/q1x.git/compare/v0.1.4...v0.1.5
 [0.1.4]: https://gitee.com/quant1x/q1x.git/compare/v0.1.3...v0.1.4

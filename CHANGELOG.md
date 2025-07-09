@@ -3,9 +3,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.5] - 2025-07-09
+### Changed
+- datafrmae组件统一头文件预编译宏前缀为QUANT1X
+
 ## [0.1.4] - 2025-07-09
 ### Changed
 - 暂时保留加载配置文件时输出的配置文件路径
+- update changelog
 
 ## [0.1.3] - 2025-07-09
 ### Changed
@@ -103,7 +108,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.4...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.5...HEAD
+[0.1.5]: https://gitee.com/quant1x/q1x.git/compare/v0.1.4...v0.1.5
 [0.1.4]: https://gitee.com/quant1x/q1x.git/compare/v0.1.3...v0.1.4
 [0.1.3]: https://gitee.com/quant1x/q1x.git/compare/v0.1.2...v0.1.3
 [0.1.2]: https://gitee.com/quant1x/q1x.git/compare/v0.1.1...v0.1.2

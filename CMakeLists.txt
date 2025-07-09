@@ -937,9 +937,9 @@ target_include_directories(q1x
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/third_party/include>
     $<INSTALL_INTERFACE:include>
 )
-target_compile_options(q1x PUBLIC ${quant1x_global_compile_options})
+
 target_link_libraries(q1x PUBLIC
-    third_libs
+    third_libs global_compile_options
 )
 
 if (MINGW)
@@ -959,16 +959,103 @@ endif ()
 get_target_property(_libs q1x INTERFACE_LINK_LIBRARIES)
 message(STATUS "Library 'q1x' requires: ${_libs}")
 
-# 检查编译器选项
-get_target_property(_includes q1x INCLUDE_DIRECTORIES)
-get_target_property(_libs q1x LINK_LIBRARIES)
-get_target_property(_defines q1x COMPILE_DEFINITIONS)
-get_target_property(_options q1x COMPILE_OPTIONS)
+STRING(TOUPPER "${CMAKE_BUILD_TYPE}" buildtype)
+message(STATUS "")
+message(STATUS "")
+message(STATUS "quant1x configuration summary:")
+message(STATUS "")
+message(STATUS "                              Build type : ${CMAKE_BUILD_TYPE}")
+message(STATUS "                        Operating System : ${CMAKE_HOST_SYSTEM_NAME}")
+message(STATUS "                            Build System : ${CMAKE_SYSTEM}")
+message(STATUS "                  Processor Architecture : ${CMAKE_SYSTEM_PROCESSOR}")
+# C 编译选项
+message(STATUS "------------------------------ C Standard Configuration ------------------------------")
+message(STATUS "                              C_STANDARD : ${CMAKE_C_STANDARD}")
+message(STATUS "                     C_STANDARD_REQUIRED : ${CMAKE_C_STANDARD_REQUIRED}")
+message(STATUS "                            C_EXTENSIONS : ${CMAKE_C_EXTENSIONS}")
+message(STATUS "                         C flags(CFLAGS) : ${CMAKE_C_FLAGS}")
+message(STATUS "                           C flags debug : ${CMAKE_C_FLAGS_DEBUG}")
+message(STATUS "                         C flags release : ${CMAKE_C_FLAGS_RELEASE}")
+# C++ 编译选项
+message(STATUS "------------------------------ C++ Standard Configuration ------------------------------")
+message(STATUS "                            CXX_STANDARD : ${CMAKE_CXX_STANDARD}")
+message(STATUS "                   CXX_STANDARD_REQUIRED : ${CMAKE_CXX_STANDARD_REQUIRED}")
+message(STATUS "                          CXX_EXTENSIONS : ${CMAKE_CXX_EXTENSIONS}")
+message(STATUS "                       C++ flags(CFLAGS) : ${CMAKE_CXX_FLAGS}")
+message(STATUS "                         C++ flags debug : ${CMAKE_CXX_FLAGS_DEBUG}")
+message(STATUS "                       C++ flags release : ${CMAKE_CXX_FLAGS_RELEASE}")
+message(STATUS "------------------------------ C++ linker ------------------------------")
+message(STATUS "                  CMAKE_EXE_LINKER_FLAGS : ${CMAKE_EXE_LINKER_FLAGS}")
+# 输出当前编译器信息
+message(STATUS "------------------------------ C compiler ------------------------------")
+message(STATUS "                           C compiler ID : ${CMAKE_C_COMPILER_ID}")
+message(STATUS "                      C compiler version : ${CMAKE_C_COMPILER_VERSION}")
+message(STATUS "                         C compiler path : ${CMAKE_C_COMPILER}")
+message(STATUS "------------------------------ C++ compiler ------------------------------")
+message(STATUS "                         C++ compiler ID : ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "                    C++ compiler version : ${CMAKE_CXX_COMPILER_VERSION}")
+message(STATUS "                       C++ compiler path : ${CMAKE_CXX_COMPILER}")
+message(STATUS "------------------------------ CUDA compiler ------------------------------")
+message(STATUS "                  CMAKE_CUDA_FLAGS_DEBUG : ${CMAKE_CUDA_FLAGS_DEBUG}")
+message(STATUS "                CMAKE_CUDA_FLAGS_RELEASE : ${CMAKE_CUDA_FLAGS_RELEASE}")
+message(STATUS "")
+message(STATUS "")
 
-message(STATUS "Includes: ${_includes}")
-message(STATUS "Libs: ${_libs}")
-message(STATUS "Defines: ${_defines}")
-message(STATUS "Options: ${_options}")
+message(STATUS "   Build type .......................... : ${CMAKE_BUILD_TYPE}")
+message(STATUS "   Install .pdb (if available).......... : ${INSTALL_PDB}")
+message(STATUS "   Install prefix ...................... : ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "     Directory for binary files ........ : PREFIX/${QUANT1X_INSTALL_BIN_DIR}")
+message(STATUS "     Directory for library files ....... : PREFIX/${QUANT1X_INSTALL_LIB_DIR}")
+message(STATUS "     Directory for include files ....... : PREFIX/${QUANT1X_INSTALL_INCLUDE_DIR}")
+message(STATUS "   C compiler .......................... : ${CMAKE_C_COMPILER}")
+message(STATUS "   CXX compiler ........................ : ${CMAKE_CXX_COMPILER}")
+message(STATUS "")
+message(STATUS "                                 OpenSSL : v${OPENSSL_VERSION}")
+message(STATUS "                                    asio : v${ASIO_VERSION_FULL}")
+message(STATUS "                         Iconv(libiconv) : v${Iconv_VERSION}")
+message(STATUS "                                     fmt : v${fmt_VERSION}")
+message(STATUS "                                    zlib : v${ZLIB_VERSION}")
+message(STATUS "                                    inja : v${inja_VERSION}")
+message(STATUS "                           nlohmann_json : v${nlohmann_json_VERSION}")
+message(STATUS "                                     xtl : v${xtl_VERSION}")
+message(STATUS "                                   xsimd : v${xsimd_VERSION}")
+message(STATUS "                                 xtensor : v${xtensor_VERSION}")
+message(STATUS "  BS::thread_pool(bshoshany-thread-pool) : v${BSHOSHANY_THREAD_POOL_VERSION}")
+message(STATUS "                                 croncpp : v${croncpp_VERSION}")
+message(STATUS "            tsl::robin_map(robin-map)(√) : v${tsl-robin-map_VERSION}")
+message(STATUS "                                argparse : v${argparse_VERSION}")
+#message(STATUS "                               RapidJSON : v${RapidJSON_VERSION}")
+message(STATUS "                                yaml-cpp : v${yaml-cpp_VERSION}")
+message(STATUS "                                Protobuf : v${Protobuf_VERSION}")
+message(STATUS "                             Cap'n Proto : v${CapnProto_VERSION}")
+message(STATUS "                                Cista(√) : v${CISTA_VERSION}")
+message(STATUS "                                mimalloc : v${mimalloc_VERSION}")
+message(STATUS "                                  spdlog : v${spdlog_VERSION}")
+message(STATUS "     C++ Requests Library (Cpr for curl) : v${cpr_VERSION}")
+message(STATUS "                   unofficial-duktape(√) : v${unofficial-duktape_VERSION}")
+message(STATUS "                               benchmark : v${benchmark_VERSION}")
+message(STATUS "                                  Catch2 : v${Catch2_VERSION}")
+message(STATUS "                                   GTest : v${GTest_VERSION}")
+
+message(STATUS "q1x found: ${q1x_FOUND}")
+message(STATUS "q1x version: ${q1x_VERSION}")
+message(STATUS "q1x include dirs: ${q1x_INCLUDE_DIRS}")
+message(STATUS "q1x library dirs: ${q1x_LIBRARY_DIRS}")
+get_target_property(q1x_opts q1x COMPILE_OPTIONS)
+get_target_property(q1x_defs q1x COMPILE_DEFINITIONS)
+message(STATUS "继承的编译选项: ${q1x_opts}")
+message(STATUS "继承的宏定义: ${q1x_defs}")
+
+# 检查编译器选项
+get_target_property(_includes global_compile_options INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(_libs global_compile_options INTERFACE_LINK_LIBRARIES)
+get_target_property(_defines global_compile_options INTERFACE_COMPILE_DEFINITIONS)
+get_target_property(_options global_compile_options INTERFACE_COMPILE_OPTIONS)
+
+message(STATUS "quant1x Includes: ${_includes}")
+message(STATUS "quant1x     Libs: ${_libs}")
+message(STATUS "quant1x  Defines: ${_defines}")
+message(STATUS "quant1x  Options: ${_options}")
 
 function(get_all_linked_targets target result_var)
     set(result "")
@@ -1017,7 +1104,7 @@ install(
 )
 
 # 安装配置（可选）
-install(TARGETS q1x third_libs xtensor_optimize quant1x_global_compile_options EXPORT q1x
+install(TARGETS q1x third_libs xtensor_optimize global_compile_options EXPORT q1x
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin

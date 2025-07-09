@@ -1,6 +1,6 @@
 #pragma once
-#ifndef API_DATAFRAME_PERIODS_H
-#define API_DATAFRAME_PERIODS_H 1
+#ifndef QUANT1X_DATAFRAME_PERIODS_H
+#define QUANT1X_DATAFRAME_PERIODS_H 1
 
 #include <vector>
 #include <string>
@@ -47,4 +47,4 @@ namespace ta {
     };
 }
 
-#endif //API_DATAFRAME_PERIODS_H
+#endif //QUANT1X_DATAFRAME_PERIODS_H

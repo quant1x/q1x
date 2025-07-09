@@ -53,7 +53,7 @@ void AsyncScheduler::scheduler_loop() {
             spdlog::info("任务队列不为空，继续调度...");
             continue;
         }
-        spdlog::warn("task total:{}", task_queue_.size());
+
         // 检查队列顶部任务是否可以执行
         const auto &top_task = task_queue_.top();
         if (Clock::now() >= top_task.next_run) {

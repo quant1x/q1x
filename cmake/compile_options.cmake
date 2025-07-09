@@ -167,13 +167,13 @@ endif()
 if(MSVC_VERSION GREATER_EQUAL 1920)  # VS2019+
     # 合法选项替代方案
     target_compile_options(global_compile_options INTERFACE
-        "/volatile:iso"  # 严格内存顺序
-        "/Zc:threadSafeInit-"      # 禁用线程安全初始化（测试编译器bug）
-        #"/d2:-IncrementalLink"     # 增强链接时检查
+        /volatile:iso         # 严格内存顺序
+        /Zc:threadSafeInit-   # 禁用线程安全初始化（测试编译器bug）
+        #/d2:-IncrementalLink  # 增强链接时检查
     )
     # 确保静态变量在独立段
     #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SECTION:.staticvars,RWS")
-    target_link_options(global_compile_options INTERFACE "/SECTION:.staticvars,RWS")
+    target_link_options(global_compile_options INTERFACE /SECTION:.staticvars,RWS)
 else()
     # 通用保护方案
     target_compile_options(global_compile_options INTERFACE -DSTATIC_VAR_PROTECTION)
@@ -183,34 +183,48 @@ endif()
 if (MSVC)
     # 确保 Debug 模式使用正确的调试信息格式
     target_compile_options(global_compile_options INTERFACE
-        "$<$<CONFIG:Debug>:/Zi /DEBUG>"
+        $<$<CONFIG:Debug>:/Zi /DEBUG>
     )
     # 确保 Release 模式不包含调试符号（可选）
     target_compile_options(global_compile_options INTERFACE
-        "$<$<CONFIG:Release>:/O2>"
+        $<$<CONFIG:Release>:/O2>
     )
-    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG")
+    #set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG")
+    target_link_options(global_compile_options INTERFACE
+        $<$<CONFIG:Debug>:/DEBUG>
+    )
     #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 else ()
-    target_compile_options(global_compile_options INTERFACE "$<$<CONFIG:Debug>:-g>")
-    target_compile_options(global_compile_options INTERFACE "$<$<CONFIG:Release>:-O2>")
-    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g")
+    target_compile_options(global_compile_options INTERFACE $<$<CONFIG:Debug>:-g>)
+    target_compile_options(global_compile_options INTERFACE $<$<CONFIG:Release>:-O2>)
+    #set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g")
+    target_link_options(global_compile_options INTERFACE
+        $<$<CONFIG:Debug>:-g>
+    )
 endif ()
 
 if (MINGW OR GNU)
-    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++" CACHE STRING "Use libstdc++")
-    #target_compile_options(global_compile_options INTERFACE "-stdlib=libstdc++")
-    #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libstdc++" CACHE STRING "")
-    #target_link_options(global_compile_options INTERFACE "-stdlib=libstdc++")
-    #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libstdc++" CACHE STRING "")
-    #target_link_options(global_compile_options INTERFACE "/SECTION:.staticvars,RWS")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++" CACHE STRING "Use libstdc++")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libstdc++" CACHE STRING "")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libstdc++" CACHE STRING "")
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "Use libstdc++")
-    target_compile_options(global_compile_options INTERFACE "-stdlib=libc++")
-    #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++" CACHE STRING "")
-    #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++" CACHE STRING "")
-    target_link_options(global_compile_options INTERFACE "-stdlib=libc++")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "Use libstdc++")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++" CACHE STRING "")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++" CACHE STRING "")
 endif ()
+
+#if (MINGW OR GNU)
+#    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++" CACHE STRING "Use libstdc++")
+#    target_compile_options(global_compile_options INTERFACE -stdlib=libstdc++)
+#    #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libstdc++" CACHE STRING "")
+#    target_link_options(global_compile_options INTERFACE -stdlib=libstdc++)
+#elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+#    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "Use libstdc++")
+#    target_compile_options(global_compile_options INTERFACE -stdlib=libc++)
+#    #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++" CACHE STRING "")
+#    #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++" CACHE STRING "")
+#    target_link_options(global_compile_options INTERFACE -stdlib=libc++)
+#endif ()
 
 # 7. 平台特定配置
 if(MSVC)

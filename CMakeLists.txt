@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.30)
-
+set(CMAKE_VERBOSE_MAKEFILE ON)
 # 加载基础 CMake 配置
 include(cmake/base.cmake)
 
@@ -14,205 +14,20 @@ project(quant1x-q1x
         VERSION ${VERSION_FROM_GIT}
         LANGUAGES C CXX)
 
-# -----------------------------------------------------------------------------
-# Convenience: set default build type and compiler depending on the build directory
-# -----------------------------------------------------------------------------
-if(NOT DEFINED CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
-    message(STATUS "Build type is not set or empty, defaulting to Debug")
-    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
-        "Choose the build type: Debug, Release, RelWithDebInfo, MinSizeRel"
-        FORCE)
-endif()
-
-message(STATUS "Build Type: \"${CMAKE_BUILD_TYPE}\"")
-set(CMAKE_INSTALL_CONFIG_NAME ${CMAKE_BUILD_TYPE})
-message(STATUS "Install configuration: \"${CMAKE_INSTALL_CONFIG_NAME}\"")
-
-# 设置默认的构建类型
-if (CMAKE_GENERATOR MATCHES "^Visual Studio.*$")
-  message(STATUS "Note: when building with Visual Studio the build type is specified when building.")
-  message(STATUS "For example: 'cmake --build . --config=Release")
-endif()
-
-# 2. 全局配置, 预设c/c++执行标准17
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_CXX_STANDARD 17)
-#set(CMAKE_TOOLCHAIN_FILE "toolchain.cmake")  # 如果需要交叉编译
-
-set(CMAKE_C_COMPILER_WORKS TRUE)
-set(CMAKE_CXX_COMPILER_WORKS TRUE)
-
-# 3. 系统环境
-message("CMAKE_HOST_SYSTEM_NAME: ${CMAKE_HOST_SYSTEM_NAME}")
-message("     CMAKE_HOST_SYSTEM: ${CMAKE_HOST_SYSTEM}")
-message("     CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
-message("          CMAKE_SYSTEM: ${CMAKE_SYSTEM}")
-message("       CMAKE_HOST_UNIX: ${CMAKE_HOST_UNIX}")
-message("      CMAKE_HOST_WIN32: ${CMAKE_HOST_WIN32}")
-message("      CMAKE_HOST_WIN64: ${CMAKE_HOST_WIN64}")
-
-# 4. CPU类型
-#include(CMakeDetermineSystem OPTIONAL)
-message("                System: ${CMAKE_SYSTEM}")
-message("             Processor: ${CMAKE_SYSTEM_PROCESSOR}")
-
-# 5. 编译参数-字符集
 if (MSVC)
-    add_compile_options(/utf-8)
-    add_definitions(-D_UNICODE -DUNICODE)
-else ()
-    set(quant1x_charsets "-finput-charset=UTF-8 -fexec-charset=UTF-8")
-    add_compile_options(-finput-charset=UTF-8 -fexec-charset=UTF-8)
-    if (NOT CMAKE_C_FLAGS)
-        set(CMAKE_C_FLAGS ${quant1x_charsets})
-    else ()
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${quant1x_charsets}")
-    endif ()
-    if (NOT CMAKE_CXX_FLAGS)
-        set(CMAKE_CXX_FLAGS ${quant1x_charsets})
-    else ()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${quant1x_charsets}")
-    endif ()
-endif ()
-
+    # 强制 cl.exe 显示命令行（/Bv = 显示调用的完整命令）
+    #add_compile_options(/Bv)
+endif()
 # 6. 编译器选项
-# 6.1 检测编译器类型
-include(CheckCCompilerFlag)
-include(CheckCXXCompilerFlag)
-
-message(STATUS "CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
-if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    # 检查是否是 MinGW
-    execute_process(
-        COMMAND ${CMAKE_CXX_COMPILER} -dumpmachine
-        OUTPUT_VARIABLE MACHINE_DUMP
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-
-    if (MACHINE_DUMP MATCHES "mingw" OR
-        MACHINE_DUMP MATCHES "windows" OR
-        CMAKE_CXX_COMPILER MATCHES "mingw")
-        set(IS_MINGW TRUE)
-        message(STATUS "Detected MinGW GCC (${MACHINE_DUMP})")
-    else ()
-        set(IS_MINGW FALSE)
-        message(STATUS "Detected regular GCC (${MACHINE_DUMP})")
-    endif ()
-endif ()
-
-# 6.2 特定所有权相关警告
-# Windows 路径处理
-if (IS_MINGW)
-    # 转换 Windows 路径到 MinGW 兼容格式
-    file(TO_CMAKE_PATH "$ENV{PATH}" MINGW_PATH)
-    string(REPLACE "\\" "/" MINGW_PATH "${MINGW_PATH}")
-endif ()
-
-if (MSVC)
-    # 对于MSVC编译器
-    add_compile_options(/W3 /WX)  # /W4显示所有警告，/WX将警告视为错误
-else ()
-    # 对于GCC/Clang等编译器
-    add_compile_options(-Wall -Wextra)
-    add_compile_options(-Wuninitialized)
-    add_compile_options(-pedantic -Werror)
-    # 对于GCC/Clang等编译器
-    add_compile_options(-Wunused -Wno-shadow)
-
-    # GNU 特有选项
-    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-        add_compile_options(-Wmaybe-uninitialized)
-        add_compile_options(-Wreturn-local-addr)
-        add_compile_options(-ftrivial-auto-var-init=zero)
-        if (IS_MINGW)
-            # MinGW 特有设置
-            add_definitions(-DMINGW_COMPILER)
-        else ()
-            # 其他系统 GCC 设置
-        endif ()
-    endif ()
-    # Clang 特有选项
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        add_compile_options(-Wmove)
-    endif ()
-endif ()
+include(cmake/compile_options.cmake)
 
 # 查看全局 C 选项
 message(STATUS "  CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 # 查看全局 C++ 选项
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
-include(CMakeDependentOption)
-include(CMakeDetermineSystem)
-# 4. CPU类型
-include(CMakeDetermineSystem)
-message("                System: ${CMAKE_SYSTEM}")
-message("             Processor: ${CMAKE_SYSTEM_PROCESSOR}")
-
-# 全局启用异常
-if (MSVC)
-    # 对于 MSVC 编译器
-    add_compile_options(/EHsc)  # /EHsc 启用 C++ 异常处理
-else ()
-    # 对于 GCC/Clang 等编译器
-    add_compile_options(-fexceptions)  # 启用 C++ 异常处理
-endif()
-
-# 或方法 3: 使用内置变量（推荐）
-set(CMAKE_CXX_EXCEPTIONS ON)
-set(CMAKE_VERBOSE_MAKEFILE ON)
 ## 在CMake中启用内存检测
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-# 打印检测到的 C 和 C++ 编译器
-message(STATUS "  C compiler: ${CMAKE_C_COMPILER}")
-message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
-
-# 打印编译器版本
-execute_process(
-    COMMAND "${CMAKE_CXX_COMPILER}" --version
-    OUTPUT_VARIABLE COMPILER_VERSION
-)
-message(STATUS "Compiler version:\n${COMPILER_VERSION}")
-
-# ============================================================
-# C/C++ Languages Standard
-# ============================================================
-include(CheckCCompilerFlag)
-# 检测 C11 支持
-check_c_compiler_flag("-std=c11" SUPPORTS_C11)
-if (SUPPORTS_C11)
-    message(STATUS "Compiler supports C11")
-else ()
-    message(WARNING "Compiler does not support C11")
-endif ()
-# 检测 C17 支持
-check_c_compiler_flag("-std=c17" SUPPORTS_C17)
-if (SUPPORTS_C17)
-    message(STATUS "Compiler supports C17")
-else ()
-    message(WARNING "Compiler does not support C17")
-endif ()
-
-include(CheckCXXCompilerFlag)
-# 检测 C++17 支持
-check_cxx_compiler_flag("-std=c++17" SUPPORTS_CXX17)
-if (SUPPORTS_CXX17)
-    message(STATUS "Compiler supports C++17")
-else ()
-    message(WARNING "Compiler does not support C++17, falling back to C++14")
-endif ()
-
-# 检测 C++20 支持
-check_cxx_compiler_flag("-std=c++20" SUPPORTS_CXX20)
-check_cxx_compiler_flag("/-std:c++20" HAS_CPP20_SUPPORT)
-if (SUPPORTS_CXX20)
-    message(STATUS "Compiler supports C++20")
-    add_compile_options(-std=c++20)
-elseif (HAS_CPP20_SUPPORT)
-    add_compile_options(/-std:c++20)
-else ()
-    message(WARNING "Compiler does not support C++20")
-endif ()
 
 # 设置标准属性
 set(CMAKE_C_STANDARD 17)
@@ -225,82 +40,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # 禁用 GNU 扩展（关键！）
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# 检查编译器版本
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9)
-    message(FATAL_ERROR "GCC >= 9 required for C++20 support.")
-endif ()
-
-# ============================================================
-# Global Compiler Options
-# ============================================================
-if(MSVC)
-    # Release flags
-    set(windows_flags "/O2 /Gy /GF /GS")
-    string(APPEND CMAKE_C_FLAGS_RELEASE " ${windows_flags}")
-    string(APPEND CMAKE_CXX_FLAGS_RELEASE " ${windows_flags}")
-
-    # Debug flags
-    unset(windows_flags)
-    set(windows_flags "/Od /GS")
-    string(APPEND CMAKE_C_FLAGS_RELEASE " ${windows_flags}")
-    string(APPEND CMAKE_CXX_FLAGS_RELEASE " ${windows_flags}")
-else ()
-    set(unix_flags "-O2 -m64 -march=native -mtune=native -fstack-protector-strong")
-    string(APPEND CMAKE_C_FLAGS " ${unix_flags}")
-    string(APPEND CMAKE_CXX_FLAGS " ${unix_flags}")
-    # 启用 function/data sections
-    unset(unix_flags)
-    set(unix_flags "-ffunction-sections -fdata-sections")
-    string(APPEND CMAKE_C_FLAGS " ${unix_flags}")
-    string(APPEND CMAKE_CXX_FLAGS " ${unix_flags}")
-endif()
-
-# 仅对新版MSVC添加高级保护（需版本检测）
-if(MSVC_VERSION GREATER_EQUAL 1920)  # VS2019+
-    # 合法选项替代方案
-    add_compile_options(
-        "/volatile:iso"  # 严格内存顺序
-        "/Zc:threadSafeInit-"      # 禁用线程安全初始化（测试编译器bug）
-        #"/d2:-IncrementalLink"     # 增强链接时检查
-    )
-    # 确保静态变量在独立段
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SECTION:.staticvars,RWS")
-else()
-    # 通用保护方案
-    add_definitions(-DSTATIC_VAR_PROTECTION)
-endif()
-
-# 关于debug和release模式的编译选项
-if (MSVC)
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /Zi /DEBUG")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi /DEBUG")
-    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG")
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-else ()
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
-    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g")
-endif ()
-
-# 对于MinGW/GCC
-if (MINGW OR GNU)
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O2")
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O2")
-    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g")
-    # 确保生成.map文件用于符号解析
-    #set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -Wl,-Map=output.map")
-endif ()
-
-if (MINGW OR GNU)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++" CACHE STRING "Use libstdc++")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libstdc++" CACHE STRING "")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libstdc++" CACHE STRING "")
-elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "Use libstdc++")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++" CACHE STRING "")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++" CACHE STRING "")
-endif ()
-
 # ============================================================
 # vcpkg Options/Dependencies
 # ============================================================
@@ -308,7 +47,7 @@ add_library(third_libs INTERFACE)
 # 可选：显式链接静态版 pthread
 find_package(Threads REQUIRED)
 target_link_libraries(third_libs INTERFACE Threads::Threads -lpthread)
-if (WIN32)
+if (MINGW OR GNU)
     target_link_libraries(third_libs INTERFACE -static)
     # 静态链接所有库（包括 libwinpthread-1.dll）
     set(CMAKE_EXE_LINKER_FLAGS "-static -lpthread")
@@ -1198,6 +937,7 @@ target_include_directories(q1x
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/third_party/include>
     $<INSTALL_INTERFACE:include>
 )
+target_compile_options(q1x PUBLIC ${quant1x_global_compile_options})
 target_link_libraries(q1x PUBLIC
     third_libs
 )
@@ -1277,7 +1017,7 @@ install(
 )
 
 # 安装配置（可选）
-install(TARGETS q1x third_libs xtensor_optimize EXPORT q1x
+install(TARGETS q1x third_libs xtensor_optimize quant1x_global_compile_options EXPORT q1x
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         RUNTIME DESTINATION bin

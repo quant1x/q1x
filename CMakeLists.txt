@@ -1086,6 +1086,12 @@ set(CMAKE_IMPORT_LIBRARY_PREFIX "")
 # 为静态库和动态库分别设置目标名称，避免冲突
 set_target_properties(q1x PROPERTIES OUTPUT_NAME "q1x" PREFIX "")
 
+# Generate build-info.h from build-info.h.in
+configure_file(
+    "${CMAKE_SOURCE_DIR}/include/q1x/build-info.h.in"
+    "${CMAKE_BINARY_DIR}/include/private/build-info.h"
+)
+
 # 设置安装路径变量
 include(GNUInstallDirs)
 MESSAGE(STATUS "RUNTIME = ${RUNTIME}")
@@ -1113,7 +1119,8 @@ install(TARGETS q1x third_libs xtensor_optimize global_compile_options EXPORT q1
 
 # 安装主库头文件
 install(
-    DIRECTORY include/ DESTINATION include
+    DIRECTORY include/ ${CMAKE_BINARY_DIR}/include/private/
+    DESTINATION include/q1x
 )
 
 # 安装 CMake 配置文件

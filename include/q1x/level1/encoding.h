@@ -15,7 +15,7 @@
 #endif
 
 #include <cista/serialization.h>
-#include "q1x/std/api.h"
+#include <q1x/std/api.h>
 #include <zlib.h>
 
 #include <stdint.h>
@@ -28,6 +28,11 @@ namespace level1 {
     /// 编解码
     namespace encoding {
 
+        // 获取日期和时间
+        // @param category 数据类别
+        // @param zipday 压缩的日期
+        // @param tminutes 压缩的时间（分钟）
+        // @return 返回一个包含年、月、日、小时和分钟的元组
         inline std::tuple<int, int, int, int, int> GetDatetimeFromUint32(int category, uint32_t zipday, uint16_t tminutes) {
             int year = 0, month = 0, day = 0, hour = 15, minute = 0;
 
@@ -46,6 +51,36 @@ namespace level1 {
             return {year, month, day, hour, minute};
         }
 
+        // 编码变长整数（VLQ编码），采用类似UTF-8的方案存储有符号整数
+        // 编码规则：
+        // - 每个字节的低6位（0x3F）存储数据
+        // - 最高位（0x80）为连续标志：1=还有后续字节，0=终止
+        // - 首字节的0x40位（第六位）为符号位：1=负数，0=正数
+        // 位掩码说明：
+        // +---------+-----------+-----------------------+
+        // | 掩码值  | 二进制    | 作用                  |
+        // +---------+-----------+-----------------------+
+        // | 0x80    | 10000000  | 连续标志位            |
+        // | 0x7F    | 01111111  | 首字节数据掩码（7位） |
+        // | 0x40    | 01000000  | 符号位                |
+        // | 0x3F    | 00111111  | 后续字节数据掩码（6位）|
+        // +---------+-----------+-----------------------+
+        // 编码流程：
+        // 1. 处理符号位：
+        //    - 如果是负数，设置符号位（0x40）
+        //    - 取绝对值
+        // 2. 处理第一个6位块：
+        //    - 取低6位（&0x3F）作为首字节数据
+        //    - 检查是否有后续字节（绝对值是否大于63）
+        // 3. 处理后续7位块：
+        //    - 循环读取剩余的7位块
+        //    - 每个字节的低7位（&0x7F）存储数据
+        //    - 最高位（0x80）为连续标志：1=还有后续字节，0=终止
+        // 4. 返回编码后的字节数
+        //  @param value 输入的有符号整数
+        //  @param buffer 输出的字节缓冲区
+        //  @param pos 输入/输出参数：输入为起始位置，输出为编码后位置
+        //  @return int 编码后的字节数
         inline int varint_encode(int64_t value, uint8_t *buffer, int *pos) {
             bool sign = value < 0;
             uint64_t abs_value = sign ? -(uint64_t)value : (uint64_t)value;
@@ -68,6 +103,38 @@ namespace level1 {
             return num_bytes;
         }
 
+        /**
+         * @brief 解码变长整数（VLQ编码），采用类似UTF-8的方案存储有符号整数
+         *
+         * 编码规则：
+         * - 每个字节的低7位（0x7F）存储数据
+         * - 最高位（0x80）为连续标志：1=还有后续字节，0=终止
+         * - 首字节的0x40位（第六位）为符号位：1=负数，0=正数
+         *
+         * 位掩码说明：
+         * +---------+-----------+-----------------------+
+         * | 掩码值  | 二进制    | 作用                  |
+         * +---------+-----------+-----------------------+
+         * | 0x80    | 10000000  | 连续标志位            |
+         * | 0x7F    | 01111111  | 首字节数据掩码（7位） |
+         * | 0x40    | 01000000  | 符号位                |
+         * | 0x3F    | 00111111  | 后续字节数据掩码（6位）|
+         * +---------+-----------+-----------------------+
+         *
+         * 解码流程：
+         * 1. 读取首字节：
+         *    - 取低7位（&0x7F）作为初始值
+         *    - 检查0x40位确定符号
+         * 2. 循环读取后续字节（直到最高位为0）：
+         *    - 取低6位（&0x3F）并左移累加
+         * 3. 应用符号位
+         *
+         * @param b     输入字节数组（编码数据）
+         * @param pos   输入/输出参数：
+         *              - 输入：起始解码位置
+         *              - 输出：解码后位置（pos+已读字节数）
+         * @return int  解码后的有符号整数值
+         */
         inline int64_t varint_decode(const uint8_t *b, int *pos) {
             uint8_t byte = b[(*pos)++];
             bool sign = (byte & 0x40) != 0;
@@ -87,102 +154,9 @@ namespace level1 {
         const int TM_M_WIDTH = 10000;    // 分钟部分基数（中间2位）
         const int TM_T_WIDTH = 1000;     // 毫秒位基数
 
-        inline std::string format_time_v1(int stamp) {
-            char buffer[32] = {};
-            int h = 0, m = 0, s = 0, t = 0;
-
-            // 解析小时部分
-            h = stamp / TM_H_WIDTH;         // 提取前4位作为小时
-            int remainder = stamp % TM_H_WIDTH;
-
-            // 解析分钟部分
-            m = remainder / TM_M_WIDTH;         // 中间2位作为初始分钟
-            remainder %= TM_M_WIDTH;       // 最后2位作为秒基数
-
-            if (m < 60) {
-                // 正常分支：直接使用分钟
-                remainder *= 60;           // 转换为秒基数
-                s = remainder / TM_M_WIDTH;      // 整数秒部分
-//        if (s >= 60) {
-//            m +=1;
-//            remainder += (s%60)*60 * TM_T_WIDTH;
-//            s = remainder / TM_M_WIDTH;
-//        }
-                remainder %= TM_M_WIDTH;      // 毫秒基数
-                t = remainder / TM_T_WIDTH;            // 转换为3位毫秒
-            } else {
-                // 分钟溢出分支：进位处理
-                h += (m / 60);                          // 小时进位
-                remainder += (m % 60) *60 * TM_M_WIDTH; // 重新计算整个剩余部分
-                m = remainder / TM_H_WIDTH;           // 重新计算分钟
-                remainder %= TM_H_WIDTH;        // 剩余秒数
-                s = remainder / TM_M_WIDTH;           // 整数秒部分
-//        if (s >= 60) {
-//            m +=(s/60);
-//            remainder += (s%60)*60 * TM_T_WIDTH;
-//            s = remainder / TM_H_WIDTH;
-//        }
-                t = remainder % TM_H_WIDTH;           // 毫秒基数
-                t /= TM_T_WIDTH;                 // 转换为3位毫秒
-            }
-
-            // 格式化输出（自动补零）
-            //int n = std::snprintf(buffer, sizeof(buffer), "%02d:%02d:%06.3f", h, m, st);
-            int n = std::snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d.%03d", h, m, s, t);
-            return std::string(buffer, 0, n);
-        }
-
-
-//        inline std::string format_time_v2(int stamp) {
-//            char buffer[32] = {};
-//            int h = 0, m = 0, s = 0, t = 0;
-//            int remain_minutes = 0, remain_seconds = 0, remain_millions = 0;
-//            int m0 = 0;
-//            double st = 0.000f;
-//
-//            // 解析小时部分
-//            h = stamp / TM_H_WIDTH;         // 提取前4位作为小时
-//            remain_minutes = stamp % TM_H_WIDTH;      // 剩余部分
-//
-//            // 解析分钟部分
-//            m0 = remain_minutes / TM_M_WIDTH;         // 中间2位作为初始分钟
-//            remain_seconds = remain_minutes % TM_M_WIDTH;       // 最后2位作为秒基数
-//
-//            if (m0 < 60) {
-//                // 正常分支：直接使用分钟
-//                m = m0;
-//                remain_millions = remain_seconds * 60;           // 转换为秒基数
-//                s = remain_millions / TM_M_WIDTH;      // 整数秒部分
-//                t = remain_millions % TM_M_WIDTH;      // 毫秒基数
-//                t /= TM_T_WIDTH;            // 转换为3位毫秒
-//                st = (double)remain_millions / TM_M_WIDTH; // 合并秒与毫秒
-//            } else {
-//                // 分钟溢出分支：进位处理
-//                h += (m0 / 60);                          // 小时进位
-//                //int m2 = m0 % 60; // 剩余的分钟数要叠加到剩余部分
-//                remain_seconds += remain_minutes + (m0 % 60)  * TM_M_WIDTH; // 重新计算整个剩余部分
-//                m = remain_seconds / TM_H_WIDTH;           // 重新计算分钟
-//                remain_millions = remain_seconds % TM_H_WIDTH;        // 剩余秒数
-//                s = remain_millions / TM_M_WIDTH;           // 整数秒部分
-//                if (s < 60) {
-//
-//                } else {
-//                    m +=(s/60);
-//                    remain_millions = remain_millions + (s % 60) * TM_T_WIDTH;
-//                    s = remain_millions / TM_H_WIDTH;
-//                }
-//                t = remain_millions % TM_H_WIDTH;           // 毫秒基数
-//                t /= TM_T_WIDTH;                 // 转换为3位毫秒
-//                st = (double)remain_millions / TM_H_WIDTH;
-//            }
-//
-//            // 格式化输出（自动补零）
-//            //int n = std::snprintf(buffer, sizeof(buffer), "%02d:%02d:%06.3f", h, m, st);
-//            int n = std::snprintf(buffer, sizeof(buffer), "%02d:%02d:%02d.%03d", h, m, s, t);
-//            return std::string(buffer, 0, n);
-//        }
-
         /// 转换快照中的时间戳, HH:mm:ss.SSS
+        /// @param stamp 时间戳
+        /// @return 返回格式化的时间字符串
         inline std::string format_time(int64_t stamp) {
             char buffer[32] = {0};
             int h, tmp1, m1, tmp2, tmp3, m;
@@ -225,6 +199,10 @@ namespace level1 {
             return std::string(buffer, 0, n);
         }
 
+        // 将整数转换为 float64
+        // 该函数将整数转换为 float64，模拟 Go 语言中的位操作逻辑
+        // 该函数假设输入为 32 位无符号整数，并将其分解为 4 个字节部分，计算出对应的 float64 值
+        // 注意：此函数仅适用于整数类型，且不处理负数或非整数输入
         template<typename T>
         inline f64 IntToFloat64(T integer) {
             // 确保输入为整数类型

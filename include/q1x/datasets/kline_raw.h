@@ -15,16 +15,16 @@ namespace datasets {
 
     // 日K线 结构体
     struct KLineRaw {
-        std::string Date;      // 日期
-        double      Open;      // 开盘价
-        double      Close;     // 收盘价
-        double      High;      // 最高价
-        double      Low;       // 最低价
-        double      Volume;    // 成交量(股)
-        double      Amount;    // 成交金额(元)
-        int         Up;        // 上涨家数 / 外盘
-        int         Down;      // 下跌家数 / 内盘
-        std::string Datetime;  // 时间
+        std::string Date;        // 日期
+        double      Open   = 0;  // 开盘价
+        double      Close  = 0;  // 收盘价
+        double      High   = 0;  // 最高价
+        double      Low    = 0;  // 最低价
+        double      Volume = 0;  // 成交量(股)
+        double      Amount = 0;  // 成交金额(元)
+        int         Up     = 0;  // 上涨家数 / 外盘
+        int         Down   = 0;  // 下跌家数 / 内盘
+        std::string Datetime;    // 时间
 
         // 复权
         void adjust(double m, double a, int number);

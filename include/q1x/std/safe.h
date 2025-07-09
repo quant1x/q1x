@@ -24,27 +24,26 @@ namespace q1x {
         }
 
         inline std::string strerror(int errnum) {
-            char buf[256];
+            constexpr size_t buf_size = 256;
+            std::string      buf(buf_size, '\0');
 
 #if defined(_WIN32) || defined(_MSC_VER)
-            // MSVC 安全版本
-    if (strerror_s(buf, sizeof(buf), errnum) != 0) {
-        std::snprintf(buf, sizeof(buf), "Unknown error %d", errnum);
-    }
+            if (strerror_s(&buf[0], buf.size(), errnum) != 0) {
+                std::snprintf(&buf[0], buf.size(), "Unknown error %d", errnum);
+            }
 #elif (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && !_GNU_SOURCE
-            // POSIX 标准版本（返回 int）
-    if (strerror_r(errnum, buf, sizeof(buf)) != 0) {
-        std::snprintf(buf, sizeof(buf), "Unknown error %d", errnum);
-    }
+            if (strerror_r(errnum, &buf[0], buf.size()) != 0) {
+                std::snprintf(&buf[0], buf.size(), "Unknown error %d", errnum);
+            }
 #else
-            // GNU 扩展版本（返回 char*）或其他平台
-            char* msg = strerror_r(errnum, buf, sizeof(buf));
-            if (msg != buf) {
-                std::strncpy(buf, msg, sizeof(buf) - 1);
-                buf[sizeof(buf) - 1] = '\0';
+            char *msg = strerror_r(errnum, &buf[0], buf.size());
+            if (msg != &buf[0]) {
+                std::strncpy(&buf[0], msg, buf.size());
+                buf[buf.size() - 1] = '\0';
             }
 #endif
 
+            buf.resize(std::strlen(buf.c_str()));
             return buf;
         }
     }  // namespace safe

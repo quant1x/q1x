@@ -43,7 +43,7 @@ namespace level1 {
             Method     = StdCommand::BLOCK_META;
 
             memset(BlockFilename, 0x00, sizeof(BlockFilename));
-            strncpy(BlockFilename, filename.c_str(), sizeof(BlockFilename) - 1);
+            std::strncpy(BlockFilename, filename.c_str(), sizeof(BlockFilename) - 1);
         }
 
         std::vector<u8> serializeImpl() {

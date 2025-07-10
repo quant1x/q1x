@@ -22,13 +22,14 @@ namespace exchange {
 
     void init_securities() {
         spdlog::debug("{}, begin", __FUNCTION__);
-        auto cache_security_tp = io::getModificationTime(cache_security_filename);
-        util::check_filepath(cache_security_filename, true);
-        std::string cache_security_time = api::to_string(cache_security_tp);
-        std::string check_time_point = api::today() + " 09:00:00.000";
+        auto cache_security_tp = io::last_modified_time(cache_security_filename);
+        auto ec = util::check_filepath(cache_security_filename, true);
+        ec.clear();
+        std::string cache_security_time = exchange::timestamp(cache_security_tp).toString();
+        std::string check_time_point = exchange::timestamp::now().pre_market_time().toString();
         auto now = exchange::timestamp::now().toString();
         bool bUpdate = false;
-        if (cache_security_tp.time_since_epoch().count() == 0 ||cache_security_time.empty()) {
+        if (cache_security_tp == 0 || cache_security_time.empty()) {
             spdlog::debug("文件[{}]不存在", cache_security_filename);
             bUpdate = true;
         } else if (now >= check_time_point && cache_security_time < check_time_point) {

@@ -89,18 +89,18 @@ namespace config {
             YAML::Node  yaml = YAML::LoadFile(global_config().filename);
             std::string base_dir;
             encoding::safe_yaml::parse_field(yaml, "basedir", base_dir, global_config().homeDir);
-            global_config().cacheDir = std::move(util::expand_homedir(base_dir));
+            global_config().cacheDir = util::expand_homedir(base_dir);
             // 读取配置文件顶层的debug设置, 如果解析异常, 当作false处理
             bool in_debug = false;
             encoding::safe_yaml::parse_field(yaml, "debug", in_debug, false);
-            global_config().running_in_debug = std::move(in_debug);  // 设置全局调试标志
+            global_config().running_in_debug = in_debug;  // 设置全局调试标志
         } catch (const std::exception &e) {
             // 解析yaml失败
             std::cerr << e.what() << std::endl;
             global_config().cacheDir = std::string(global_config().homeDir);
         }
 
-        global_config().logsDir = std::move(global_config().cacheDir + "/logs");
+        global_config().logsDir = global_config().cacheDir + "/logs";
         auto err                = util::mkdirs(global_config().logsDir, true);
         err.clear();
 

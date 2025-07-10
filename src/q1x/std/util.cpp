@@ -134,44 +134,6 @@ namespace util {
         return mkdirs(dir_path.string(), notExistToCreate);
     }
 
-//    #include <chrono>
-//    #include <ctime>
-//    #include <iomanip>
-//    #include <sstream>
-//    #include <stdexcept>
-//
-//    // time_point 转 std::tm (UTC时间)
-//    std::tm time_point_to_tm_utc(const std::chrono::system_clock::time_point& tp)
-//    {
-//        // 转换为time_t
-//        const std::time_t t = std::chrono::system_clock::to_time_t(tp);
-//
-//        // 转换为UTC时间
-//        std::tm tm_utc{};
-//#if defined(_WIN32)
-//        gmtime_s(&tm_utc, &t);  // Windows线程安全版本
-//#else
-//        gmtime_r(&t, &tm_utc);  // POSIX线程安全版本
-//#endif
-//
-//        return tm_utc;
-//    }
-//
-//    // time_point 转 std::tm (本地时间)
-//    std::tm time_point_to_tm_local(const std::chrono::system_clock::time_point& tp)
-//    {
-//        const std::time_t t = std::chrono::system_clock::to_time_t(tp);
-//
-//        std::tm tm_local{};
-//#if defined(_WIN32)
-//        localtime_s(&tm_local, &t);  // Windows线程安全版本
-//#else
-//        localtime_r(&t, &tm_local);  // POSIX线程安全版本
-//#endif
-//
-//        return tm_local;
-//    }
-
     // std::tm 转 time_point (假设tm为本地时间)
     std::chrono::system_clock::time_point tm_to_time_point(const std::tm& tm)
     {

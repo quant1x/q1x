@@ -5,13 +5,22 @@ include(CheckCXXCompilerFlag)
 include(CMakeDependentOption)
 include(CMakeDetermineSystem)
 
+# 初始化编译变量
+set(q1x_build_type "")
+set(q1x_cflags "")
+set(q1x_cflags_static "")            # extra flags for a static library build
+set(q1x_cflags_dynamic "")           # extra flags for a shared-object library build
+set(q1x_libraries "")
+
 # -----------------------------------------------------------------------------
 # 1. 检测构建类型
 # -----------------------------------------------------------------------------
-if(NOT CMAKE_BUILD_TYPE)
+if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
         "Choose the default build type: Debug, Release, RelWithDebInfo, MinSizeRel")
 endif()
+
+set(q1x_build_type ${CMAKE_BUILD_TYPE})
 
 message(STATUS "Build Type: \"${CMAKE_BUILD_TYPE}\"")
 set(CMAKE_INSTALL_CONFIG_NAME ${CMAKE_BUILD_TYPE})
@@ -79,8 +88,10 @@ set(q1x_compiler_ver ${CMAKE_CXX_COMPILER_VERSION})
 set(q1x_compiler "${q1x_compiler_id}(${q1x_compiler_ver})")
 message(STATUS "Compiler use: ${q1x_compiler}")
 
+# 强制告诉 CMake: C/C++ 编译器已正常工作, 无需执行测试编译
 set(CMAKE_C_COMPILER_WORKS TRUE)
 set(CMAKE_CXX_COMPILER_WORKS TRUE)
+
 # 设置标准属性
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -246,9 +257,13 @@ endif()
 if(MSVC)
     # MSVC特有设置
     target_compile_options(global_compile_options INTERFACE
-        /MP           # 多进程编译
         /bigobj       # 大对象支持
     )
+    if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(global_compile_options INTERFACE
+            /MP           # 多进程编译
+        )
+    endif ()
 elseif (MINGW OR GNU)
     # MinGW设置
     target_compile_options(global_compile_options INTERFACE -static)

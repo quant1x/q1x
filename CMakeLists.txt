@@ -14,10 +14,6 @@ project(quant1x-q1x
         VERSION ${VERSION_FROM_GIT}
         LANGUAGES C CXX)
 
-if (MSVC)
-    # 强制 cl.exe 显示命令行（/Bv = 显示调用的完整命令）
-    #add_compile_options(/Bv)
-endif()
 # 6. 编译器选项
 include(cmake/compile_options.cmake)
 

@@ -3,10 +3,29 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.9] - 2025-07-10
+### Changed
+- cmake project函数前新增执行cmake策略
+- 收录HowardHinnant date v3.0.4
+- 收录spdlog v1.15.3
+- 收录fmt v11.2.0
+- vcpkg 删除spdlog,fmt,date
+- 屏蔽废弃的代码
+- 新增测试交易日的文件修改时间戳
+- 微调注释
+- 删除废弃的代码
+- http请求中过期时间改用毫秒数, 去掉对chrono的依赖
+- 修复clang对此处std::move用法影响性能的问题
+- 新增测试交易日的文件修改时间戳
+- 调整对文件时间戳的获取方法
+- 优化clang在cmake的编译选项
+- 计划用变量缓存编译选项, 方便管理
+
 ## [0.1.8] - 2025-07-10
 ### Changed
 - 修复引用错误了已经从顶部移除的对象top_task
 - 调整编译选项
+- update changelog
 
 ## [0.1.7] - 2025-07-09
 ### Changed
@@ -125,7 +144,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.8...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.9...HEAD
+[0.1.9]: https://gitee.com/quant1x/q1x.git/compare/v0.1.8...v0.1.9
 [0.1.8]: https://gitee.com/quant1x/q1x.git/compare/v0.1.7...v0.1.8
 [0.1.7]: https://gitee.com/quant1x/q1x.git/compare/v0.1.6...v0.1.7
 [0.1.6]: https://gitee.com/quant1x/q1x.git/compare/v0.1.5...v0.1.6

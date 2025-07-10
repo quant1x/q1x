@@ -3,9 +3,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.8] - 2025-07-10
+### Changed
+- 修复引用错误了已经从顶部移除的对象top_task
+- 调整编译选项
+
 ## [0.1.7] - 2025-07-09
 ### Changed
 - 删除冗余的日志
+- update changelog
 
 ## [0.1.6] - 2025-07-09
 ### Changed
@@ -119,7 +125,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.7...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.8...HEAD
+[0.1.8]: https://gitee.com/quant1x/q1x.git/compare/v0.1.7...v0.1.8
 [0.1.7]: https://gitee.com/quant1x/q1x.git/compare/v0.1.6...v0.1.7
 [0.1.6]: https://gitee.com/quant1x/q1x.git/compare/v0.1.5...v0.1.6
 [0.1.5]: https://gitee.com/quant1x/q1x.git/compare/v0.1.4...v0.1.5

@@ -47,17 +47,8 @@ endif ()
 set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 MESSAGE(STATUS "CMAKE_TOOLCHAIN_FILE = ${CMAKE_TOOLCHAIN_FILE}")
 
-## 如果是MSVC, 且使用了MSVC内置的vcpkg, 需要改成本地安装的vcpkg
-#if(VCPKG_ROOT MATCHES "Visual Studio")
-#    message(STATUS "This is a Visual Studio generator")
-#    if (DEFINED ENV{RUNTIME_VCPKG})
-#        file(TO_CMAKE_PATH "$ENV{RUNTIME_VCPKG}" VCPKG_ROOT)
-#        string(REGEX REPLACE "/$" "" VCPKG_ROOT "${VCPKG_ROOT}")
-#    endif ()
-#endif()
-
 # 修正VCPKG的installed目录
-if(MSVC)
+if(MSVC OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(VCPKG_INSTALLED_DIR "${PROJECT_SOURCE_DIR}/vcpkg_installed")
 else()
     set(VCPKG_INSTALLED_DIR "${VCPKG_ROOT}/installed")
@@ -66,11 +57,13 @@ endif()
 # 在 Triplet 文件中添加
 set(VCPKG_LIBRARY_LINKAGE static)
 set(VCPKG_CRT_LINKAGE static)
-message(STATUS "        MSVC_VERSION = ${MSVC_VERSION}")
-message(STATUS "MSVC_TOOLSET_VERSION = ${MSVC_TOOLSET_VERSION}")
+#if (MSVC)
+#    message(STATUS "        MSVC_VERSION = ${MSVC_VERSION}")
+#    message(STATUS "MSVC_TOOLSET_VERSION = ${MSVC_TOOLSET_VERSION}")
+#endif ()
 # 根据平台自动选择 Triplet
 if (WIN32)
-    if (MSVC)
+    if (MSVC OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Default Triplet for Windows")
     else ()
         set(VCPKG_TARGET_TRIPLET "x64-mingw-static" CACHE STRING "Default Triplet for Windows")
@@ -79,7 +72,6 @@ elseif (UNIX AND NOT APPLE)
     set(VCPKG_TARGET_TRIPLET "x64-linux" CACHE STRING "Default Triplet for Linux")
 elseif (APPLE)
     set(VCPKG_TARGET_TRIPLET "x64-osx" CACHE STRING "Default Triplet for macOS")
-    #set(VCPKG_TARGET_TRIPLET "x64-mingw-static" CACHE STRING "Default Triplet for macOS")
 else ()
     message(status "other...")
 endif ()
@@ -328,7 +320,13 @@ set(inja_VERSION 3.4.0)
 set(nlohmann_json_VERSION "3.1.1")
 add_library(xtensor_optimize INTERFACE)
 if(MSVC)
-    target_compile_options(xtensor_optimize INTERFACE /EHsc /MP /bigobj)
+    target_compile_options(xtensor_optimize INTERFACE /EHsc)
+    if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(global_compile_options INTERFACE
+            /MP           # 多进程编译
+        )
+    endif ()
+    target_compile_options(xtensor_optimize INTERFACE /bigobj)
 else()
     include(CheckCXXCompilerFlag)
     CHECK_CXX_COMPILER_FLAG(-march=native arch_native_supported)
@@ -409,7 +407,9 @@ find_package(CapnProto CONFIG REQUIRED)
 target_link_libraries(third_libs INTERFACE CapnProto::capnp CapnProto::capnp-json)
 echo_lib_version(CapnProto ${CapnProto_VERSION})
 if (MSVC)
-    add_compile_definitions(KJ_USE_FIBERS=0)
+    if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        add_compile_definitions(KJ_USE_FIBERS=0)
+    endif ()
 endif ()
 # ==============================
 # cista
@@ -457,11 +457,15 @@ else ()
     message(FATAL_ERROR "Asio headers not found. Please install Asio and specify its path.")
 endif ()
 
-# mimalloc
-find_package(mimalloc CONFIG REQUIRED)
-target_link_libraries(third_libs INTERFACE $<IF:$<TARGET_EXISTS:mimalloc-static>,mimalloc-static,mimalloc>)
-target_compile_definitions(third_libs INTERFACE MI_OVERRIDE=1)
-echo_lib_version(mimalloc ${mimalloc_VERSION})
+## mimalloc
+#find_package(mimalloc CONFIG REQUIRED)
+#target_link_libraries(third_libs INTERFACE $<IF:$<TARGET_EXISTS:mimalloc-static>,mimalloc-static,mimalloc>)
+#target_compile_definitions(third_libs INTERFACE
+#    #MI_OVERRIDE=1
+#    MI_OVERRIDE_NEW_DELETE=1  # 让mimalloc只重载operator new/delete
+#    MI_INTERPOSE=0            # 禁用拦截标准库函数
+#)
+#echo_lib_version(mimalloc ${mimalloc_VERSION})
 
 # C++ Requests Library (Cpr for curl)
 find_package(cpr CONFIG REQUIRED)
@@ -473,16 +477,17 @@ find_package(ZLIB REQUIRED)
 target_link_libraries(third_libs INTERFACE ZLIB::ZLIB)
 echo_lib_version(ZLIB ${ZLIB_VERSION})
 
-# fmt
-find_package(fmt CONFIG REQUIRED)
-target_link_libraries(third_libs INTERFACE fmt::fmt)
-echo_lib_version(fmt ${fmt_VERSION})
-find_package(date CONFIG REQUIRED)
-target_link_libraries(third_libs INTERFACE date::date date::date-tz)
+## fmt
+#find_package(fmt CONFIG REQUIRED)
+#target_link_libraries(third_libs INTERFACE fmt::fmt)
+#echo_lib_version(fmt ${fmt_VERSION})
+#find_package(date CONFIG REQUIRED)
+#target_link_libraries(third_libs INTERFACE date::date date::date-tz)
+target_compile_definitions(third_libs INTERFACE FMT_HEADER_ONLY)
 
 # spdlog
-find_package(spdlog CONFIG REQUIRED)
-target_link_libraries(third_libs INTERFACE spdlog::spdlog_header_only)
+#find_package(spdlog CONFIG REQUIRED)
+#target_link_libraries(third_libs INTERFACE spdlog::spdlog_header_only)
 #set(SPDLOG_FMT_EXTERNAL OFF)
 #set(SPDLOG_NO_EXTERNAL_FMT ON)
 #set(SPDLOG_HEADER_PATH "${INNER_THIRD_PARTY_INCLUDE_DIRS}/spdlog/version.h")
@@ -521,7 +526,8 @@ target_link_libraries(third_libs INTERFACE spdlog::spdlog_header_only)
 #    message(WARNING "spdlog version.h not found at: ${SPDLOG_HEADER_PATH}")
 #    set(spdlog_VERSION "0.0.0")
 #endif()
-echo_lib_version(spdlog ${spdlog_VERSION})
+#echo_lib_version(spdlog ${spdlog_VERSION})
+target_compile_definitions(third_libs INTERFACE SPDLOG_HEADER_ONLY)
 
 message(STATUS "================== JavaScript工具库 ==================")
 ## MuJS
@@ -940,6 +946,9 @@ endif ()
 get_target_property(_libs q1x INTERFACE_LINK_LIBRARIES)
 message(STATUS "Library 'q1x' requires: ${_libs}")
 
+MESSAGE(STATUS "RUNTIME = ${RUNTIME}")
+set(CMAKE_INSTALL_PREFIX ${RUNTIME})
+
 STRING(TOUPPER "${CMAKE_BUILD_TYPE}" buildtype)
 message(STATUS "")
 message(STATUS "")
@@ -1075,8 +1084,6 @@ configure_file(
 
 # 设置安装路径变量
 include(GNUInstallDirs)
-MESSAGE(STATUS "RUNTIME = ${RUNTIME}")
-set(CMAKE_INSTALL_PREFIX ${RUNTIME})
 MESSAGE(STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
 set(THIRD_PARTY_INSTALL_INCDIR "${CMAKE_INSTALL_INCLUDEDIR}/third_party")
 

@@ -396,7 +396,7 @@ namespace exchange {
     /// 同步交易日历
     void update_calendar() {
         auto cache_filename = config::get_calendar_filename();;
-        auto modified = io::getModificationTime(cache_filename);
+        auto modified = io::last_modified_time(cache_filename);
         auto [text, tm] = io::request(urlSinaRealstockCompanyKlcTdSh, modified);
         if(!text.empty()) {
             auto list = js_sina::decode(text);
@@ -405,15 +405,15 @@ namespace exchange {
                 list.insert(it, calendarMissingDate);
             }
             {
-                util::check_filepath(cache_filename, true);
+                auto ec = util::check_filepath(cache_filename, true);
+                ec.clear();
                 io::CSVWriter writer(cache_filename);
                 writer.write_row("date", "source");
                 for (auto const &v: list) {
                     writer.write_row(v, "sina");
                 }
             }
-            auto t1 = util::tm_to_time_point(tm);
-            io::setFileTimes(cache_filename, t1, t1, t1);
+            io::last_modified_time(cache_filename, tm);
         }
     }
 
@@ -422,7 +422,8 @@ namespace exchange {
         spdlog::info("初始化交易日历...");
         update_calendar();
         auto cache_filename = config::get_calendar_filename();
-        util::check_filepath(cache_filename, true);
+        auto ec = util::check_filepath(cache_filename, true);
+        ec.clear();
         io::CSVReader<1> in(cache_filename);
         in.read_header(io::ignore_extra_column, "date");
         std::string date;

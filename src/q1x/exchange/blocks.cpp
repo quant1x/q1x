@@ -35,7 +35,7 @@ namespace exchange {
         if (!fs::exists(blkFilename) || fs::file_size(blkFilename) == 0) {
             needUpdate = true;
         }
-        auto modified = io::getModificationTime(blkFilename);
+        auto modified = io::last_modified_time(blkFilename);
         if(!needUpdate) {
             needUpdate = exchange::can_initialize(modified);
         }

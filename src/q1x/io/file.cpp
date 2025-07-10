@@ -66,177 +66,177 @@ namespace {
         );
     #endif
     }
-#ifdef _WIN32
-    std::chrono::system_clock::time_point getWindowsModificationTime(const std::string& filePath)
-    {
-        HANDLE hFile = CreateFileA(
-            filePath.c_str(),
-            GENERIC_READ,
-            FILE_SHARE_READ | FILE_SHARE_WRITE,
-            nullptr,
-            OPEN_EXISTING,
-            FILE_ATTRIBUTE_NORMAL,
-            nullptr);
-
-        if (hFile == INVALID_HANDLE_VALUE) {
-            throw std::system_error(GetLastError(), std::system_category());
-        }
-
-        FILETIME ftCreate, ftAccess, ftWrite;
-        if (!GetFileTime(hFile, &ftCreate, &ftAccess, &ftWrite)) {
-            CloseHandle(hFile);
-            throw std::system_error(GetLastError(), std::system_category());
-        }
-
-        CloseHandle(hFile);
-
-        // 将FILETIME转换为system_clock::time_point
-        ULARGE_INTEGER uli;
-        uli.LowPart = ftWrite.dwLowDateTime;
-        uli.HighPart = ftWrite.dwHighDateTime;
-
-        // Windows时间（1601-01-01）到Unix时间（1970-01-01）的转换
-        constexpr uint64_t WINDOWS_TICK = 10000000;
-        constexpr uint64_t UNIX_EPOCH = 11644473600ULL * WINDOWS_TICK;
-
-        uint64_t nanoseconds = (uli.QuadPart - UNIX_EPOCH) * 100;
-        return std::chrono::system_clock::time_point(
-            std::chrono::duration_cast<std::chrono::system_clock::duration>(
-                std::chrono::nanoseconds(nanoseconds)
-            )
-        );
-    }
-
-    void setWindowsFileTimes(
-        const std::string& filePath,
-        const std::chrono::system_clock::time_point& createTime,
-        const std::chrono::system_clock::time_point& modifyTime,
-        const std::chrono::system_clock::time_point& accessTime)
-    {
-        // 转换时间格式
-        const auto toFileTime = [](const auto& tp) {
-            using namespace std::chrono;
-            // 定义目标时区（例如 Asia/Shanghai）
-            const auto target_tz = locate_zone("Asia/Shanghai");
-
-            // 将 UTC 时间点转换为目标时区的本地时间
-            auto current = target_tz->to_local(tp);
-            // 获取自 1970-01-01 以来的持续时间
-            auto since_epoch = current.time_since_epoch();
-
-            // 转换为以 100 纳秒为单位的持续时间
-            auto ft_duration = duration_cast<duration<int64_t, std::ratio<1, 10'000'000>>>(since_epoch);
-
-            // 计算从 1601-01-01 到 1970-01-01 的偏移量（100 纳秒单位）
-            constexpr int64_t offset = 116444736000000000LL;
-            int64_t total_100ns = ft_duration.count() + offset;
-
-            // 构造 FILETIME 结构
-            FILETIME ft;
-            ft.dwLowDateTime = static_cast<DWORD>(total_100ns & 0xFFFFFFFF);
-            ft.dwHighDateTime = static_cast<DWORD>((total_100ns >> 32) & 0xFFFFFFFF);
-            return ft;
-        };
-
-        // 打开文件句柄
-        HANDLE hFile = CreateFileA(
-            filePath.c_str(),
-            FILE_WRITE_ATTRIBUTES,
-            FILE_SHARE_READ | FILE_SHARE_WRITE,
-            nullptr,
-            OPEN_EXISTING,
-            FILE_ATTRIBUTE_NORMAL,
-            nullptr);
-
-        if (hFile == INVALID_HANDLE_VALUE) {
-            throw std::system_error(GetLastError(), std::system_category());
-        }
-
-        // 设置文件时间
-        FILETIME creationTime = toFileTime(createTime);
-        FILETIME lastAccessTime = toFileTime(accessTime);
-        FILETIME lastWriteTime = toFileTime(modifyTime);
-
-        if (!SetFileTime(hFile, &creationTime, &lastAccessTime, &lastWriteTime)) {
-            CloseHandle(hFile);
-            throw std::system_error(GetLastError(), std::system_category());
-        }
-
-        CloseHandle(hFile);
-    }
-#else
-    static std::chrono::system_clock::time_point getPosixModificationTime(const std::string& filePath)
-    {
-        struct stat fileStat;
-        if (stat(filePath.c_str(), &fileStat) != 0) {
-            throw std::system_error(errno, std::generic_category());
-        }
-
-        // 转换timespec到time_point
-        auto duration = std::chrono::seconds(fileStat.st_mtime) +
-                       std::chrono::nanoseconds(fileStat.st_mtim.tv_nsec);
-
-        return std::chrono::system_clock::time_point(
-            std::chrono::duration_cast<std::chrono::system_clock::duration>(duration)
-        );
-    }
-
-    static void setPosixFileTimes(
-        const std::string& filePath,
-        const std::chrono::system_clock::time_point& modifyTime,
-        const std::chrono::system_clock::time_point& accessTime)
-    {
-        // 转换时间格式
-        const auto toTimeSpec = [](const auto& tp) {
-            auto duration = tp.time_since_epoch();
-            auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration);
-            auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(duration - seconds);
-
-            timespec ts;
-            ts.tv_sec = seconds.count();
-            ts.tv_nsec = nanoseconds.count();
-            return ts;
-        };
-
-        timespec times[2];
-        times[0] = toTimeSpec(accessTime); // 访问时间
-        times[1] = toTimeSpec(modifyTime); // 修改时间
-
-        if (utimensat(AT_FDCWD, filePath.c_str(), times, 0) != 0) {
-            throw std::system_error(errno, std::generic_category());
-        }
-    }
-#endif
+//#ifdef _WIN32
+//    std::chrono::system_clock::time_point getWindowsModificationTime(const std::string& filePath)
+//    {
+//        HANDLE hFile = CreateFileA(
+//            filePath.c_str(),
+//            GENERIC_READ,
+//            FILE_SHARE_READ | FILE_SHARE_WRITE,
+//            nullptr,
+//            OPEN_EXISTING,
+//            FILE_ATTRIBUTE_NORMAL,
+//            nullptr);
+//
+//        if (hFile == INVALID_HANDLE_VALUE) {
+//            throw std::system_error(GetLastError(), std::system_category());
+//        }
+//
+//        FILETIME ftCreate, ftAccess, ftWrite;
+//        if (!GetFileTime(hFile, &ftCreate, &ftAccess, &ftWrite)) {
+//            CloseHandle(hFile);
+//            throw std::system_error(GetLastError(), std::system_category());
+//        }
+//
+//        CloseHandle(hFile);
+//
+//        // 将FILETIME转换为system_clock::time_point
+//        ULARGE_INTEGER uli;
+//        uli.LowPart = ftWrite.dwLowDateTime;
+//        uli.HighPart = ftWrite.dwHighDateTime;
+//
+//        // Windows时间（1601-01-01）到Unix时间（1970-01-01）的转换
+//        constexpr uint64_t WINDOWS_TICK = 10000000;
+//        constexpr uint64_t UNIX_EPOCH = 11644473600ULL * WINDOWS_TICK;
+//
+//        uint64_t nanoseconds = (uli.QuadPart - UNIX_EPOCH) * 100;
+//        return std::chrono::system_clock::time_point(
+//            std::chrono::duration_cast<std::chrono::system_clock::duration>(
+//                std::chrono::nanoseconds(nanoseconds)
+//            )
+//        );
+//    }
+//
+//    void setWindowsFileTimes(
+//        const std::string& filePath,
+//        const std::chrono::system_clock::time_point& createTime,
+//        const std::chrono::system_clock::time_point& modifyTime,
+//        const std::chrono::system_clock::time_point& accessTime)
+//    {
+//        // 转换时间格式
+//        const auto toFileTime = [](const auto& tp) {
+//            using namespace std::chrono;
+//            // 定义目标时区（例如 Asia/Shanghai）
+//            const auto target_tz = locate_zone("Asia/Shanghai");
+//
+//            // 将 UTC 时间点转换为目标时区的本地时间
+//            auto current = target_tz->to_local(tp);
+//            // 获取自 1970-01-01 以来的持续时间
+//            auto since_epoch = current.time_since_epoch();
+//
+//            // 转换为以 100 纳秒为单位的持续时间
+//            auto ft_duration = duration_cast<duration<int64_t, std::ratio<1, 10'000'000>>>(since_epoch);
+//
+//            // 计算从 1601-01-01 到 1970-01-01 的偏移量（100 纳秒单位）
+//            constexpr int64_t offset = 116444736000000000LL;
+//            int64_t total_100ns = ft_duration.count() + offset;
+//
+//            // 构造 FILETIME 结构
+//            FILETIME ft;
+//            ft.dwLowDateTime = static_cast<DWORD>(total_100ns & 0xFFFFFFFF);
+//            ft.dwHighDateTime = static_cast<DWORD>((total_100ns >> 32) & 0xFFFFFFFF);
+//            return ft;
+//        };
+//
+//        // 打开文件句柄
+//        HANDLE hFile = CreateFileA(
+//            filePath.c_str(),
+//            FILE_WRITE_ATTRIBUTES,
+//            FILE_SHARE_READ | FILE_SHARE_WRITE,
+//            nullptr,
+//            OPEN_EXISTING,
+//            FILE_ATTRIBUTE_NORMAL,
+//            nullptr);
+//
+//        if (hFile == INVALID_HANDLE_VALUE) {
+//            throw std::system_error(GetLastError(), std::system_category());
+//        }
+//
+//        // 设置文件时间
+//        FILETIME creationTime = toFileTime(createTime);
+//        FILETIME lastAccessTime = toFileTime(accessTime);
+//        FILETIME lastWriteTime = toFileTime(modifyTime);
+//
+//        if (!SetFileTime(hFile, &creationTime, &lastAccessTime, &lastWriteTime)) {
+//            CloseHandle(hFile);
+//            throw std::system_error(GetLastError(), std::system_category());
+//        }
+//
+//        CloseHandle(hFile);
+//    }
+//#else
+//    static std::chrono::system_clock::time_point getPosixModificationTime(const std::string& filePath)
+//    {
+//        struct stat fileStat;
+//        if (stat(filePath.c_str(), &fileStat) != 0) {
+//            throw std::system_error(errno, std::generic_category());
+//        }
+//
+//        // 转换timespec到time_point
+//        auto duration = std::chrono::seconds(fileStat.st_mtime) +
+//                       std::chrono::nanoseconds(fileStat.st_mtim.tv_nsec);
+//
+//        return std::chrono::system_clock::time_point(
+//            std::chrono::duration_cast<std::chrono::system_clock::duration>(duration)
+//        );
+//    }
+//
+//    static void setPosixFileTimes(
+//        const std::string& filePath,
+//        const std::chrono::system_clock::time_point& modifyTime,
+//        const std::chrono::system_clock::time_point& accessTime)
+//    {
+//        // 转换时间格式
+//        const auto toTimeSpec = [](const auto& tp) {
+//            auto duration = tp.time_since_epoch();
+//            auto seconds = std::chrono::duration_cast<std::chrono::seconds>(duration);
+//            auto nanoseconds = std::chrono::duration_cast<std::chrono::nanoseconds>(duration - seconds);
+//
+//            timespec ts;
+//            ts.tv_sec = seconds.count();
+//            ts.tv_nsec = nanoseconds.count();
+//            return ts;
+//        };
+//
+//        timespec times[2];
+//        times[0] = toTimeSpec(accessTime); // 访问时间
+//        times[1] = toTimeSpec(modifyTime); // 修改时间
+//
+//        if (utimensat(AT_FDCWD, filePath.c_str(), times, 0) != 0) {
+//            throw std::system_error(errno, std::generic_category());
+//        }
+//    }
+//#endif
 }
 
 namespace io {
 
-    // 获取文件修改时间
-    std::chrono::system_clock::time_point getModificationTime(const std::string &filePath) {
-        try {
-#ifdef _WIN32
-            return getWindowsModificationTime(filePath);
-#else
-            return getPosixModificationTime(filePath);
-#endif
-        } catch (...) {
-            return std::chrono::system_clock::from_time_t(0);
-        }
-    }
-
-    // 设置文件时间（创建时间在非Windows平台可能不可修改）
-    void setFileTimes(
-        const std::string &filePath,
-        const std::chrono::system_clock::time_point &createTime,
-        const std::chrono::system_clock::time_point &modifyTime,
-        const std::chrono::system_clock::time_point &accessTime) {
-#ifdef _WIN32
-        setWindowsFileTimes(filePath, createTime, modifyTime, accessTime);
-#else
-        (void)createTime;
-        setPosixFileTimes(filePath, modifyTime, accessTime);
-#endif
-    }
+//    // 获取文件修改时间
+//    std::chrono::system_clock::time_point getModificationTime(const std::string &filePath) {
+//        try {
+//#ifdef _WIN32
+//            return getWindowsModificationTime(filePath);
+//#else
+//            return getPosixModificationTime(filePath);
+//#endif
+//        } catch (...) {
+//            return std::chrono::system_clock::from_time_t(0);
+//        }
+//    }
+//
+//    // 设置文件时间（创建时间在非Windows平台可能不可修改）
+//    void setFileTimes(
+//        const std::string &filePath,
+//        const std::chrono::system_clock::time_point &createTime,
+//        const std::chrono::system_clock::time_point &modifyTime,
+//        const std::chrono::system_clock::time_point &accessTime) {
+//#ifdef _WIN32
+//        setWindowsFileTimes(filePath, createTime, modifyTime, accessTime);
+//#else
+//        (void)createTime;
+//        setPosixFileTimes(filePath, modifyTime, accessTime);
+//#endif
+//    }
 
     std::string remove_extension(const std::string& path_str) {
         std::filesystem::path p(path_str);

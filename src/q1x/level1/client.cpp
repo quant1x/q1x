@@ -11,7 +11,7 @@ namespace level1 {
             if (!fs::exists(cache_server_filename) || fs::file_size(cache_server_filename) == 0) {
                 need_update = true;
             }
-            auto modified = io::getModificationTime(cache_server_filename);
+            auto modified = io::last_modified_time(cache_server_filename);
             if (!need_update) {
                 need_update = exchange::can_initialize(modified);
             }

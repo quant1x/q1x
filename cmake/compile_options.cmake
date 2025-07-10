@@ -23,6 +23,7 @@ if (CMAKE_GENERATOR MATCHES "^Visual Studio.*$")
     message(STATUS "For example: 'cmake --build . --config=Release")
 endif()
 
+# MSVC特定设置, 使用静态CRT
 option(USE_STATIC_CRT "Use static CRT" ON)
 if(MSVC AND USE_STATIC_CRT)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -31,6 +32,7 @@ endif()
 # -----------------------------------------------------------------------------
 # 2. 系统环境
 # -----------------------------------------------------------------------------
+# 2.1 检测主机系统
 message("CMAKE_HOST_SYSTEM_NAME: ${CMAKE_HOST_SYSTEM_NAME}")
 message("     CMAKE_HOST_SYSTEM: ${CMAKE_HOST_SYSTEM}")
 message("     CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
@@ -39,11 +41,12 @@ message("       CMAKE_HOST_UNIX: ${CMAKE_HOST_UNIX}")
 message("      CMAKE_HOST_WIN32: ${CMAKE_HOST_WIN32}")
 message("      CMAKE_HOST_WIN64: ${CMAKE_HOST_WIN64}")
 
-# CPU类型
+# 2.2 CPU类型
 #include(CMakeDetermineSystem OPTIONAL)
 message("                System: ${CMAKE_SYSTEM}")
 message("             Processor: ${CMAKE_SYSTEM_PROCESSOR}")
 
+# 2.3 检测编译器
 message(STATUS "CMAKE_CXX_COMPILER_ID = ${CMAKE_CXX_COMPILER_ID}")
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     execute_process(
@@ -51,7 +54,6 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         OUTPUT_VARIABLE MACHINE_DUMP
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-
     if (MACHINE_DUMP MATCHES "mingw" OR
         MACHINE_DUMP MATCHES "windows" OR
         CMAKE_CXX_COMPILER MATCHES "mingw")
@@ -62,19 +64,33 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
         message(STATUS "Detected regular GCC (${MACHINE_DUMP})")
     endif ()
 endif ()
-# 打印检测到的 C 和 C++ 编译器
+# 2.4 打印检测到的 C 和 C++ 编译器
 message(STATUS "  C compiler: ${CMAKE_C_COMPILER}")
 message(STATUS "C++ compiler: ${CMAKE_CXX_COMPILER}")
 
-# 打印编译器版本
+# 2.5 打印编译器版本
 execute_process(
     COMMAND "${CMAKE_CXX_COMPILER}" --version
     OUTPUT_VARIABLE COMPILER_VERSION
 )
 message(STATUS "Compiler version:\n${COMPILER_VERSION}")
+set(q1x_compiler_id ${CMAKE_CXX_COMPILER_ID})
+set(q1x_compiler_ver ${CMAKE_CXX_COMPILER_VERSION})
+set(q1x_compiler "${q1x_compiler_id}(${q1x_compiler_ver})")
+message(STATUS "Compiler use: ${q1x_compiler}")
 
 set(CMAKE_C_COMPILER_WORKS TRUE)
 set(CMAKE_CXX_COMPILER_WORKS TRUE)
+# 设置标准属性
+set(CMAKE_C_STANDARD 17)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+# 禁用 GNU 扩展（关键！）
+set(CMAKE_C_EXTENSIONS OFF)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# 禁用 GNU 扩展（关键！）
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # -----------------------------------------------------------------------------
 # 3. 创建全局接口库（核心）
@@ -203,28 +219,28 @@ else ()
     )
 endif ()
 
-if (MINGW OR GNU)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++" CACHE STRING "Use libstdc++")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libstdc++" CACHE STRING "")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libstdc++" CACHE STRING "")
-elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "Use libstdc++")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++" CACHE STRING "")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++" CACHE STRING "")
-endif ()
-
-#if (MINGW OR GNU)
-#    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++" CACHE STRING "Use libstdc++")
-#    target_compile_options(global_compile_options INTERFACE -stdlib=libstdc++)
-#    #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libstdc++" CACHE STRING "")
-#    target_link_options(global_compile_options INTERFACE -stdlib=libstdc++)
-#elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-#    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++" CACHE STRING "Use libstdc++")
-#    target_compile_options(global_compile_options INTERFACE -stdlib=libc++)
-#    #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++" CACHE STRING "")
-#    #set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -stdlib=libc++" CACHE STRING "")
-#    target_link_options(global_compile_options INTERFACE -stdlib=libc++)
-#endif ()
+# 检查编译器类型
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # 判断是否支持 libc++
+    include(CheckCXXCompilerFlag)
+    check_cxx_compiler_flag("-stdlib=libc++" COMPILER_SUPPORTS_LIBCXX)
+    if (COMPILER_SUPPORTS_LIBCXX)
+        message(STATUS "Using libc++")
+        target_compile_options(global_compile_options INTERFACE -stdlib=libc++)
+        target_link_options(global_compile_options INTERFACE -stdlib=libc++)
+    else()
+        message(WARNING "Compiler does not support -stdlib=libc++")
+    endif()
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR MINGW)
+    message(STATUS "Using libstdc++ (default for GCC/MinGW)")
+    # GCC/MinGW 不需要手动加 -stdlib=libstdc++
+    # 它只支持 libstdc++，且默认已启用，不需要额外设置
+elseif (MSVC)
+    message(STATUS "Using MSVC STL (standard library)")
+    # MSVC 使用自己的标准库，无法更改
+else()
+    message(WARNING "Unknown compiler, skipping stdlib settings")
+endif()
 
 # 7. 平台特定配置
 if(MSVC)
@@ -252,5 +268,22 @@ else ()
 endif()
 
 # 10. 验证输出（构建时可见）
-get_target_property(ALL_OPTS global_compile_options INTERFACE_COMPILE_OPTIONS)
-message(STATUS "Global compile options: ${ALL_OPTS}")
+message(STATUS "quant1x global options:")
+# 查看全局 C 选项
+message(STATUS "         CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
+# 查看全局 C++ 选项
+message(STATUS "       CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+get_target_property(c_standard global_compile_options INTERFACE_C_STANDARD)
+message(STATUS "            C standard: ${c_standard}")
+get_target_property(cxx_standard global_compile_options INTERFACE_CXX_STANDARD)
+message(STATUS "          C++ standard: ${cxx_standard}")
+get_target_property(cxx_standard_required global_compile_options INTERFACE_CXX_STANDARD_REQUIRED)
+message(STATUS " C++ standard required: ${cxx_standard_required}")
+get_target_property(cxx_extensions global_compile_options INTERFACE_CXX_EXTENSIONS)
+message(STATUS "C++ extensions enabled: ${cxx_extensions}")
+get_target_property(compile_options global_compile_options INTERFACE_COMPILE_OPTIONS)
+message(STATUS "       compile options: ${compile_options}")
+get_target_property(link_options global_compile_options INTERFACE_LINK_OPTIONS)
+message(STATUS "          link options: ${link_options}")
+get_target_property(link_libs global_compile_options INTERFACE_LINK_LIBRARIES)
+message(STATUS "        link libraries: ${link_libs}")

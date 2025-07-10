@@ -21,25 +21,6 @@ endif()
 # 6. 编译器选项
 include(cmake/compile_options.cmake)
 
-# 查看全局 C 选项
-message(STATUS "  CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
-# 查看全局 C++ 选项
-message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
-
-## 在CMake中启用内存检测
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address")
-
-# 设置标准属性
-set(CMAKE_C_STANDARD 17)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-# 禁用 GNU 扩展（关键！）
-set(CMAKE_C_EXTENSIONS OFF)
-
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-# 禁用 GNU 扩展（关键！）
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 # ============================================================
 # vcpkg Options/Dependencies
 # ============================================================

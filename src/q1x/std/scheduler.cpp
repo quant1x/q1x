@@ -70,10 +70,10 @@ void AsyncScheduler::scheduler_loop() {
                     }
                 });
             } else {
-                spdlog::warn("执行任务: id={}, name={}, 未执行", task_to_run.id, top_task.name);
+                spdlog::warn("执行任务: id={}, name={}, 未执行", task_to_run.id, task_to_run.name);
             }
         } else {
-            //spdlog::debug("等待下一个任务执行时间: {}, {}", top_task.name, std::chrono::duration_cast<std::chrono::milliseconds>(top_task.next_run - Clock::now()).count());
+            //spdlog::debug("等待下一个任务执行时间: {}, {}", task_to_run.name, std::chrono::duration_cast<std::chrono::milliseconds>(task_to_run.next_run - Clock::now()).count());
             //  带条件的超时等待
             condition_.wait_for(lock, std::chrono::milliseconds(100), [this] { return !running_; });
             if (!running_) {

@@ -3,10 +3,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.12] - 2025-07-11
+### Changed
+- 新增q2x应用程序, 调整插件路径为q1x/engine
+
 ## [0.1.11] - 2025-07-11
 ### Changed
 - 调整iconv头文件的搜索路径优先级
 - 屏蔽mingw的backward宏定义
+- update changelog
 
 ## [0.1.10] - 2025-07-11
 ### Changed
@@ -163,7 +168,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.11...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.12...HEAD
+[0.1.12]: https://gitee.com/quant1x/q1x.git/compare/v0.1.11...v0.1.12
 [0.1.11]: https://gitee.com/quant1x/q1x.git/compare/v0.1.10...v0.1.11
 [0.1.10]: https://gitee.com/quant1x/q1x.git/compare/v0.1.9...v0.1.10
 [0.1.9]: https://gitee.com/quant1x/q1x.git/compare/v0.1.8...v0.1.9

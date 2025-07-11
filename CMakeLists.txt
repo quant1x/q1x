@@ -93,11 +93,6 @@ else ()
 endif ()
 MESSAGE(STATUS "RUNTIME = ${RUNTIME}")
 
-#include_directories(${RUNTIME}/include)
-#link_directories(${RUNTIME}/lib)
-#set(RUNTIME_INCLUDE_DIRS ${RUNTIME}/include)
-#set(RUNTIME_LIBRARY_DIRS ${RUNTIME}/lib)
-
 # 项目内聚合的第三方库
 set(inner_third_party_dir "${CMAKE_SOURCE_DIR}/third_party")
 set(INNER_THIRD_PARTY_INCLUDE_DIRS ${inner_third_party_dir}/include)

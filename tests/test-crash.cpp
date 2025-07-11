@@ -1,12 +1,5 @@
 #include <q1x/runtime/crash.h>
 #include <q1x/runtime/core.h>
-//#include <spdlog/spdlog.h>
-//#define BACKWARD_HAS_DW 1
-//#include <backward.hpp>
-
-//namespace {
-//    backward::SignalHandling sh; // 自动注册信号处理器
-//}
 
 void bar() {
     int* p = nullptr;

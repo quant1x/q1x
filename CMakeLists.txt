@@ -471,14 +471,6 @@ find_package(ZLIB REQUIRED)
 target_link_libraries(third_libs INTERFACE ZLIB::ZLIB)
 echo_lib_version(ZLIB ${ZLIB_VERSION})
 
-## fmt
-#find_package(fmt CONFIG REQUIRED)
-#target_link_libraries(third_libs INTERFACE fmt::fmt)
-#echo_lib_version(fmt ${fmt_VERSION})
-#find_package(date CONFIG REQUIRED)
-#target_link_libraries(third_libs INTERFACE date::date date::date-tz)
-target_compile_definitions(third_libs INTERFACE FMT_HEADER_ONLY)
-
 # spdlog
 include(cmake/spdlog.cmake)
 

@@ -1,3 +1,12 @@
+## fmt
+#find_package(fmt CONFIG REQUIRED)
+#target_link_libraries(third_libs INTERFACE fmt::fmt)
+#echo_lib_version(fmt ${fmt_VERSION})
+#find_package(date CONFIG REQUIRED)
+#target_link_libraries(third_libs INTERFACE date::date date::date-tz)
+target_compile_definitions(third_libs INTERFACE FMT_HEADER_ONLY)
+
+# spdlog
 #find_package(spdlog CONFIG REQUIRED)
 #target_link_libraries(third_libs INTERFACE spdlog::spdlog_header_only)
 #set(SPDLOG_FMT_EXTERNAL OFF)

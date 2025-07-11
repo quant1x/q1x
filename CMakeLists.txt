@@ -130,6 +130,11 @@ endif ()
 target_link_libraries(third_libs INTERFACE OpenSSL::SSL OpenSSL::Crypto)
 echo_lib_version(OpenSSL ${OPENSSL_VERSION})
 
+# zlib
+find_package(ZLIB REQUIRED)
+target_link_libraries(third_libs INTERFACE ZLIB::ZLIB)
+echo_lib_version(ZLIB ${ZLIB_VERSION})
+
 # libiconv
 find_package(Iconv REQUIRED)  # CMake 官方模块名称是 Iconv（大写 I）
 if (NOT DEFINED Iconv_VERSION) # 如果没有定义Iconv_VERSION变量, 去查找iconv.h文件路径
@@ -466,10 +471,6 @@ find_package(cpr CONFIG REQUIRED)
 target_link_libraries(third_libs INTERFACE cpr::cpr)
 echo_lib_version(cpr ${cpr_VERSION})
 
-# zlib
-find_package(ZLIB REQUIRED)
-target_link_libraries(third_libs INTERFACE ZLIB::ZLIB)
-echo_lib_version(ZLIB ${ZLIB_VERSION})
 
 # spdlog
 include(cmake/spdlog.cmake)

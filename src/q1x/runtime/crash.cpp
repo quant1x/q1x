@@ -56,7 +56,12 @@ namespace crash {
 
 #include <csignal>
 #if OS_IS_WINDOWS
-//#define BACKWARD_HAS_DWARF 1 // 并不好用
+#if TARGET_COMPILER_IS_MSVC
+#define BACKWARD_HAS_DWARF 0             // 禁用 DWARF（MinGW 可能不支持）
+#define BACKWARD_HAS_LIBUNWIND 0         // 禁用 libunwind
+#define BACKWARD_HAS_BACKTRACE 0         // 禁用 backtrace（MinGW 可能不支持）
+#define BACKWARD_HAS_BACKTRACE_SYMBOL 0  // 禁用 backtrace_symbols
+#endif // TARGET_COMPILER_IS_MSVC
 #elif OS_IS_LINUX
 #define BACKWARD_HAS_DW 1
 #elif OS_IS_APPLE
@@ -75,10 +80,10 @@ namespace crash {
 
     constexpr int MAX_FRAMES = 64;
     // 全局变量：启用 backward-cpp 的信号处理
-    backward::SignalHandling sh;
+    inline backward::SignalHandling sh;
 
     namespace detail {
-        void LogStackTrace(const backward::StackTrace &st) {
+        static void LogStackTrace(const backward::StackTrace &st) {
             std::ostringstream oss;
             backward::Printer p;
             p.address = true;
@@ -212,6 +217,9 @@ namespace crash {
 
     void InitCrashHandler() {
         std::call_once(once_crash_handler, [&]() {
+            if (!sh.loaded()) {
+                spdlog::error("[ERROR] backward-cpp 未能正确初始化");
+            }
             setup_crash_handlers();
             spdlog::info("[INFO] 崩溃处理器已初始化");
         });

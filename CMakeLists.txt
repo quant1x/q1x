@@ -23,7 +23,7 @@ include(cmake/compile_options.cmake)
 add_library(third_libs INTERFACE)
 # 可选：显式链接静态版 pthread
 find_package(Threads REQUIRED)
-target_link_libraries(third_libs INTERFACE Threads::Threads -lpthread)
+target_link_libraries(third_libs INTERFACE Threads::Threads)
 if (MINGW OR GNU)
     target_link_libraries(third_libs INTERFACE -static)
     # 静态链接所有库（包括 libwinpthread-1.dll）
@@ -32,6 +32,7 @@ if (MINGW OR GNU)
     set(CMAKE_MODULE_LINKER_FLAGS "-static -lpthread")
 endif ()
 
+message(STATUS "detect VCPKG")
 # 通过环境变量获取全局路径
 if (DEFINED ENV{VCPKG_ROOT})
     file(TO_CMAKE_PATH "$ENV{VCPKG_ROOT}" VCPKG_ROOT)
@@ -59,6 +60,7 @@ set(VCPKG_CRT_LINKAGE static)
 #endif ()
 # 根据平台自动选择 Triplet
 if (WIN32)
+    message("triplet windows...")
     if (MSVC OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         set(VCPKG_TARGET_TRIPLET "x64-windows-static" CACHE STRING "Default Triplet for Windows")
     else ()
@@ -386,6 +388,7 @@ if (MSVC)
         # Release模式下链接
         set(PROTOBUF_LIB_NAME "libprotobuf")
     endif ()
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 else ()
     set(PROTOBUF_LIB_NAME "protobuf")
 endif ()
@@ -924,20 +927,6 @@ target_include_directories(q1x
 target_link_libraries(q1x PUBLIC
     third_libs global_compile_options
 )
-
-if (MINGW)
-    # MinGW (GCC)，Windows 下使用 -mthreads
-    target_link_options(q1x PUBLIC -mthreads)
-elseif (MSVC)
-    # Visual Studio，不需要 -mthreads 或 -pthread
-    # Windows 上 MSVC 的多线程由编译器自动处理
-    # 可以什么都不加，或根据需要添加特定选项
-    message(STATUS "Using MSVC, no thread flags needed.")
-else ()
-    # Linux/macOS 使用 -pthread
-    target_compile_options(q1x PUBLIC -pthread)
-    target_link_options(q1x PUBLIC -pthread)
-endif ()
 
 get_target_property(_libs q1x INTERFACE_LINK_LIBRARIES)
 message(STATUS "Library 'q1x' requires: ${_libs}")

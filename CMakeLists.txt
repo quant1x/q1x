@@ -1072,6 +1072,18 @@ include(GNUInstallDirs)
 MESSAGE(STATUS "CMAKE_INSTALL_PREFIX = ${CMAKE_INSTALL_PREFIX}")
 set(THIRD_PARTY_INSTALL_INCDIR "${CMAKE_INSTALL_INCLUDEDIR}/third_party")
 
+# 设置 Debug 版本后缀, 并标记为高级选项(默认不显示在 CMake GUI 中)
+set(lib_suffix "d" CACHE STRING "Default debug postfix")
+if (WIN32)
+    set(lib_suffix "${lib_suffix}-win")
+endif ()
+set(q1x_DEBUG_POSTFIX ${lib_suffix})
+message(STATUS ${q1x_DEBUG_POSTFIX})
+
+mark_as_advanced(q1x_DEBUG_POSTFIX)
+set_target_properties(q1x PROPERTIES
+    DEBUG_POSTFIX "${q1x_DEBUG_POSTFIX}"
+)
 # 将第三方头文件声明为安装目标
 install(
     DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/third_party/include/

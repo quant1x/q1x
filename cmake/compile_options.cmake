@@ -34,7 +34,7 @@ endif()
 
 # MSVC特定设置, 使用静态CRT
 option(USE_STATIC_CRT "Use static CRT" ON)
-if(MSVC AND USE_STATIC_CRT)
+if(WIN32 AND USE_STATIC_CRT)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
@@ -177,7 +177,7 @@ else ()
     target_compile_options(global_compile_options INTERFACE -ffunction-sections -fdata-sections)
 endif()
 
-# 6.6. 异常处理（强制启用）
+# 3.6 异常处理（强制启用）
 set_target_properties(global_compile_options PROPERTIES INTERFACE_CXX_EXCEPTIONS ON)
 if(MSVC)
     # 对于 MSVC 编译器
@@ -190,23 +190,24 @@ endif()
 #set(CMAKE_CXX_EXCEPTIONS ON)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
-# 仅对新版MSVC添加高级保护（需版本检测）
+# 4. 仅对新版MSVC添加高级保护（需版本检测）
 if(MSVC_VERSION GREATER_EQUAL 1920)  # VS2019+
-    # 合法选项替代方案
-    target_compile_options(global_compile_options INTERFACE
-        /volatile:iso         # 严格内存顺序
-        /Zc:threadSafeInit-   # 禁用线程安全初始化（测试编译器bug）
-        #/d2:-IncrementalLink  # 增强链接时检查
-    )
-    # 确保静态变量在独立段
-    #set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SECTION:.staticvars,RWS")
-    target_link_options(global_compile_options INTERFACE /SECTION:.staticvars,RWS)
+    if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        # 合法选项替代方案
+        target_compile_options(global_compile_options INTERFACE
+            /volatile:iso         # 严格内存顺序
+            /Zc:threadSafeInit-   # 禁用线程安全初始化（测试编译器bug）
+            #/d2:-IncrementalLink  # 增强链接时检查
+        )
+        # 确保静态变量在独立段
+        target_link_options(global_compile_options INTERFACE /SECTION:.staticvars,RWS)
+    endif ()
 else()
     # 通用保护方案
     target_compile_options(global_compile_options INTERFACE -DSTATIC_VAR_PROTECTION)
 endif()
 
-# 关于debug和release模式的编译选项
+# 5. 关于debug和release模式的编译选项
 if (MSVC)
     # 确保 Debug 模式使用正确的调试信息格式
     target_compile_options(global_compile_options INTERFACE
@@ -230,18 +231,20 @@ else ()
     )
 endif ()
 
-# 检查编译器类型
+# 6. 检查编译器标准库
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    # 判断是否支持 libc++
-    include(CheckCXXCompilerFlag)
-    check_cxx_compiler_flag("-stdlib=libc++" COMPILER_SUPPORTS_LIBCXX)
-    if (COMPILER_SUPPORTS_LIBCXX)
-        message(STATUS "Using libc++")
-        target_compile_options(global_compile_options INTERFACE -stdlib=libc++)
-        target_link_options(global_compile_options INTERFACE -stdlib=libc++)
-    else()
-        message(WARNING "Compiler does not support -stdlib=libc++")
-    endif()
+    if (NOT WIN32)
+        # 判断是否支持 libc++
+        include(CheckCXXCompilerFlag)
+        check_cxx_compiler_flag("-stdlib=libc++" COMPILER_SUPPORTS_LIBCXX)
+        if (COMPILER_SUPPORTS_LIBCXX)
+            message(STATUS "Using libc++")
+            target_compile_options(global_compile_options INTERFACE -stdlib=libc++)
+            target_link_options(global_compile_options INTERFACE -stdlib=libc++)
+        else()
+            message(WARNING "Compiler does not support -stdlib=libc++")
+        endif()
+    endif ()
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR MINGW)
     message(STATUS "Using libstdc++ (default for GCC/MinGW)")
     # GCC/MinGW 不需要手动加 -stdlib=libstdc++
@@ -280,6 +283,38 @@ elseif(UNIX AND NOT APPLE)
     target_compile_options(global_compile_options INTERFACE -pthread -Wl,--as-needed)
 else ()
     # APPLE
+endif()
+
+# 8. 线程选项
+if (MINGW)
+    # MinGW (GCC)，Windows 下使用 -mthreads
+    target_link_options(global_compile_options INTERFACE -mthreads)
+    message(STATUS "Using MinGW with -mthreads")
+elseif (MSVC)
+    # Visual Studio，不需要 -mthreads 或 -pthread
+    message(STATUS "Using MSVC, no thread flags needed.")
+elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if (WIN32)
+        # Windows 上的 Clang
+        if (CMAKE_CXX_SIMULATE_ID MATCHES "MSVC")
+            # 使用 MSVC 后端的 Clang
+            message(STATUS "Using Clang with MSVC backend, no thread flags needed.")
+        else()
+            # 使用 MinGW 后端的 Clang
+            target_link_options(global_compile_options INTERFACE -mthreads)
+            message(STATUS "Using Clang with MinGW backend, adding -mthreads")
+        endif()
+    else()
+        # 非 Windows 平台的 Clang
+        target_compile_options(global_compile_options INTERFACE -pthread)
+        target_link_options(global_compile_options INTERFACE -pthread)
+        message(STATUS "Using Clang on non-Windows, adding -pthread")
+    endif()
+else()
+    # 其他情况（通常是 Linux/macOS 的 GCC）
+    target_compile_options(global_compile_options INTERFACE -pthread)
+    target_link_options(global_compile_options INTERFACE -pthread)
+    message(STATUS "Using other compiler, adding -pthread")
 endif()
 
 # 10. 验证输出（构建时可见）

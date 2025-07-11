@@ -3,6 +3,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.10] - 2025-07-11
+### Changed
+- 补充README.md
+- q1x库发布cmake配置删除spdlog,fmt,date
+- 删除废弃的msvc显示命令行的设置
+- 明确指定windows下MSVC编译时禁用backward的POSIX选项
+- 删除废弃的backward初始化代码, 由内部封装的部分实现
+- 测试Clang异常崩溃调用栈, 可以输出调用栈, 但是不精准, 只能定位到crash_function, 不能定位到*a=1这一行
+- 明确在windows环境下统一/MT, 静态多线程编译
+- 去掉多余的-lpthread
+- debug版本库增加后缀d, windows系统增加-win
+
 ## [0.1.9] - 2025-07-10
 ### Changed
 - cmake project函数前新增执行cmake策略
@@ -20,6 +32,7 @@ All notable changes to this project will be documented in this file.
 - 调整对文件时间戳的获取方法
 - 优化clang在cmake的编译选项
 - 计划用变量缓存编译选项, 方便管理
+- update changelog
 
 ## [0.1.8] - 2025-07-10
 ### Changed
@@ -144,7 +157,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.9...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.10...HEAD
+[0.1.10]: https://gitee.com/quant1x/q1x.git/compare/v0.1.9...v0.1.10
 [0.1.9]: https://gitee.com/quant1x/q1x.git/compare/v0.1.8...v0.1.9
 [0.1.8]: https://gitee.com/quant1x/q1x.git/compare/v0.1.7...v0.1.8
 [0.1.7]: https://gitee.com/quant1x/q1x.git/compare/v0.1.6...v0.1.7

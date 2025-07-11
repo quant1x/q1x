@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.11] - 2025-07-11
+### Changed
+- 调整iconv头文件的搜索路径优先级
+- 屏蔽mingw的backward宏定义
+
 ## [0.1.10] - 2025-07-11
 ### Changed
 - 补充README.md
@@ -14,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - 明确在windows环境下统一/MT, 静态多线程编译
 - 去掉多余的-lpthread
 - debug版本库增加后缀d, windows系统增加-win
+- update changelog
 
 ## [0.1.9] - 2025-07-10
 ### Changed
@@ -157,7 +163,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.10...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.11...HEAD
+[0.1.11]: https://gitee.com/quant1x/q1x.git/compare/v0.1.10...v0.1.11
 [0.1.10]: https://gitee.com/quant1x/q1x.git/compare/v0.1.9...v0.1.10
 [0.1.9]: https://gitee.com/quant1x/q1x.git/compare/v0.1.8...v0.1.9
 [0.1.8]: https://gitee.com/quant1x/q1x.git/compare/v0.1.7...v0.1.8

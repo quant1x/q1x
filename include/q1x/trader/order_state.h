@@ -3,7 +3,7 @@
 #define QUANT1X_ORDER_STATE_H 1
 
 #include <q1x/std/api.h>
-#include <q1x/strategies/strategy.h>
+#include <q1x/engine/strategy.h>
 #include "fee.h"
 
 namespace trader {

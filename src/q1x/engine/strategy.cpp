@@ -1,10 +1,4 @@
-#include "q1x/strategies/strategy.h"
-#include "q1x/factors/base.h"
-#include "q1x/formula.h"
-#include "q1x/dataframe/dataframe.h"
-#include "q1x/trader/fee.h"
-#include "q1x/factors/history.h"
-
+#include <q1x/engine/strategy.h>
 std::string StrategyInfo::QmtStrategyName() const {
     std::string result = "S";
     char buffer[20];  // 最大支持 uint64_t 字符数（如 18446744073709551615）

@@ -2,7 +2,7 @@
 #include <spdlog/spdlog.h>
 #include <q1x/trader/fee.h>
 #include <q1x/exchange.h>
-#include <q1x/strategies/strategy.h>
+#include <q1x/engine/strategy.h>
 #include <q1x/trader/order.h>
 
 namespace trader {

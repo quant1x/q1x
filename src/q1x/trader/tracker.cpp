@@ -19,24 +19,30 @@
 namespace trader {
 
     void tracker(void) {
-        uint64_t strategy_id = 1;
+        uint64_t strategy_id = 1; // 默认1号策略
         auto const & traderParameter = config::TraderConfig();
         auto opt_strategy = traderParameter->GetStrategyParameterByCode(strategy_id);
         if(!opt_strategy.has_value()) {
-            spdlog::error("[tracker] {}号策略不存在, 忽略交易", strategy_id);
+            spdlog::error("[tracker] {}号策略配置无效, 忽略交易", strategy_id);
             return;
         }
+        StrategyManager& manager = StrategyManager::Instance();
+        auto strategy = manager.GetStrategy(strategy_id);
+        if (strategy == nullptr) {
+            spdlog::error("[tracker] {}号策略插件不存在, 忽略交易", strategy_id);
+            return;
+        }
+
         auto &strategyParameter = opt_strategy.value();
         if(!strategyParameter.Session.IsTrading()) {
             spdlog::warn("[tracker] {}号策略非交易时段[{}], 不交易", strategy_id, strategyParameter.Session.ToString());
             // 不在交易时段, 退出
             return;
         }
+
         spdlog::warn("[tracker] {}号策略, 交易流程, 开始", strategy_id);
+        // 加载快照
         realtime::load_snapshots();
-        StrategyManager& manager = StrategyManager::Instance();
-        //auto strategy = std::make_unique<HousNo1Strategy>();
-        auto strategy = manager.GetStrategy(strategy_id);
         auto all_codes = exchange::GetCodeList();
         auto codeCount = all_codes.size();
         {

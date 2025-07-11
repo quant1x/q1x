@@ -738,10 +738,10 @@ set(q1x-headers
     include/q1x/level1/protocol.h
 
     # 策略
-    include/q1x/strategies/strategy.h
-    include/q1x/strategies/rule-engine.h
-    include/q1x/strategies/rule-error.h
-    include/q1x/strategies/rule-context.h
+    include/q1x/engine/strategy.h
+    include/q1x/engine/rule-engine.h
+    include/q1x/engine/rule-error.h
+    include/q1x/engine/rule-context.h
 
     # 插件
     include/q1x/models/plugin-loader.h
@@ -770,6 +770,7 @@ set(q1x-headers
 
     # 内嵌资源文件
     include/q1x/resources/meta/blocks.h
+    include/q1x/quant1x.h
 )
 
 set(q1x-sources
@@ -853,8 +854,8 @@ set(q1x-sources
     src/q1x/plugins/plugin-loader.cpp
 
     # 策略
-    src/q1x/strategies/rule-engine.cpp
-    src/q1x/strategies/strategy.cpp
+    src/q1x/engine/rule-engine.cpp
+    src/q1x/engine/strategy.cpp
 
     # 交易柜台
     src/q1x/trader/fee.cpp
@@ -866,6 +867,7 @@ set(q1x-sources
     src/q1x/trader/position.cpp
     src/q1x/trader/tracker.cpp
     src/q1x/trader/order_state.cpp
+    src/q1x/quant1x.cpp
 )
 
 if (WIN32)
@@ -1070,6 +1072,19 @@ configure_file(
     "${CMAKE_SOURCE_DIR}/include/q1x/build-info.h.in"
     "${CMAKE_BINARY_DIR}/include/private/build-info.h"
 )
+
+add_executable(q2x
+    main.cpp
+)
+target_include_directories(q2x
+    SYSTEM        # 关键选项：标记为系统头文件路径
+    PUBLIC       # 仅当前目标可见（或 PUBLIC/INTERFACE）
+    ${CMAKE_SOURCE_DIR}/include  # 头文件目录
+    ${CMAKE_SOURCE_DIR}/third_party/include  # 头文件目录
+    ${CMAKE_BINARY_DIR}/include  # 私有头文件
+)
+
+target_link_libraries(q2x PRIVATE q1x)
 
 # 设置安装路径变量
 include(GNUInstallDirs)

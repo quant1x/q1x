@@ -7,7 +7,7 @@
 #include "q1x/backtest/position.h"
 #include "q1x/backtest/trade.h"
 #include "q1x/datasets/kline.h"
-#include "q1x/strategies/strategy.h"
+#include "q1x/engine/strategy.h"
 
 // 使用时间点别名简化代码
 using TimePoint = std::chrono::system_clock::time_point;

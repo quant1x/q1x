@@ -55,7 +55,10 @@ namespace crash {
 } // namespace crash
 
 #include <csignal>
-#if OS_IS_WINDOWS
+#if defined(__MINGW32__) || defined(__MINGW64__)
+//#define BACKWARD_HAS_BFD 1
+//#define BACKWARD_HAS_DWARF 1
+#elif OS_IS_WINDOWS
 #if TARGET_COMPILER_IS_MSVC
 #define BACKWARD_HAS_DWARF 0             // 禁用 DWARF（MinGW 可能不支持）
 #define BACKWARD_HAS_LIBUNWIND 0         // 禁用 libunwind

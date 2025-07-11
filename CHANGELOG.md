@@ -3,9 +3,20 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.13] - 2025-07-11
+### Changed
+- 删除从runtime查找第三方库的设置
+- 从cmake主配置文件剥离spdlog
+- 修正头文件宏
+- 从cmake主配置文件剥离fmt
+- 调整zlib顺序
+- 从cmake主配置文件剥离backward-cpp,iconv,asio,openssl
+- 从cmake主配置文件剥离simd
+
 ## [0.1.12] - 2025-07-11
 ### Changed
 - 新增q2x应用程序, 调整插件路径为q1x/engine
+- update changelog
 
 ## [0.1.11] - 2025-07-11
 ### Changed
@@ -168,7 +179,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.12...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.13...HEAD
+[0.1.13]: https://gitee.com/quant1x/q1x.git/compare/v0.1.12...v0.1.13
 [0.1.12]: https://gitee.com/quant1x/q1x.git/compare/v0.1.11...v0.1.12
 [0.1.11]: https://gitee.com/quant1x/q1x.git/compare/v0.1.10...v0.1.11
 [0.1.10]: https://gitee.com/quant1x/q1x.git/compare/v0.1.9...v0.1.10

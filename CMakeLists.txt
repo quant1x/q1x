@@ -16,7 +16,7 @@ project(quant1x-q1x
 
 # 6. 编译器选项
 include(cmake/compile_options.cmake)
-
+message(STATUS "                         C++ flags debug : ${CMAKE_CXX_FLAGS_DEBUG}")
 # ============================================================
 # vcpkg Options/Dependencies
 # ============================================================
@@ -104,8 +104,40 @@ else ()
 endif ()
 
 message(STATUS "================== Crash Report Integration ==================")
-include(cmake/crash.cmake)
+#include(cmake/crash.cmake)
+include(cmake/backward.cmake)
 
+# check if compiler is nvcc or nvcc_wrapper
+set(COMPILER_IS_NVCC false)
+get_filename_component(COMPILER_NAME ${CMAKE_CXX_COMPILER} NAME)
+if (COMPILER_NAME MATCHES "^nvcc")
+    set(COMPILER_IS_NVCC true)
+endif()
+
+if (DEFINED ENV{OMPI_CXX} OR DEFINED ENV{MPICH_CXX})
+    if ( ($ENV{OMPI_CXX} MATCHES "nvcc") OR ($ENV{MPICH_CXX} MATCHES "nvcc") )
+        set(COMPILER_IS_NVCC true)
+    endif()
+endif()
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+    if (NOT ${COMPILER_IS_NVCC})
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic-errors")
+    endif()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+endif()
+
+#add_library(backward_interface INTERFACE)
+#set_target_properties(backward_interface PROPERTIES EXPORT_NAME Interface)
+target_compile_definitions(third_libs INTERFACE ${BACKWARD_DEFINITIONS})
+target_include_directories(third_libs INTERFACE ${BACKWARD_INCLUDE_DIRS})
+if(BACKWARD_HAS_EXTERNAL_LIBRARIES)
+    target_link_libraries(third_libs INTERFACE ${BACKWARD_LIBRARIES})
+endif()
+message(STATUS "                         C++ flags debug : ${CMAKE_CXX_FLAGS_DEBUG}")
+#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd")
+#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -Xclang -gcodeview -D_DEBUG -D_MT -Xclang --dependent-lib=msvcrtd")
 message(STATUS "================== 基础功能库 ==================")
 # OpenSSL
 include(cmake/openssl.cmake)
@@ -147,41 +179,7 @@ echo_lib_version(croncpp ${croncpp_VERSION})
 # BS::thread_pool(bshoshany-thread-pool)
 # find_path(BSHOSHANY_THREAD_POOL_INCLUDE_DIRS "BS_thread_pool.hpp")
 # ==============================
-# BS::thread_pool(bshoshany-thread-pool), header-only方式的第三方库收敛到third_party
-# find_path(BSHOSHANY_THREAD_POOL_INCLUDE_DIRS "BS_thread_pool.hpp")
-set(BSHOSHANY_THREAD_POOL_INCLUDE_DIRS "${INNER_THIRD_PARTY_INCLUDE_DIRS}")
-MESSAGE(STATUS "BSHOSHANY_THREAD_POOL_INCLUDE_DIRS = ${BSHOSHANY_THREAD_POOL_INCLUDE_DIRS}")
-## 查找 thread_pool.hpp 文件路径
-## find_path(THREAD_POOL_INCLUDE_DIR BS_thread_pool.hpp PATHS ${CMAKE_PREFIX_PATH}/include /usr/include /usr/local/include ${CMAKE_SOURCE_DIR}/third_party)
-if (BSHOSHANY_THREAD_POOL_INCLUDE_DIRS)
-    # 提取 BS_THREAD_POOL_VERSION_MAJOR 宏
-    file(STRINGS "${BSHOSHANY_THREAD_POOL_INCLUDE_DIRS}/BS_thread_pool.hpp" THREAD_POOL_VERSION_MAJOR_LINE REGEX "#define BS_THREAD_POOL_VERSION_MAJOR")
-    if (THREAD_POOL_VERSION_MAJOR_LINE)
-        string(REGEX MATCH "[0-9]+" THREAD_POOL_VERSION_MAJOR "${THREAD_POOL_VERSION_MAJOR_LINE}")
-    endif ()
-
-    # 提取 BS_THREAD_POOL_VERSION_MINOR 宏
-    file(STRINGS "${BSHOSHANY_THREAD_POOL_INCLUDE_DIRS}/BS_thread_pool.hpp" THREAD_POOL_VERSION_MINOR_LINE REGEX "#define BS_THREAD_POOL_VERSION_MINOR")
-    if (THREAD_POOL_VERSION_MINOR_LINE)
-        string(REGEX MATCH "[0-9]+" THREAD_POOL_VERSION_MINOR "${THREAD_POOL_VERSION_MINOR_LINE}")
-    endif ()
-
-    # 提取 BS_THREAD_POOL_VERSION_PATCH 宏
-    file(STRINGS "${BSHOSHANY_THREAD_POOL_INCLUDE_DIRS}/BS_thread_pool.hpp" THREAD_POOL_VERSION_PATCH_LINE REGEX "#define BS_THREAD_POOL_VERSION_PATCH")
-    if (THREAD_POOL_VERSION_PATCH_LINE)
-        string(REGEX MATCH "[0-9]+" THREAD_POOL_VERSION_PATCH "${THREAD_POOL_VERSION_PATCH_LINE}")
-    endif ()
-
-    # 组合完整版本号
-    set(THREAD_POOL_VERSION_FULL "${THREAD_POOL_VERSION_MAJOR}.${THREAD_POOL_VERSION_MINOR}.${THREAD_POOL_VERSION_PATCH}")
-
-    # 显示版本信息
-    message(STATUS "bshoshany-thread-pool version: ${THREAD_POOL_VERSION_FULL}")
-    set(BSHOSHANY_THREAD_POOL_VERSION ${THREAD_POOL_VERSION_FULL})
-else ()
-    message(WARNING "bshoshany-thread-pool headers not found.")
-endif ()
-echo_lib_version(BS::thread_pool ${BSHOSHANY_THREAD_POOL_VERSION})
+include(cmake/threadpool.cmake)
 
 #simd
 include(cmake/simd.cmake)
@@ -262,6 +260,7 @@ if (MSVC)
         add_compile_definitions(KJ_USE_FIBERS=0)
     endif ()
 endif ()
+
 # ==============================
 # cista
 # find_package(cista CONFIG REQUIRED)
@@ -284,11 +283,6 @@ include(cmake/network.cmake)
 #    MI_INTERPOSE=0            # 禁用拦截标准库函数
 #)
 #echo_lib_version(mimalloc ${mimalloc_VERSION})
-
-# C++ Requests Library (Cpr for curl)
-find_package(cpr CONFIG REQUIRED)
-target_link_libraries(third_libs INTERFACE cpr::cpr)
-echo_lib_version(cpr ${cpr_VERSION})
 
 # spdlog
 include(cmake/spdlog.cmake)
@@ -368,6 +362,7 @@ else ()
     set(CUDA_FLAGS_DEBUG "N/A")
     set(CUDA_FLAGS_RELEASE "N/A")
 endif ()
+
 # 第三方库版本定义
 set(DEPENDENCY_OPENSSL "v${OPENSSL_VERSION}")
 set(DEPENDENCY_ASIO "v${ASIO_VERSION_FULL}")
@@ -655,33 +650,44 @@ else ()
     message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
 endif ()
 
-# 链接不同平台的库
-if (WIN32)
-    target_link_libraries(third_libs INTERFACE ws2_32)   # Windows 网络库, 标准 Winsock API 支持, TCP/UDP 通信、客户端/服务器, winsock2.h
-    target_link_libraries(third_libs INTERFACE mswsock)  # Windows 网络库, 微软扩展函数（高性能网络）, IOCP、异步网络、高性能服务端, mswsock.h
-    target_link_libraries(third_libs INTERFACE Imagehlp) # Windows Crash Dump, PE 文件结构解析
-    target_link_libraries(third_libs INTERFACE Dbghelp)  # Windows Crash Dump, 堆栈回溯（Stack Walking）
-    target_link_libraries(third_libs INTERFACE advapi32) # Windows 服务管理
-    target_link_libraries(third_libs INTERFACE psapi)
-    if (MINGW)
-        #find_package(libdwarf CONFIG REQUIRED)
-        #target_link_libraries(third_libs INTERFACE libdwarf::dwarf)
-        target_link_libraries(third_libs INTERFACE bfd)
-        target_compile_definitions(third_libs INTERFACE BACKWARD_HAS_BFD=1)
-    endif ()
-elseif (LINUX)
-    # vcpkg版本的libdwarf未实验成功
-    #target_link_libraries(third_libs PUBLIC libdwarf::dwarf)
-    # #define BACKWARD_HAS_DW 1
-    target_link_libraries(third_libs INTERFACE dw bfd) # apt-get install libdw-dev
-    # #define BACKWARD_HAS_DWARF 1
-    #target_link_libraries(third_libs INTERFACE elf dwarf) # apt-get install libdwarf-dev
-elseif (APPLE)
-    target_link_libraries(third_libs INTERFACE dwarf) # apt-get install libdw-dev
-endif ()
+## 链接不同平台的库
+#if (WIN32)
+#    target_link_libraries(third_libs INTERFACE ws2_32)   # Windows 网络库, 标准 Winsock API 支持, TCP/UDP 通信、客户端/服务器, winsock2.h
+#    target_link_libraries(third_libs INTERFACE mswsock)  # Windows 网络库, 微软扩展函数（高性能网络）, IOCP、异步网络、高性能服务端, mswsock.h
+#    target_link_libraries(third_libs INTERFACE Imagehlp) # Windows Crash Dump, PE 文件结构解析
+#    target_link_libraries(third_libs INTERFACE Dbghelp)  # Windows Crash Dump, 堆栈回溯（Stack Walking）
+#    target_link_libraries(third_libs INTERFACE advapi32) # Windows 服务管理
+#    target_link_libraries(third_libs INTERFACE psapi)
+#    if (MINGW)
+#        #find_package(libdwarf CONFIG REQUIRED)
+#        #target_link_libraries(third_libs INTERFACE libdwarf::dwarf)
+#        target_link_libraries(third_libs INTERFACE bfd)
+#        target_compile_definitions(third_libs INTERFACE BACKWARD_HAS_BFD=1)
+#    endif ()
+#elseif (LINUX)
+#    # vcpkg版本的libdwarf未实验成功
+#    #target_link_libraries(third_libs PUBLIC libdwarf::dwarf)
+#    # #define BACKWARD_HAS_DW 1
+#    target_link_libraries(third_libs INTERFACE dw bfd) # apt-get install libdw-dev
+#    # #define BACKWARD_HAS_DWARF 1
+#    #target_link_libraries(third_libs INTERFACE elf dwarf) # apt-get install libdwarf-dev
+#elseif (APPLE)
+#    target_link_libraries(third_libs INTERFACE dwarf) # apt-get install libdw-dev
+#endif ()
 
-get_target_property(_libs third_libs INTERFACE_LINK_LIBRARIES)
-message(STATUS "Library 'third_libs' requires: ${_libs}")
+#get_target_property(_libs third_libs INTERFACE_LINK_LIBRARIES)
+#message(STATUS "Library 'third_libs' requires: ${_libs}")
+
+# 检查编译器选项
+get_target_property(_includes third_libs INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(_libs     third_libs INTERFACE_LINK_LIBRARIES)
+get_target_property(_defines  third_libs INTERFACE_COMPILE_DEFINITIONS)
+get_target_property(_options  third_libs INTERFACE_COMPILE_OPTIONS)
+
+message(STATUS "third_libs Includes: ${_includes}")
+message(STATUS "third_libs     Libs: ${_libs}")
+message(STATUS "third_libs  Defines: ${_defines}")
+message(STATUS "third_libs  Options: ${_options}")
 
 add_library(q1x STATIC
     ${q1x-headers}
@@ -794,9 +800,9 @@ message(STATUS "继承的宏定义: ${q1x_defs}")
 
 # 检查编译器选项
 get_target_property(_includes global_compile_options INTERFACE_INCLUDE_DIRECTORIES)
-get_target_property(_libs global_compile_options INTERFACE_LINK_LIBRARIES)
-get_target_property(_defines global_compile_options INTERFACE_COMPILE_DEFINITIONS)
-get_target_property(_options global_compile_options INTERFACE_COMPILE_OPTIONS)
+get_target_property(_libs     global_compile_options INTERFACE_LINK_LIBRARIES)
+get_target_property(_defines  global_compile_options INTERFACE_COMPILE_DEFINITIONS)
+get_target_property(_options  global_compile_options INTERFACE_COMPILE_OPTIONS)
 
 message(STATUS "quant1x Includes: ${_includes}")
 message(STATUS "quant1x     Libs: ${_libs}")

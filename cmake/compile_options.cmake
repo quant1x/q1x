@@ -172,7 +172,12 @@ if(MSVC)
         target_compile_options(global_compile_options INTERFACE /O2 /Gy /GF /GS)
     endif ()
 else ()
-    target_compile_options(global_compile_options INTERFACE -O2 -m64 -march=native -mtune=native -fstack-protector-strong)
+    if (WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        # windows环境下llvm-clang编译打开-O2无法输出详细的调用栈
+    else ()
+        target_compile_options(global_compile_options INTERFACE -O2)
+    endif ()
+    target_compile_options(global_compile_options INTERFACE -m64 -march=native -mtune=native -fstack-protector-strong)
     # 启用 function/data sections
     target_compile_options(global_compile_options INTERFACE -ffunction-sections -fdata-sections)
 endif()

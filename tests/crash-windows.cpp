@@ -1,11 +1,11 @@
-#include <iostream>
 //#define BACKWARD_HAS_DWARF 0
 //#define BACKWARD_SYSTEM_UNKNOWN 0
 //#define BACKWARD_SYSTEM_LINUX 0
 //#define BACKWARD_SYSTEM_WINDOWS 1  // 强制启用Windows模式
 //#define BACKWARD_SYSTEM_DARWIN 0
-#define BACKWARD_HAS_UNWIND 1
+//#define BACKWARD_HAS_UNWIND 1
 #include "backward.hpp"
+#include <iostream>
 
 namespace {
     backward::SignalHandling sh;

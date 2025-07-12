@@ -3,10 +3,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.15] - 2025-07-12
+### Changed
+- 调整macosx下的backward设置
+- 补充fmt版本号
+
 ## [0.1.14] - 2025-07-12
 ### Changed
 - 从cmake主配置文件剥离backward-cpp,network,threadpool
 - llvm-clang崩溃输出详细的调用栈不能带-Ox优化选项, 这样的话, 虽然可以输出调用栈但是优势不明显, 可以自由选择用msvc还是clang
+- update changelog
 
 ## [0.1.13] - 2025-07-11
 ### Changed
@@ -185,7 +191,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.14...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.15...HEAD
+[0.1.15]: https://gitee.com/quant1x/q1x.git/compare/v0.1.14...v0.1.15
 [0.1.14]: https://gitee.com/quant1x/q1x.git/compare/v0.1.13...v0.1.14
 [0.1.13]: https://gitee.com/quant1x/q1x.git/compare/v0.1.12...v0.1.13
 [0.1.12]: https://gitee.com/quant1x/q1x.git/compare/v0.1.11...v0.1.12

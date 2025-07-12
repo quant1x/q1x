@@ -3,10 +3,15 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.16] - 2025-07-12
+### Changed
+- 调整mingw下原backward-cpp cmake配置不准确的问题
+
 ## [0.1.15] - 2025-07-12
 ### Changed
 - 调整macosx下的backward设置
 - 补充fmt版本号
+- update changelog
 
 ## [0.1.14] - 2025-07-12
 ### Changed
@@ -191,7 +196,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.15...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.16...HEAD
+[0.1.16]: https://gitee.com/quant1x/q1x.git/compare/v0.1.15...v0.1.16
 [0.1.15]: https://gitee.com/quant1x/q1x.git/compare/v0.1.14...v0.1.15
 [0.1.14]: https://gitee.com/quant1x/q1x.git/compare/v0.1.13...v0.1.14
 [0.1.13]: https://gitee.com/quant1x/q1x.git/compare/v0.1.12...v0.1.13

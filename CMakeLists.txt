@@ -14,7 +14,9 @@ project(quant1x-q1x
         VERSION ${VERSION_FROM_GIT}
         LANGUAGES C CXX)
 
-# 6. 编译器选项
+set(BUILD_SHARED_LIBS OFF)  # 默认构建为 STATIC
+
+# 编译器选项
 include(cmake/compile_options.cmake)
 
 # ============================================================

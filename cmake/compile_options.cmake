@@ -109,6 +109,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # 3.1 定义接口传播
 add_library(global_compile_options INTERFACE)
 
+## 为动态库定义导出宏
+#target_compile_definitions(global_compile_options INTERFACE API_DECLARE_EXPORT)
+## 为静态库定义导出宏
+#target_compile_definitions(global_compile_options INTERFACE API_DECLARE_STATIC)
+
 # 3.2 标准配置（强制传播）
 set_target_properties(global_compile_options PROPERTIES
     INTERFACE_C_STANDARD 17

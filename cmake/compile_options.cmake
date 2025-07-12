@@ -174,6 +174,7 @@ if(MSVC)
 else ()
     if (WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         # windows环境下llvm-clang编译打开-O2无法输出详细的调用栈
+    elseif (APPLE AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     else ()
         target_compile_options(global_compile_options INTERFACE -O2)
     endif ()

@@ -67,7 +67,9 @@ namespace crash {
 #elif OS_IS_LINUX
 #define BACKWARD_HAS_DW 1
 #elif OS_IS_APPLE
+#ifndef BACKWARD_HAS_DWARF
 #define BACKWARD_HAS_DWARF 1
+#endif
 #else
 #error "not support this platform"
 #endif

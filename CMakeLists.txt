@@ -16,7 +16,7 @@ project(quant1x-q1x
 
 # 6. 编译器选项
 include(cmake/compile_options.cmake)
-message(STATUS "                         C++ flags debug : ${CMAKE_CXX_FLAGS_DEBUG}")
+
 # ============================================================
 # vcpkg Options/Dependencies
 # ============================================================
@@ -45,7 +45,7 @@ set(CMAKE_TOOLCHAIN_FILE "${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake")
 MESSAGE(STATUS "CMAKE_TOOLCHAIN_FILE = ${CMAKE_TOOLCHAIN_FILE}")
 
 # 修正VCPKG的installed目录
-if(MSVC OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+if(MSVC OR (WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang"))
     set(VCPKG_INSTALLED_DIR "${PROJECT_SOURCE_DIR}/vcpkg_installed")
 else()
     set(VCPKG_INSTALLED_DIR "${VCPKG_ROOT}/installed")
@@ -135,7 +135,7 @@ target_include_directories(third_libs INTERFACE ${BACKWARD_INCLUDE_DIRS})
 if(BACKWARD_HAS_EXTERNAL_LIBRARIES)
     target_link_libraries(third_libs INTERFACE ${BACKWARD_LIBRARIES})
 endif()
-message(STATUS "                         C++ flags debug : ${CMAKE_CXX_FLAGS_DEBUG}")
+
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd")
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -Xclang -gcodeview -D_DEBUG -D_MT -Xclang --dependent-lib=msvcrtd")
 message(STATUS "================== 基础功能库 ==================")
@@ -239,6 +239,9 @@ if (MSVC)
         set(PROTOBUF_LIB_NAME "libprotobuf")
     endif ()
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if(APPLE)
+        set(PROTOBUF_LIB_NAME "protobuf")    
+    endif(APPLE)
 else ()
     set(PROTOBUF_LIB_NAME "protobuf")
 endif ()
@@ -650,34 +653,6 @@ else ()
     message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
 endif ()
 
-## 链接不同平台的库
-#if (WIN32)
-#    target_link_libraries(third_libs INTERFACE ws2_32)   # Windows 网络库, 标准 Winsock API 支持, TCP/UDP 通信、客户端/服务器, winsock2.h
-#    target_link_libraries(third_libs INTERFACE mswsock)  # Windows 网络库, 微软扩展函数（高性能网络）, IOCP、异步网络、高性能服务端, mswsock.h
-#    target_link_libraries(third_libs INTERFACE Imagehlp) # Windows Crash Dump, PE 文件结构解析
-#    target_link_libraries(third_libs INTERFACE Dbghelp)  # Windows Crash Dump, 堆栈回溯（Stack Walking）
-#    target_link_libraries(third_libs INTERFACE advapi32) # Windows 服务管理
-#    target_link_libraries(third_libs INTERFACE psapi)
-#    if (MINGW)
-#        #find_package(libdwarf CONFIG REQUIRED)
-#        #target_link_libraries(third_libs INTERFACE libdwarf::dwarf)
-#        target_link_libraries(third_libs INTERFACE bfd)
-#        target_compile_definitions(third_libs INTERFACE BACKWARD_HAS_BFD=1)
-#    endif ()
-#elseif (LINUX)
-#    # vcpkg版本的libdwarf未实验成功
-#    #target_link_libraries(third_libs PUBLIC libdwarf::dwarf)
-#    # #define BACKWARD_HAS_DW 1
-#    target_link_libraries(third_libs INTERFACE dw bfd) # apt-get install libdw-dev
-#    # #define BACKWARD_HAS_DWARF 1
-#    #target_link_libraries(third_libs INTERFACE elf dwarf) # apt-get install libdwarf-dev
-#elseif (APPLE)
-#    target_link_libraries(third_libs INTERFACE dwarf) # apt-get install libdw-dev
-#endif ()
-
-#get_target_property(_libs third_libs INTERFACE_LINK_LIBRARIES)
-#message(STATUS "Library 'third_libs' requires: ${_libs}")
-
 # 检查编译器选项
 get_target_property(_includes third_libs INTERFACE_INCLUDE_DIRECTORIES)
 get_target_property(_libs     third_libs INTERFACE_LINK_LIBRARIES)
@@ -866,6 +841,8 @@ set(THIRD_PARTY_INSTALL_INCDIR "${CMAKE_INSTALL_INCLUDEDIR}/third_party")
 set(lib_suffix "d" CACHE STRING "Default debug postfix")
 if (WIN32)
     set(lib_suffix "${lib_suffix}-win")
+elseif(APPLE)
+    set(lib_suffix "${lib_suffix}-darwin")
 endif ()
 set(q1x_DEBUG_POSTFIX ${lib_suffix})
 message(STATUS ${q1x_DEBUG_POSTFIX})
@@ -931,7 +908,6 @@ install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/q1x-config-version.cmake"
     DESTINATION lib/cmake/q1x
 )
-
 
 # 单元测试
 add_subdirectory(tests)

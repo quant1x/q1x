@@ -31,7 +31,7 @@ namespace q1x {
             if (strerror_s(&buf[0], buf.size(), errnum) != 0) {
                 std::snprintf(&buf[0], buf.size(), "Unknown error %d", errnum);
             }
-#elif (_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && !_GNU_SOURCE
+#elif defined(__APPLE__) || ((_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600) && !_GNU_SOURCE)
             if (strerror_r(errnum, &buf[0], buf.size()) != 0) {
                 std::snprintf(&buf[0], buf.size(), "Unknown error %d", errnum);
             }

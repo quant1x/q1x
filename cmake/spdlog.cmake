@@ -2,8 +2,12 @@
 #find_package(fmt CONFIG REQUIRED)
 #target_link_libraries(third_libs INTERFACE fmt::fmt)
 #echo_lib_version(fmt ${fmt_VERSION})
-#find_package(date CONFIG REQUIRED)
-#target_link_libraries(third_libs INTERFACE date::date date::date-tz)
+if(NOT WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    # 非windows环境下clang 需要date::date-tz库
+    find_package(date CONFIG REQUIRED)
+    target_link_libraries(third_libs INTERFACE date::date date::date-tz)
+endif(NOT WIN32)
+
 target_compile_definitions(third_libs INTERFACE FMT_HEADER_ONLY)
 
 # spdlog

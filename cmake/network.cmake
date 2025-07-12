@@ -43,3 +43,8 @@ if (WIN32)
     target_link_libraries(third_libs INTERFACE ws2_32)   # Windows 网络库, 标准 Winsock API 支持, TCP/UDP 通信、客户端/服务器, winsock2.h
     target_link_libraries(third_libs INTERFACE mswsock)  # Windows 网络库, 微软扩展函数（高性能网络）, IOCP、异步网络、高性能服务端, mswsock.h
 endif ()
+
+# C++ Requests Library (Cpr for curl)
+find_package(cpr CONFIG REQUIRED)
+target_link_libraries(third_libs INTERFACE cpr::cpr)
+echo_lib_version(cpr ${cpr_VERSION})

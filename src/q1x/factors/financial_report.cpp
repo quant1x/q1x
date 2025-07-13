@@ -1130,8 +1130,6 @@ namespace dfcf {
 //}
 
 
-
-
     std::tuple<std::vector<QuarterlyReport>, int, Exception> QuarterlyReports(
         const std::string& featureDate,
         int pageNo)
@@ -1167,7 +1165,7 @@ namespace dfcf {
             auto raw = nlohmann::json::parse(response.text);
             auto result = raw.find("result");
             if (result == raw.end() || result->is_null()) {
-                spdlog::warn("缺少 result 字段");
+                spdlog::warn("[QuarterlyReports] pageNo={}, report date={}: 缺少 result 字段", pageNo, quarterEndDate);
                 err = Exception(-1, "缺少 result 字段");
                 return {reports, 0, err};
             }
@@ -1228,7 +1226,7 @@ namespace dfcf {
         return {reports, 0, err};
     }
 
-    std::tuple<std::vector<QuarterlyReport>, int, Exception> QuarterlyReportsBySecurityCode(
+    [[maybe_unused]] std::tuple<std::vector<QuarterlyReport>, int, Exception> QuarterlyReportsBySecurityCode(
         const std::string& securityCode,
         const std::string& date,
         int diffQuarters,

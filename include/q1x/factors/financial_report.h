@@ -66,7 +66,7 @@ namespace dfcf {
         const std::string& featureDate,
         int pageNo = 1);
 
-    std::tuple<std::vector<QuarterlyReport>, int, Exception> QuarterlyReportsBySecurityCode(
+    [[maybe_unused]] std::tuple<std::vector<QuarterlyReport>, int, Exception> QuarterlyReportsBySecurityCode(
         const std::string& securityCode,
         const std::string& date,
         int diffQuarters,

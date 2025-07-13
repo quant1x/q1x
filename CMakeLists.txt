@@ -86,6 +86,8 @@ include_directories(${CMAKE_PREFIX_PATH}/include)
 link_directories(${CMAKE_PREFIX_PATH}/lib)
 set(VCPKG_INCLUDE_DIRS ${VCPKG_LIBS_PATH}/include)
 set(VCPKG_LIBRARY_DIRS ${VCPKG_LIBS_PATH}/lib)
+#target_include_directories(third_libs INTERFACE ${VCPKG_INCLUDE_DIRS})
+#target_link_directories(third_libs INTERFACE ${VCPKG_LIBRARY_DIRS})
 
 if (DEFINED ENV{MSF_RUNTIME})
     file(TO_CMAKE_PATH "$ENV{MSF_RUNTIME}" RUNTIME)
@@ -324,7 +326,7 @@ echo_lib_version(Catch2 ${Catch2_VERSION})
 add_library(test-catch2 INTERFACE)
 target_link_libraries(test-catch2 INTERFACE Catch2::Catch2 Catch2::Catch2WithMain)
 # 启用Catch2 Unicode支持
-target_compile_definitions(third_libs INTERFACE
+target_compile_definitions(test-catch2 INTERFACE
     CATCH_CONFIG_WINDOWS_SEH
     CATCH_CONFIG_USE_ANSI_COLOR_CODES
 )
@@ -667,12 +669,14 @@ else ()
 endif ()
 
 # 检查编译器选项
-get_target_property(_includes third_libs INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(_include_dirs third_libs INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(_library_dirs third_libs INTERFACE_LIBRARY_DIRECTORIES)
 get_target_property(_libs     third_libs INTERFACE_LINK_LIBRARIES)
 get_target_property(_defines  third_libs INTERFACE_COMPILE_DEFINITIONS)
 get_target_property(_options  third_libs INTERFACE_COMPILE_OPTIONS)
 
-message(STATUS "third_libs Includes: ${_includes}")
+message(STATUS "third_libs Include dirs: ${_include_dirs}")
+message(STATUS "third_libs Library dirs: ${_library_dirs}")
 message(STATUS "third_libs     Libs: ${_libs}")
 message(STATUS "third_libs  Defines: ${_defines}")
 message(STATUS "third_libs  Options: ${_options}")

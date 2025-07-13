@@ -115,3 +115,8 @@ add_catch2_executable(test-calender.cpp)
 
 # formula测试
 add_catch2_executable(tdd-formula.cpp)
+
+# f10
+add_catch2_executable(tdd-notices.cpp)
+add_catch2_executable(tdd-safety-score.cpp)
+add_catch2_executable(tdd-margin-trading.cpp)

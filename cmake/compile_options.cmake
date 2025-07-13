@@ -220,26 +220,21 @@ endif()
 
 # 5. 关于debug和release模式的编译选项
 if (MSVC)
-    # 确保 Debug 模式使用正确的调试信息格式
-    target_compile_options(global_compile_options INTERFACE
-        $<$<CONFIG:Debug>:/Zi /DEBUG>
-    )
-    # 确保 Release 模式不包含调试符号（可选）
-    target_compile_options(global_compile_options INTERFACE
-        $<$<CONFIG:Release>:/O2>
-    )
-    #set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} /DEBUG")
-    target_link_options(global_compile_options INTERFACE
-        $<$<CONFIG:Debug>:/DEBUG>
-    )
-    #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        # 确保 Debug 模式使用正确的调试信息格式
+        target_compile_options(global_compile_options INTERFACE /Zi /DEBUG)
+        target_link_options(global_compile_options INTERFACE /DEBUG)
+    else ()
+        # 确保 Release 模式不包含调试符号（可选）
+        target_compile_options(global_compile_options INTERFACE /O2)
+    endif ()
 else ()
-    target_compile_options(global_compile_options INTERFACE $<$<CONFIG:Debug>:-g>)
-    target_compile_options(global_compile_options INTERFACE $<$<CONFIG:Release>:-O2>)
-    #set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -g")
-    target_link_options(global_compile_options INTERFACE
-        $<$<CONFIG:Debug>:-g>
-    )
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        target_compile_options(global_compile_options INTERFACE -g)
+        target_link_options(global_compile_options INTERFACE -g)
+    else ()
+        target_compile_options(global_compile_options INTERFACE -O2)
+    endif ()
 endif ()
 
 # 6. 检查编译器标准库

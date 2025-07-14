@@ -202,10 +202,10 @@ namespace risks {
                         std::lock_guard<std::mutex> lock(mapMutex);
                         mapSafetyScore[securityCode] = score;
                     } catch (const json::type_error &e) {
-                        spdlog::error("类型转换错误: {}", e.what());
+                        spdlog::error("[safety-score] 类型转换错误: {}", e.what());
                     }
                 } catch (const json::parse_error &e) {
-                    spdlog::error("JSON parse error: {}", e.what());
+                    spdlog::error("[safety-score] JSON parse error: {}", e.what());
                     // 线程安全地读取map
                     std::lock_guard<std::mutex> lock(mapMutex);
                     auto it = mapSafetyScore.find(securityCode);

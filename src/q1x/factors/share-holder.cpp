@@ -121,7 +121,7 @@ namespace dfcf {
             if (j["data"].is_array()) {
                 r.data = j["data"].get<std::vector<RawStockHolder::Result::Data>>();
             } else if (!j["data"].is_null()) {
-                throw json::type_error::create(302, "Field 'data' must be array", &j);
+                throw json::type_error::create(302, "[share-holder] Field 'data' must be array", &j);
             }
         }
     }
@@ -198,8 +198,8 @@ namespace dfcf {
                 };
 
                 // 修订证券代码
-                auto [_, mfalg, mcode] = exchange::DetectMarket(shareholder.SecurityCode);
-                shareholder.SecurityCode = mfalg + mcode;
+                auto [_, mflag, mcode] = exchange::DetectMarket(shareholder.SecurityCode);
+                shareholder.SecurityCode = mflag + mcode;
 
                 // HoldChangeState
                 if (v.HOLDNUM_CHANGE_NAME == "新进") {
@@ -213,7 +213,7 @@ namespace dfcf {
                 } else {
                     shareholder.HoldChangeState = HoldNumUnknownChanges;
                     std::string warning = v.SECURITY_NAME_ABBR + ": " + v.SECUCODE + ", 变化状态未知: " + v.HOLDNUM_CHANGE_NAME;
-                    spdlog::warn("WARNING: {}", warning);
+                    spdlog::warn("[share-holder] WARNING: {}", warning);
                 }
 
                 list.push_back(shareholder);
@@ -224,7 +224,7 @@ namespace dfcf {
                 return a.HolderRank < b.HolderRank;
             });
         } catch (const std::exception& e) {
-            spdlog::error("Error parsing shareholder data: {}", e.what());
+            spdlog::error("[share-holder] Error parsing shareholder data: {}", e.what());
         }
 
         return list;

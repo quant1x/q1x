@@ -43,7 +43,6 @@ namespace datasets {
         return _historical_trading_data_begin_date;
     }
 
-
     // 获取指定日期的分笔成交记录
     std::vector<level1::TickTransaction> CheckoutTransactionData(const std::string &securityCode,
                                                                  const exchange::timestamp &featureDate,

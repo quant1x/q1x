@@ -38,7 +38,8 @@ namespace cache {
 
     void doneUpdate(const std::string& date, const exchange::timestamp& timestamp) {
         std::string filename = stateFilename(date, timestamp);
-        util::check_filepath(filename, true);
+        auto err = util::check_filepath(filename, true);
+        err.clear();
         io::write_file(filename);
     }
 
@@ -57,92 +58,6 @@ namespace cache {
             spdlog::error("Error cleaning state files: {}", e.what());
             return false;
         }
-    }
-
-    void update_chips(const std::string &code, const std::string& date) {
-        std::string securityCode = exchange::CorrectSecurityCode(code);
-        std::string factor_date = date;
-        auto cache_filename = config::get_historical_trade_filename(securityCode, factor_date);
-        if (!fs::exists(cache_filename)) {
-            return;
-        }
-        io::CSVReader<6,io::trim_chars<' ', '\t'>,io::double_quote_escape<',','"'>> csvReader(cache_filename);
-        csvReader.read_header(io::ignore_extra_column, "time", "price", "vol", "num", "amount", "buyorsell");
-        std::string Time;      // 时间 hh:mm
-        f64 Price = 0;     // 价格
-        f64 Vol = 0;          // 成交量, 股数
-        i64 Num = 0;          // 历史成交数据中无该字段，但仍保留
-        f64 Amount = 0;    // 金额
-        int BuyOrSell = TradeDirection::TICK_NEUTRAL;    // 交易方向
-        tsl::robin_map<int32_t, PriceLine> chipDistributionMap;
-        int32_t front = 0;
-        bool is_first = true;
-        while (csvReader.read_row(Time, Price, Vol, Num, Amount, BuyOrSell)) {
-            auto price = int32_t(Price * 100);
-            PriceLine pl{};
-            pl.price = price;
-            if (is_first) {
-                switch (BuyOrSell) {
-                    case TradeDirection::TICK_BUY:
-                        pl.buy = Vol;
-                        break;
-                    case TradeDirection::TICK_SELL:
-                        pl.sell = Vol;
-                        break;
-                    default:
-                        pl.buy = Vol/2;
-                        pl.sell = Vol - pl.buy;
-                        break;
-                }
-                is_first = false;
-            } else {
-                if ( price > front) {
-                    BuyOrSell = TradeDirection::TICK_BUY;
-                    pl.buy = Vol;
-                } else if (price < front) {
-                    BuyOrSell = TradeDirection::TICK_SELL;
-                    pl.sell = Vol;
-                } else {
-                    BuyOrSell = TradeDirection::TICK_NEUTRAL;
-                    pl.buy = Vol/2;
-                    pl.sell = Vol - pl.buy;
-                }
-            }
-            auto it = chipDistributionMap.find(pl.price);
-            if(it != chipDistributionMap.end()) {
-                pl.buy += it->second.buy;
-                pl.sell += it->second.sell;
-            }
-            chipDistributionMap[pl.price] = pl;
-            front = price;
-        }
-//        // 提取所有 key 到 vector
-//        std::vector<int32_t> keys;
-//        keys.reserve(chipDistributionMap.size());  // 预分配空间优化性能
-//        for (const auto& [key, value] : chipDistributionMap) {
-//            keys.push_back(key);
-//        }
-//        std::sort(keys.begin(), keys.end());
-        std::vector<PriceLine> values;
-        for (const auto& [_,v] : chipDistributionMap) {
-            values.push_back(v);
-        }
-        std::sort(values.begin(), values.end(), [](const PriceLine& a, const PriceLine &b){
-            return a.price< b.price;
-        });
-
-        data::Chips chips{};
-        auto ofn = config::get_chip_distribution_filename(securityCode, factor_date);
-        std::ofstream out(ofn, std::ios::binary);
-        chips.set_date(factor_date);
-        for(const auto & v : values) {
-            auto l = chips.add_dist();
-            l->set_price(v.price);
-            l->set_buy(v.buy);
-            l->set_sell(v.sell);
-        }
-        bool result = chips.SerializeToOstream(&out);
-        (void)result;
     }
 
     int update_with_adapters(const std::vector<cache::DataAdapter*> &adapters, const exchange::timestamp& feature_date) {
@@ -324,7 +239,8 @@ namespace cache {
 
                     // 4. 写入文件
                     if (!final_data.empty()) {
-                        util::check_filepath(cache_filename, true);
+                        auto ec = util::check_filepath(cache_filename, true);
+                        ec.clear();
                         std::ofstream out_file(cache_filename, std::ios::binary|std::ios::out | std::ios::trunc);
                         if (out_file) {
                             csv2::Writer<csv2::delimiter<','>> writer(out_file);

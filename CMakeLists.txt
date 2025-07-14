@@ -430,13 +430,14 @@ set(q1x-headers
     include/q1x/ta/sma.h
 
     # 数据集
-    include/q1x/datasets/chips.h
+    include/q1x/datasets/base.h
+    include/q1x/datasets/xdxr.h
+    include/q1x/datasets/xdxr_adjust_factor.h
     include/q1x/datasets/kline_raw.h
     include/q1x/datasets/kline.h
     include/q1x/datasets/trans.h
     include/q1x/datasets/minute.h
-    include/q1x/datasets/xdxr.h
-    include/q1x/datasets/xdxr_adjust_factor.h
+    include/q1x/datasets/chips.h
 
     # 实时模块
     include/q1x/realtime/snapshot.h
@@ -544,12 +545,13 @@ set(q1x-sources
     src/q1x/backtest/trade.cpp
 
     # 数据集
-    src/q1x/datasets/minute.cpp
     src/q1x/datasets/xdxr_adjust_factor.cpp
     src/q1x/datasets/xdxr.cpp
-    src/q1x/datasets/trans.cpp
     src/q1x/datasets/klines.cpp
     src/q1x/datasets/kline_raw.cpp
+    src/q1x/datasets/minute.cpp
+    src/q1x/datasets/trans.cpp
+    src/q1x/datasets/chips.cpp
     src/q1x/datasets.cpp
 
     # 交易所相关

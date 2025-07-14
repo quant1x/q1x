@@ -49,8 +49,6 @@ namespace cache {
         f64 sell  = 0;  // 卖出, 成交量, 单位股
     };
 
-    void update_chips(const std::string &code, const std::string &date);
-
 }  // namespace cache
 
 #endif  // QUANT1X_CACHE_H

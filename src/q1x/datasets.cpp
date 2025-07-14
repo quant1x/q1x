@@ -2,6 +2,7 @@
 #include <q1x/datasets/xdxr.h>
 #include <q1x/datasets/kline.h>
 #include <q1x/datasets/minute.h>
+#include <q1x/datasets/chips.h>
 #include <q1x/factors/f10.h>
 #include <q1x/factors/history.h>
 
@@ -17,6 +18,8 @@ namespace datasets {
         cache::Register(std::make_unique<DataKLine>());
         // 分时数据
         cache::Register(std::make_unique<DataMinute>());
+        // 筹码分布
+        cache::Register(std::make_unique<DataChips>());
 
         // 特征数据
         // F10

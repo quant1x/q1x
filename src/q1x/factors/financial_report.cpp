@@ -1156,7 +1156,7 @@ namespace dfcf {
         Exception err(0, "");
 
         if (response.status_code != 200) {
-            spdlog::error("请求失败: {}", response.status_code);
+            spdlog::error("[financial_report] 请求失败: {}", response.status_code);
             err = Exception(-1, "HTTP请求失败");
             return {reports, 0, err};
         }
@@ -1165,7 +1165,7 @@ namespace dfcf {
             auto raw = nlohmann::json::parse(response.text);
             auto result = raw.find("result");
             if (result == raw.end() || result->is_null()) {
-                spdlog::warn("[QuarterlyReports] pageNo={}, report date={}: 缺少 result 字段", pageNo, quarterEndDate);
+                spdlog::warn("[financial_report] pageNo={}, report date={}: 缺少 result 字段", pageNo, quarterEndDate);
                 err = Exception(-1, "缺少 result 字段");
                 return {reports, 0, err};
             }
@@ -1219,7 +1219,7 @@ namespace dfcf {
             return {reports, pages, Exception(0, "")};
 
         } catch (const std::exception& e) {
-            spdlog::error("JSON解析错误: {}", e.what());
+            spdlog::error("[financial_report] JSON解析错误: {}", e.what());
             err = Exception(-1, "JSON解析错误: " + std::string(e.what()));
         }
 
@@ -1256,7 +1256,7 @@ namespace dfcf {
         Exception err(0, "");
 
         if (response.status_code != 200) {
-            spdlog::error("请求失败: {}", response.status_code);
+            spdlog::error("[financial_report] 请求失败: {}", response.status_code);
             err = Exception(-1, "HTTP请求失败");
             return {reports, 0, err};
         }
@@ -1265,7 +1265,7 @@ namespace dfcf {
             auto raw = nlohmann::json::parse(response.text);
             auto result = raw.find("result");
             if (result == raw.end() || result->is_null()) {
-                spdlog::warn("缺少 result 字段");
+                spdlog::warn("[financial_report] 缺少 result 字段");
                 err = Exception(-1, "缺少 result 字段");
                 return {reports, 0, err};
             }
@@ -1318,7 +1318,7 @@ namespace dfcf {
             return {reports, pages, Exception(0, "")};
 
         } catch (const std::exception& e) {
-            spdlog::error("JSON解析错误: {}", e.what());
+            spdlog::error("[financial_report] JSON解析错误: {}", e.what());
             err = Exception(-1, "JSON解析错误: " + std::string(e.what()));
         }
 

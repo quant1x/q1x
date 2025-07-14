@@ -45,6 +45,7 @@ void HistoryFeature::Update(const std::string &code, const exchange::timestamp &
     history.Code = code;
     auto klines = factors::klines_forward_adjusted_to_date(code, feature_date);
     if(klines.size() < factors::KLineMin) {
+        spdlog::warn("code={},date={}, 日线数据不足", code, feature_date);
         return;
     }
     DataFrame df = DataFrame::from_struct_vector(klines);
@@ -141,6 +142,9 @@ void HistoryFeature::Update(const std::string &code, const exchange::timestamp &
 
     // 成交统计概要数据
     auto list = datasets::CheckoutTransactionData(code, date, true);
+    if(list.empty()) {
+        spdlog::warn("code={},date={}, 分笔成交数据为空", code, feature_date);
+    }
     auto summary = datasets::CountInflow(list, code, ts_cache);
     history.OpenVolume = summary.OpenVolume;
 

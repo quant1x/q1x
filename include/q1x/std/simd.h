@@ -19,4 +19,9 @@
 #include <span>
 #include <type_traits> // 用于类型检查
 
+namespace simd {
+    template<typename T>
+    using array = xt::xarray<T>;
+} // namespace simd
+
 #endif //QUANT1X_STD_SIMD_H

@@ -10,10 +10,11 @@
     "mimalloc",
     "cpr",
     "duktape",
+    "flatbuffers",
+    "capnproto",
     "benchmark",
     "catch2",
     "gtest",
-    "flatbuffers",
-    "capnproto"
+    "matplotplusplus"
   ]
 }

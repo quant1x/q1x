@@ -992,6 +992,21 @@ namespace xsimd
     }
 
     /**
+     * @ingroup batch_arithmetic
+     *
+     * Computes <tt>-(x*y) - z</tt> in a single instruction when possible.
+     * @param x a batch of integer or floating point values.
+     * @param y a batch of integer or floating point values.
+     * @param z a batch of integer or floating point values.
+     * @return  a batch where each even-indexed element is computed as <tt>x * y - z</tt> and each odd-indexed element as <tt>x * y + z</tt>
+     */
+    template <class T, class A>
+    XSIMD_INLINE batch<T, A> fmas(batch<T, A> const& x, batch<T, A> const& y, batch<T, A> const& z) noexcept
+    {
+        detail::static_check_supported_config<T, A>();
+        return kernel::fmas<A>(x, y, z, A {});
+    }
+    /**
      * @ingroup batch_fp
      *
      * Split split the number x into a normalized fraction and an exponent which is stored in exp
@@ -2109,6 +2124,7 @@ namespace xsimd
     shuffle(batch<T, A> const& x, batch<T, A> const& y, batch_constant<Vt, A, Values...> mask) noexcept
     {
         static_assert(sizeof(T) == sizeof(Vt), "consistent mask");
+        static_assert(std::is_unsigned<Vt>::value, "mask must hold unsigned indices");
         detail::static_check_supported_config<T, A>();
         return kernel::shuffle<A>(x, y, mask, A {});
     }
@@ -2418,6 +2434,7 @@ namespace xsimd
     XSIMD_INLINE batch<std::complex<T>, A> swizzle(batch<std::complex<T>, A> const& x, batch_constant<Vt, A, Values...> mask) noexcept
     {
         static_assert(sizeof(T) == sizeof(Vt), "consistent mask");
+        static_assert(std::is_unsigned<Vt>::value, "mask must hold unsigned indices");
         detail::static_check_supported_config<T, A>();
         return kernel::swizzle<A>(x, mask, A {});
     }

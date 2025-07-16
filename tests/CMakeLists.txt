@@ -123,3 +123,6 @@ add_catch2_executable(tdd-margin-trading.cpp)
 
 # 筹码分布
 add_catch2_executable(tdd-chips.cpp)
+
+# 技术形态
+add_catch2_executable(tdd-peaks.cpp)

@@ -260,16 +260,20 @@ target_link_libraries(third_libs INTERFACE unofficial::duktape::duktape)
 echo_lib_version(duktape ${unofficial-duktape_VERSION})
 
 message(STATUS "================== 测试工具库 ==================")
+# 查找 Matplot++, 需要安装gnuplot
+find_package(Matplot++ REQUIRED)
+echo_lib_version(Matplot++, ${Matplot++_VERSION})
+
 # 查找 Google Benchmark 包
 find_package(benchmark REQUIRED)
 add_library(test-benchmark INTERFACE)
-target_link_libraries(test-benchmark INTERFACE benchmark::benchmark benchmark::benchmark_main)
+target_link_libraries(test-benchmark INTERFACE benchmark::benchmark benchmark::benchmark_main Matplot++::cimg  Matplot++::matplot)
 echo_lib_version(benchmark ${benchmark_VERSION})
 # Catch2
 find_package(Catch2 CONFIG REQUIRED)
 echo_lib_version(Catch2 ${Catch2_VERSION})
 add_library(test-catch2 INTERFACE)
-target_link_libraries(test-catch2 INTERFACE Catch2::Catch2 Catch2::Catch2WithMain)
+target_link_libraries(test-catch2 INTERFACE Catch2::Catch2 Catch2::Catch2WithMain Matplot++::cimg  Matplot++::matplot)
 # 启用Catch2 Unicode支持
 target_compile_definitions(test-catch2 INTERFACE
     CATCH_CONFIG_WINDOWS_SEH
@@ -278,7 +282,7 @@ target_compile_definitions(test-catch2 INTERFACE
 # GTest
 find_package(GTest CONFIG REQUIRED)
 add_library(test-gtest INTERFACE)
-target_link_libraries(test-gtest INTERFACE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main)
+target_link_libraries(test-gtest INTERFACE GTest::gtest GTest::gtest_main GTest::gmock GTest::gmock_main Matplot++::cimg  Matplot++::matplot)
 echo_lib_version(GTest ${GTest_VERSION})
 
 # ============================================================

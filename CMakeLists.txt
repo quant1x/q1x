@@ -367,6 +367,7 @@ set(q1x-headers
     include/q1x/std/feature_detection.h
     include/q1x/std/numerics.h
     include/q1x/std/safe.h
+    include/q1x/std/simd.h
 
     # i/o 相关
     include/q1x/io/csv-reader.h
@@ -388,7 +389,6 @@ set(q1x-headers
     include/q1x/runtime/once.h
     include/q1x/runtime/core.h
     include/q1x/std/scheduler.h
-    include/q1x/ta/simd.h
 
     # 配置
     include/q1x/config/rule-parameter.h
@@ -484,6 +484,18 @@ set(q1x-headers
     include/q1x/factors/safety-score.h
     include/q1x/factors/history.h
 
+    # Technical Analysis Patterns
+    include/q1x/ta/boll.h
+    include/q1x/ta/ema.h
+    include/q1x/ta/ma.h
+    include/q1x/ta/macd.h
+    include/q1x/ta/rolling.h
+    include/q1x/ta/rolling_window.h
+    include/q1x/ta/rsi.h
+    include/q1x/ta/ta.h
+    include/q1x/ta/type_default.h
+    include/q1x/ta/wave.h
+
     # 交易柜台
     include/q1x/trader/fee.h
     include/q1x/trader/order.h
@@ -498,6 +510,8 @@ set(q1x-headers
 
     # 内嵌资源文件
     include/q1x/resources/meta/blocks.h
+
+    # 应用入口
     include/q1x/quant1x.h
 )
 
@@ -508,6 +522,7 @@ set(q1x-sources
     src/q1x/std/util.cpp
     src/q1x/std/numerics.cpp
     src/q1x/std/safe.cpp
+    src/q1x/std/simd.cpp
 
     # 运行时
     src/q1x/std/affinity.cpp
@@ -576,6 +591,9 @@ set(q1x-sources
     src/q1x/factors/financial_report.cpp
     src/q1x/factors/safety-score.cpp
 
+    # Technical Analysis Patterns
+    src/q1x/ta/wave.cpp
+
     # 实时
     src/q1x/realtime/snapshot.cpp
 
@@ -596,6 +614,8 @@ set(q1x-sources
     src/q1x/trader/position.cpp
     src/q1x/trader/tracker.cpp
     src/q1x/trader/order_state.cpp
+
+    # 应用入口
     src/q1x/quant1x.cpp
 )
 

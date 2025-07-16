@@ -1,0 +1,8 @@
+#pragma once
+#ifndef QUANT1X_TECHNICAL_ANALYSIS_PATTERNS_WAVE_H
+#define QUANT1X_TECHNICAL_ANALYSIS_PATTERNS_WAVE_H 1
+
+#include <q1x/std/simd.h>
+#include <vector>
+
+#endif //QUANT1X_TECHNICAL_ANALYSIS_PATTERNS_WAVE_H

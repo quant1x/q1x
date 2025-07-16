@@ -369,7 +369,7 @@ int compare(double a, double b) {
 }
 
 // 主函数：寻找波峰和波谷
-pair<vector<int>, vector<int>> peaks_and_valleys(const vector<double>& high, const vector<double>& low) {
+pair<vector<int>, vector<int>> basic_peaks_and_valleys(const vector<double>& high, const vector<double>& low) {
     /**
      * 输入: high - 高价序列, low - 低价序列
      * 返回: 包含波峰和波谷索引的pair
@@ -443,7 +443,7 @@ pair<vector<int>, vector<int>> peaks_and_valleys(const vector<double>& high, con
 TEST_CASE("find-peaks-v6", "[peaks]") {
     vector<double> high_prices = {1.1, 1.2, 1.3, 1.2, 1.1};
     vector<double> low_prices = {1.0, 1.1, 1.2, 1.1, 1.0};
-    auto [peaks, valleys] = peaks_and_valleys(high_prices, low_prices);
+    auto [peaks, valleys] = basic_peaks_and_valleys(high_prices, low_prices);
     std::cout << peaks << std::endl;
     std::cout << valleys << std::endl;
 }

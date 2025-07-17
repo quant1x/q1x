@@ -126,3 +126,5 @@ add_catch2_executable(tdd-chips.cpp)
 
 # 技术形态
 add_catch2_executable(tdd-peaks.cpp)
+add_catch2_executable(tdd-linear-regression.cpp)
+add_catch2_executable(tdd-patterns-wave-release.cpp)

@@ -494,6 +494,7 @@ set(q1x-headers
     include/q1x/ta/rsi.h
     include/q1x/ta/ta.h
     include/q1x/ta/type_default.h
+    include/q1x/ta/trend.h
     include/q1x/ta/wave.h
 
     # 交易柜台
@@ -592,6 +593,7 @@ set(q1x-sources
     src/q1x/factors/safety-score.cpp
 
     # Technical Analysis Patterns
+    src/q1x/ta/trend.cpp
     src/q1x/ta/wave.cpp
 
     # 实时

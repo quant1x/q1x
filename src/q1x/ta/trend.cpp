@@ -1,0 +1,1 @@
+#include <q1x/ta/trend.h>

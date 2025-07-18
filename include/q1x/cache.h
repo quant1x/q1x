@@ -3,7 +3,7 @@
 #define QUANT1X_CACHE_H 1
 
 #include <q1x/std/api.h>
-#include <q1x/proto/data.pb.h>
+#include <q1x/proto/data.h>
 #include <q1x/engine/action.h>
 #include <q1x/runtime/config.h>
 #include <q1x/exchange.h>

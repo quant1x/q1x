@@ -412,8 +412,8 @@ set(q1x-headers
 
     # 数据协议
     include/q1x/proto/data.h
-    include/q1x/proto/data.pb.h
-    include/q1x/proto/data.pb.cc
+    include/q1x/proto/chips.pb.h
+    include/q1x/proto/chips.pb.cc
     include/q1x/proto/snapshot.capnp.h
     include/q1x/proto/snapshot.capnp.c++
     include/q1x/proto/xdxr.pb.h

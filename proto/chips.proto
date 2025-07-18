@@ -1,6 +1,7 @@
+// protoc.exe --cpp_out=include\q1x\proto --proto_path=.\proto\ chips.proto
 syntax = "proto3";
 
-package data;
+package datasets;
 
 // 价格线
 message Line {

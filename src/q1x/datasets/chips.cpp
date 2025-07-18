@@ -84,7 +84,7 @@ namespace datasets {
             return a.price < b.price;
         });
 
-        data::Chips chips{};
+        datasets::Chips chips{};
         auto ofn = config::get_chip_distribution_filename(securityCode, factor_date);
         std::ofstream out(ofn, std::ios::binary);
         chips.set_date(factor_date);

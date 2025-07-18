@@ -1,4 +1,4 @@
-//protoc --cpp_out=include\ .\proto\xdxr.proto
+// protoc.exe --cpp_out=include\q1x\proto --proto_path=.\proto\ xdxr.proto
 syntax = "proto3";
 
 package xdxr;

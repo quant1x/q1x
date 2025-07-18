@@ -84,7 +84,7 @@ std::pair<std::vector<int>, std::vector<int>> basic_peaks_and_valleys(const std:
 
 namespace ta::patterns {
 
-    std::pair<std::vector<data_point>, std::vector<data_point>> peaks_and_valleys(const xt::xarray<double> &high,
+    std::pair<std::vector<point>, std::vector<point>> peaks_and_valleys(const xt::xarray<double> &high,
                                                                     const xt::xarray<double> &low) {
         // 确保输入大小一致
         if (high.shape() != low.shape()) {
@@ -139,9 +139,9 @@ namespace ta::patterns {
         auto peak_indices   = xt::flatten_indices(xt::where(xt::equal(d_high, -2)));
         auto valley_indices = xt::flatten_indices(xt::where(xt::equal(d_low, 2)));
 
-        std::vector<data_point> peaks;
+        std::vector<point> peaks;
         peaks.reserve(peak_indices.size());
-        std::vector<data_point> valleys;
+        std::vector<point> valleys;
         valleys.reserve(valley_indices.size());
         for (auto &idx : peak_indices) {
             // 调整索引(+1)

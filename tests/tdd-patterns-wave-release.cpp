@@ -41,7 +41,7 @@ struct LinearRegressionModel {
 };
 
 // 线性回归拟合
-LinearRegressionModel linear_regression(const std::vector<data_point>& points) {
+LinearRegressionModel linear_regression(const std::vector<ta::point>& points) {
     int n = points.size();
     if (n < 2) {
         return {0.0, 0.0}; // 数据不足
@@ -94,7 +94,7 @@ TEST_CASE("patterns-wave-v2", "[release]") {
     // 查找最低的波谷
     if (!valleys.empty()) {
         auto min_it = std::min_element(valleys.begin(), valleys.end(),
-                                       [](const data_point& a, const data_point& b) {
+                                       [](const ta::point& a, const ta::point& b) {
                                            return a.y < b.y;
                                        });
 
@@ -106,7 +106,7 @@ TEST_CASE("patterns-wave-v2", "[release]") {
         return;
     }
 
-    const data_point* min_valley = &valleys[0];
+    const ta::point* min_valley = &valleys[0];
     for (const auto& pt : valleys) {
         if (pt.y < min_valley->y) {
             min_valley = &pt;
@@ -114,7 +114,7 @@ TEST_CASE("patterns-wave-v2", "[release]") {
     }
     std::cout << "最低波谷: " << min_valley->to_string() << std::endl;
 
-    const data_point* max_peak = &peaks[0];
+    const ta::point* max_peak = &peaks[0];
     for (const auto& pt : peaks) {
         if (pt.y > max_peak->y) {
             max_peak = &pt;
@@ -123,7 +123,7 @@ TEST_CASE("patterns-wave-v2", "[release]") {
     std::cout << "最高波谷: " << max_peak->to_string() << std::endl;
 
     // 获取最低波谷和最高波峰之间的波峰
-    std::vector<data_point> future_peaks;
+    std::vector<ta::point> future_peaks;
     for (const auto& peak : peaks) {
         if (peak.x > min_valley->x && peak.x < max_peak->x) {
             future_peaks.push_back(peak);

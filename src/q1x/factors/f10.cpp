@@ -349,9 +349,9 @@ void F10Feature::init(const exchange::timestamp &timestamp) {
 namespace factors {
 
     namespace {
-        static inline std::mutex g_factor_f10_mutex{};
-        static inline tsl::robin_map<std::string, F10> g_factor_f10_map{};
-        static inline exchange::timestamp              g_factor_f10_date{};
+        inline std::mutex g_factor_f10_mutex{};
+        inline tsl::robin_map<std::string, F10> g_factor_f10_map{};
+        inline exchange::timestamp              g_factor_f10_date{};
     }
 
     /// 获取指定日期的F10数据

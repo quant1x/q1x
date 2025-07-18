@@ -175,7 +175,7 @@ public:
         return tm_result;
     }
 
-    // LoadCSV 加载数据
+    // 加载数据
     bool LoadCSV(const std::string &code, const std::string &date) {
         // 假设这些函数在C++中有对应的实现
         // std::vector<KLine> klines = base::CheckoutKLines(code, date);
@@ -577,7 +577,8 @@ TEST_CASE("v2", "[chips]") {
     }
     f64 targetPrice = cd.LastClose;
     auto [upper, lower] = cd.FindMainPeaks(targetPrice);
-    std::cout << "当前价格 " << targetPrice << " 附近的主要筹码峰:" << std::endl;
+    std::cout << "当前日期: " << date << ", 证券代码:" << security_code << std::endl;
+    std::cout << "当前价格: " << targetPrice << " 附近的主要筹码峰:" << std::endl;
     std::printf("压力(上): 最接近=%.2f, 最大=%.2f, 成交量=%.2f股, 占比=%.2f%%\n", upper.Closest, upper.Extremum, cd.RealVolume(upper.CurrentToPeakRatio), 100*upper.CurrentToPeakRatio);
     std::printf("支撑(下): 最接近=%.2f, 最大=%.2f, 成交量=%.2f股, 占比=%.2f%%\n", lower.Closest, lower.Extremum, cd.RealVolume(lower.CurrentToPeakRatio), 100*lower.CurrentToPeakRatio);
 }

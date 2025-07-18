@@ -414,8 +414,6 @@ set(q1x-headers
     include/q1x/proto/data.h
     include/q1x/proto/data.pb.h
     include/q1x/proto/data.pb.cc
-    include/q1x/proto/kline.pb.h
-    include/q1x/proto/kline.pb.cc
     include/q1x/proto/snapshot.capnp.h
     include/q1x/proto/snapshot.capnp.c++
     include/q1x/proto/xdxr.pb.h

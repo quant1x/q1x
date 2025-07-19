@@ -543,6 +543,7 @@ set(q1x-sources
     # level1
     src/q1x/level1/client.cpp
     src/q1x/level1/protocol.cpp
+    src/q1x/level1/server.cpp
 
     # 配置信息
     src/q1x/config/config.cpp
@@ -762,15 +763,17 @@ message(STATUS "继承的编译选项: ${q1x_opts}")
 message(STATUS "继承的宏定义: ${q1x_defs}")
 
 # 检查编译器选项
-get_target_property(_includes global_compile_options INTERFACE_INCLUDE_DIRECTORIES)
-get_target_property(_libs     global_compile_options INTERFACE_LINK_LIBRARIES)
-get_target_property(_defines  global_compile_options INTERFACE_COMPILE_DEFINITIONS)
-get_target_property(_options  global_compile_options INTERFACE_COMPILE_OPTIONS)
+get_target_property(compile_includes global_compile_options INTERFACE_INCLUDE_DIRECTORIES)
+get_target_property(compile_libs     global_compile_options INTERFACE_LINK_LIBRARIES)
+get_target_property(compile_defines  global_compile_options INTERFACE_COMPILE_DEFINITIONS)
+get_target_property(compile_options  global_compile_options INTERFACE_COMPILE_OPTIONS)
+get_target_property(link_options  global_compile_options INTERFACE_LINK_OPTIONS)
 
-message(STATUS "quant1x Includes: ${_includes}")
-message(STATUS "quant1x     Libs: ${_libs}")
-message(STATUS "quant1x  Defines: ${_defines}")
-message(STATUS "quant1x  Options: ${_options}")
+message(STATUS "quant1x (C)Includes: ${compile_includes}")
+message(STATUS "quant1x (C)    Libs: ${compile_libs}")
+message(STATUS "quant1x (C) Defines: ${compile_defines}")
+message(STATUS "quant1x (C) Options: ${compile_options}")
+message(STATUS "quant1x (L) Options: ${link_options}")
 
 function(get_all_linked_targets target result_var)
     set(result "")

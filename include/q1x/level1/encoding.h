@@ -2,6 +2,7 @@
 #ifndef QUANT1X_LEVEL1_ENCODING_H
 #define QUANT1X_LEVEL1_ENCODING_H 1
 
+#include <q1x/std/feature_detection.h>
 // 手动处理字节序检测
 #if OS_IS_WINDOWS
 #define CISTA_LITTLE_ENDIAN 1

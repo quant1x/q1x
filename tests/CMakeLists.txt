@@ -113,6 +113,9 @@ add_catch2_executable(tdd-cron.cpp)
 # 测试缓存
 add_catch2_executable(test-calender.cpp)
 
+# 测试协议
+add_catch2_executable(tdd-level1-detect-server.cpp)
+
 # formula测试
 add_catch2_executable(tdd-formula.cpp)
 

@@ -379,8 +379,8 @@ public:
 
         closeAllConnections();
 
-        io_context_->post([this]() {
-            io_context_->dispatch([this]() {
+        asio::post(*io_context_, [this]() {
+            asio::dispatch(*io_context_, [this]() {
                 io_context_->poll();
             });
         });

@@ -37,6 +37,7 @@ TEST_CASE("load-chips", "[chips]") {
 #include <sstream>
 #include <ctime>
 #include <q1x/factors/f10.h>
+#include <q1x/std/safe.h>
 
 // TechSignal 技术信号位掩码 (支持组合信号)
 typedef uint64_t TechSignal;
@@ -164,8 +165,8 @@ public:
     // FiveYearsAgoJanFirst 获取五年前的1月1日零点
     static std::tm FiveYearsAgoJanFirst() {
         std::time_t now = std::time(nullptr);
-        std::tm *tm_now = std::localtime(&now);
-        std::tm tm_result = *tm_now;
+        std::tm tm_now = q1x::safe::localtime(now);
+        std::tm tm_result = tm_now;
         tm_result.tm_year -= yearPeriod;
         tm_result.tm_mon = 0;  // January
         tm_result.tm_mday = 1;
@@ -177,14 +178,6 @@ public:
 
     // 加载数据
     bool LoadCSV(const std::string &code, const std::string &date) {
-        // 假设这些函数在C++中有对应的实现
-        // std::vector<KLine> klines = base::CheckoutKLines(code, date);
-        // factors::L5F10* f10 = factors::GetL5F10(code);
-        // if (f10 == nullptr) {
-        //     return false;
-        // }
-        // Capital = f10->Capital;
-        // Digits = f10->DecimalPoint;
         auto klines = factors::checkout_klines(code, date);
         if (klines.empty()) {
             return false;
@@ -215,13 +208,13 @@ public:
             }
             DailyData d;
             d.kline = record;
-            d.TurnoverRate = 100 * (record.Volume / Capital);
-            d.Avg = record.Amount / record.Volume;
+            d.TurnoverRate = 100 * (record.Volume / Capital);  // 换手率计算
+            d.Avg          = record.Amount / record.Volume;    // 平均成交价
             d.kline.Open = numerics::decimal(d.kline.Open, Digits);
             d.kline.Close = numerics::decimal(d.kline.Close, Digits);
             d.kline.High = numerics::decimal(d.kline.High, Digits);
             d.kline.Low = numerics::decimal(d.kline.Low, Digits);
-            d.Avg = numerics::decimal(d.Avg, Digits);
+            d.Avg          = numerics::decimal(d.Avg, Digits);  // 平均价四舍五入
             if (d.kline.High > high) {
                 high = d.kline.High;
             }
@@ -416,7 +409,7 @@ private:
     // 辅助函数：查找局部峰值
     std::vector<double> findLocalPeaks(const std::vector<double> &prices, const std::map<double, double> &data) {
         std::vector<double> peaks;
-        int n = prices.size();
+        int n = int(prices.size());
         if (n < 3) {
             return peaks;
         }
@@ -562,10 +555,11 @@ private:
     }
 };
 
-TEST_CASE("v2", "[chips]") {
+TEST_CASE("chips-v2", "[chips]") {
     std::string code = "000158";
-    std::string date = "2025-07-16";
+    std::string date = "2025-07-18";
     std::string security_code = exchange::CorrectSecurityCode(code);
+    std::cout << "当前日期: " << date << ", 证券代码: " << security_code << std::endl;
     ChipDistribution cd(defaultConfig);
     bool result = cd.LoadCSV(security_code, date);
     if(!result) {
@@ -577,7 +571,7 @@ TEST_CASE("v2", "[chips]") {
     }
     f64 targetPrice = cd.LastClose;
     auto [upper, lower] = cd.FindMainPeaks(targetPrice);
-    std::cout << "当前日期: " << date << ", 证券代码: " << security_code << std::endl;
+
     std::cout << "当前价格: " << targetPrice << " 附近的主要筹码峰:" << std::endl;
     std::printf("压力(上): 最接近=%.2f, 最大=%.2f, 成交量=%.2f股, 占比=%.2f%%\n", upper.Closest, upper.Extremum, cd.RealVolume(upper.CurrentToPeakRatio), 100*upper.CurrentToPeakRatio);
     std::printf("支撑(下): 最接近=%.2f, 最大=%.2f, 成交量=%.2f股, 占比=%.2f%%\n", lower.Closest, lower.Extremum, cd.RealVolume(lower.CurrentToPeakRatio), 100*lower.CurrentToPeakRatio);

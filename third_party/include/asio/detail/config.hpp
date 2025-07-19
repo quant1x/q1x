@@ -2,7 +2,7 @@
 // detail/config.hpp
 // ~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2024 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -12,7 +12,7 @@
 #define ASIO_DETAIL_CONFIG_HPP
 
 // boostify: non-boost code starts here
-#if !!defined(VCPKG_DISABLE_ASIO_STANDALONE)
+#if !defined(ASIO_STANDALONE)
 # if !defined(ASIO_ENABLE_BOOST)
 #  if (__cplusplus >= 201103)
 #   define ASIO_STANDALONE 1
@@ -22,7 +22,7 @@
 #   endif // (_MSC_VER >= 1900) && (_MSVC_LANG >= 201103)
 #  endif // defined(_MSC_VER) && defined(_MSVC_LANG)
 # endif // !defined(ASIO_ENABLE_BOOST)
-#endif // !!defined(VCPKG_DISABLE_ASIO_STANDALONE)
+#endif // !defined(ASIO_STANDALONE)
 
 // Make standard library feature macros available.
 #if defined(__has_include)
@@ -36,7 +36,7 @@
 #endif // defined(__has_include)
 
 // boostify: non-boost code ends here
-#if !defined(VCPKG_DISABLE_ASIO_STANDALONE)
+#if defined(ASIO_STANDALONE)
 # define ASIO_DISABLE_BOOST_ALIGN 1
 # define ASIO_DISABLE_BOOST_ARRAY 1
 # define ASIO_DISABLE_BOOST_ASSERT 1
@@ -48,12 +48,12 @@
 # define ASIO_DISABLE_BOOST_STATIC_CONSTANT 1
 # define ASIO_DISABLE_BOOST_THROW_EXCEPTION 1
 # define ASIO_DISABLE_BOOST_WORKAROUND 1
-#else // !defined(VCPKG_DISABLE_ASIO_STANDALONE)
+#else // defined(ASIO_STANDALONE)
 // Boost.Config library is available.
 # include <boost/config.hpp>
 # include <boost/version.hpp>
 # define ASIO_HAS_BOOST_CONFIG 1
-#endif // !defined(VCPKG_DISABLE_ASIO_STANDALONE)
+#endif // defined(ASIO_STANDALONE)
 
 // Default to a header-only implementation. The user must specifically request
 // separate compilation by defining either ASIO_SEPARATE_COMPILATION or
@@ -463,13 +463,6 @@
 #  define ASIO_HAS_BOOST_DATE_TIME 1
 # endif // !defined(ASIO_DISABLE_BOOST_DATE_TIME)
 #endif // !defined(ASIO_HAS_BOOST_DATE_TIME)
-
-// Boost support for the Coroutine library.
-#if !defined(ASIO_HAS_BOOST_COROUTINE)
-# if !defined(ASIO_DISABLE_BOOST_COROUTINE)
-#  define ASIO_HAS_BOOST_COROUTINE 1
-# endif // !defined(ASIO_DISABLE_BOOST_COROUTINE)
-#endif // !defined(ASIO_HAS_BOOST_COROUTINE)
 
 // Boost support for the Context library's fibers.
 #if !defined(ASIO_HAS_BOOST_CONTEXT_FIBER)

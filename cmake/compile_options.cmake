@@ -15,10 +15,10 @@ set(q1x_libraries "")
 # -----------------------------------------------------------------------------
 # 1. 检测构建类型
 # -----------------------------------------------------------------------------
-if(NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
+if (NOT CMAKE_BUILD_TYPE OR CMAKE_BUILD_TYPE STREQUAL "")
     set(CMAKE_BUILD_TYPE "Debug" CACHE STRING
         "Choose the default build type: Debug, Release, RelWithDebInfo, MinSizeRel")
-endif()
+endif ()
 
 set(q1x_build_type ${CMAKE_BUILD_TYPE})
 
@@ -30,13 +30,13 @@ message(STATUS "Install configuration: \"${CMAKE_INSTALL_CONFIG_NAME}\"")
 if (CMAKE_GENERATOR MATCHES "^Visual Studio.*$")
     message(STATUS "Note: when building with Visual Studio the build type is specified when building.")
     message(STATUS "For example: 'cmake --build . --config=Release")
-endif()
+endif ()
 
 # MSVC特定设置, 使用静态CRT
 option(USE_STATIC_CRT "Use static CRT" ON)
-if(WIN32 AND USE_STATIC_CRT)
+if (WIN32 AND USE_STATIC_CRT)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-endif()
+endif ()
 
 # -----------------------------------------------------------------------------
 # 2. 系统环境
@@ -125,21 +125,21 @@ set_target_properties(global_compile_options PROPERTIES
 )
 
 # 3.3 字符集处理（全平台覆盖）
-if(MSVC)
+if (MSVC)
     target_compile_options(global_compile_options INTERFACE /utf-8)
     target_compile_definitions(global_compile_options INTERFACE _UNICODE UNICODE)
-else()
+else ()
     target_compile_options(global_compile_options INTERFACE
         -finput-charset=UTF-8
         -fexec-charset=UTF-8
     )
-endif()
+endif ()
 
 # 3.4 警告级别
-if(MSVC)
+if (MSVC)
     # 对于MSVC编译器
     target_compile_options(global_compile_options INTERFACE /W3 /WX) # /W4显示所有警告，/WX将警告视为错误
-else()
+else ()
     # 对于GCC/Clang等编译器
     target_compile_options(global_compile_options INTERFACE
         -Wall -Wextra
@@ -163,14 +163,14 @@ else()
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         target_compile_options(global_compile_options INTERFACE -Wmove)
     endif ()
-endif()
+endif ()
 #
 ## 3.5. 优化配置（Debug/Release分离）
 #target_compile_options(global_compile_options INTERFACE
 #    "$<$<CONFIG:Debug>:-O0 -g3 -fno-omit-frame-pointer>"
 #    "$<$<CONFIG:Release>:-O3 -fomit-frame-pointer>"
 #)
-if(MSVC)
+if (MSVC)
     if (CMAKE_BUILD_TYPE STREQUAL "Debug")
         target_compile_options(global_compile_options INTERFACE /Od /GS)
     else ()
@@ -186,23 +186,23 @@ else ()
     target_compile_options(global_compile_options INTERFACE -m64 -march=native -mtune=native -fstack-protector-strong)
     # 启用 function/data sections
     target_compile_options(global_compile_options INTERFACE -ffunction-sections -fdata-sections)
-endif()
+endif ()
 
 # 3.6 异常处理（强制启用）
 set_target_properties(global_compile_options PROPERTIES INTERFACE_CXX_EXCEPTIONS ON)
-if(MSVC)
+if (MSVC)
     # 对于 MSVC 编译器
     target_compile_options(global_compile_options INTERFACE /EHsc) # /EHsc 启用 C++ 异常处理
-else()
+else ()
     # 对于 GCC/Clang 等编译器
     target_compile_options(global_compile_options INTERFACE -fexceptions) # 启用 C++ 异常处理
-endif()
+endif ()
 ## 或方法 3: 使用内置变量（推荐）
 #set(CMAKE_CXX_EXCEPTIONS ON)
 #set(CMAKE_VERBOSE_MAKEFILE ON)
 
 # 4. 仅对新版MSVC添加高级保护（需版本检测）
-if(MSVC_VERSION GREATER_EQUAL 1920)  # VS2019+
+if (MSVC_VERSION GREATER_EQUAL 1920)  # VS2019+
     if (NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         # 合法选项替代方案
         target_compile_options(global_compile_options INTERFACE
@@ -213,10 +213,10 @@ if(MSVC_VERSION GREATER_EQUAL 1920)  # VS2019+
         # 确保静态变量在独立段
         target_link_options(global_compile_options INTERFACE /SECTION:.staticvars,RWS)
     endif ()
-else()
+else ()
     # 通用保护方案
     target_compile_options(global_compile_options INTERFACE -DSTATIC_VAR_PROTECTION)
-endif()
+endif ()
 
 # 5. 关于debug和release模式的编译选项
 if (MSVC)
@@ -247,9 +247,9 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             message(STATUS "Using libc++")
             target_compile_options(global_compile_options INTERFACE -stdlib=libc++)
             target_link_options(global_compile_options INTERFACE -stdlib=libc++)
-        else()
+        else ()
             message(WARNING "Compiler does not support -stdlib=libc++")
-        endif()
+        endif ()
     endif ()
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR MINGW)
     message(STATUS "Using libstdc++ (default for GCC/MinGW)")
@@ -258,12 +258,12 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU" OR MINGW)
 elseif (MSVC)
     message(STATUS "Using MSVC STL (standard library)")
     # MSVC 使用自己的标准库，无法更改
-else()
+else ()
     message(WARNING "Unknown compiler, skipping stdlib settings")
-endif()
+endif ()
 
 # 7. 平台特定配置
-if(MSVC)
+if (MSVC)
     # MSVC特有设置
     target_compile_options(global_compile_options INTERFACE
         /bigobj       # 大对象支持
@@ -284,12 +284,12 @@ elseif (MINGW OR GNU)
     target_link_options(global_compile_options INTERFACE
         -Wl,--gc-sections  # 链接时回收未使用段
     )
-elseif(UNIX AND NOT APPLE)
+elseif (UNIX AND NOT APPLE)
     # Linux设置
     target_compile_options(global_compile_options INTERFACE -pthread -Wl,--as-needed)
 else ()
     # APPLE
-endif()
+endif ()
 
 # 8. 线程选项
 if (MINGW)
@@ -305,23 +305,82 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         if (CMAKE_CXX_SIMULATE_ID MATCHES "MSVC")
             # 使用 MSVC 后端的 Clang
             message(STATUS "Using Clang with MSVC backend, no thread flags needed.")
-        else()
+        else ()
             # 使用 MinGW 后端的 Clang
             target_link_options(global_compile_options INTERFACE -mthreads)
             message(STATUS "Using Clang with MinGW backend, adding -mthreads")
-        endif()
-    else()
+        endif ()
+    else ()
         # 非 Windows 平台的 Clang
         target_compile_options(global_compile_options INTERFACE -pthread)
         target_link_options(global_compile_options INTERFACE -pthread)
         message(STATUS "Using Clang on non-Windows, adding -pthread")
-    endif()
-else()
+    endif ()
+else ()
     # 其他情况（通常是 Linux/macOS 的 GCC）
     target_compile_options(global_compile_options INTERFACE -pthread)
     target_link_options(global_compile_options INTERFACE -pthread)
     message(STATUS "Using other compiler, adding -pthread")
-endif()
+endif ()
+
+# -----------------------------------------------------------------------------
+# 工程瘦身
+# -----------------------------------------------------------------------------
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    # 检查是否支持LTO
+    if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        # GCC 和 Clang 通常使用 -flto
+        set(LTO_FLAG "-flto")
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        # MSVC 使用 /GL 和 /LTCG
+        set(LTO_FLAG "/GL")
+    endif ()
+
+    if (LTO_FLAG)
+        include(CheckCXXCompilerFlag)
+        check_cxx_compiler_flag(${LTO_FLAG} HAS_LTO)
+        if (HAS_LTO)
+            message(STATUS "Compiler supports LTO")
+            target_compile_options(global_compile_options INTERFACE ${LTO_FLAG})
+        else ()
+            message(WARNING "Compiler does not support LTO")
+        endif ()
+    endif ()
+
+    # 检测 C 编译器是否支持 --gc-sections, 需要配合 -ffunction-sections和 -fdata-sections编译选项才能发挥最大效果
+    check_c_compiler_flag("-Wl,--gc-sections" HAS_GC_SECTIONS_C)
+    # 检测 C++ 编译器是否支持 --gc-sections
+    check_cxx_compiler_flag("-Wl,--gc-sections" HAS_GC_SECTIONS_CXX)
+
+    #if(HAS_GC_SECTIONS_C AND HAS_GC_SECTIONS_CXX)
+    #    message(STATUS "Compiler/linker supports --gc-sections")
+    #    # 添加链接选项
+    #    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--gc-sections")
+    #    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--gc-sections")
+    #    set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--gc-sections")
+    #else()
+    #    message(WARNING "Compiler/linker does not support --gc-sections")
+    #endif()
+    if (HAS_GC_SECTIONS_C AND HAS_GC_SECTIONS_CXX)
+        # 为特定目标添加选项
+        target_link_options(global_compile_options INTERFACE "-Wl,--gc-sections")
+        # 或者使用更现代的 LINKER: 前缀语法
+        #target_link_options(global_compile_options INTERFACE $<$<LINK_LANGUAGE:C,CXX>:LINKER:--gc-sections>)
+    endif ()
+
+    # 检测 C 编译器是否支持 -Os
+    check_c_compiler_flag("-Os" HAS_OS_FLAG_C)
+    # 检测 C++ 编译器是否支持 -Os
+    check_cxx_compiler_flag("-Os" HAS_OS_FLAG_CXX)
+
+    if (HAS_OS_FLAG_C AND HAS_OS_FLAG_CXX)
+        message(STATUS "Compiler supports -Os optimization")
+        # 全局设置（不推荐，除非确实需要）
+        target_compile_options(global_compile_options INTERFACE -Os)
+    else ()
+        message(WARNING "Compiler does not support -Os optimization")
+    endif ()
+endif ()
 
 # 10. 验证输出（构建时可见）
 message(STATUS "quant1x global options:")

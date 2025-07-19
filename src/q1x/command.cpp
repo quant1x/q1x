@@ -49,13 +49,26 @@ namespace quant1x {
         if(sub_parser.is_used(cmd_flag_start)) {
             tmp_start_date = updateStartDate.value;
         }
-
+        // 判断结束日期
+        std::string tmp_end_date = exchange::last_trading_day().only_date();
+        if(sub_parser.is_used(cmd_flag_end)) {
+            tmp_end_date = updateEndDate.value;
+        }
+        // 标准化日期
         exchange::timestamp start_date = exchange::timestamp::parse(tmp_start_date).pre_market_time();
         exchange::timestamp end_date = exchange::last_trading_day().pre_market_time();
+        // 矫正日期
+        // 以传入的开始日期为cache日期, 特征日期要取前一天
+        start_date = exchange::prev_trading_day(start_date);
+        // 以传入的结束日期为特征日期, 矫正结束日期为最近一个有数据的交易日
+        end_date = exchange::last_trading_day(end_date);
         auto const & dates = exchange::date_range(start_date, end_date);
         int count = 0;
-        for (auto const &timestamp : dates) {
-            std::cout << "sample date: " << timestamp.only_date() << std::endl;
+        size_t length = dates.size();
+        fmt::println("from: {} to {}, count={}", dates[0].only_date(), dates[length-1].only_date(), length);
+        for (size_t i = 0; i < length; ++i) {
+            auto const & timestamp = dates[i];
+            fmt::println("sample date: {}({}/{})", timestamp.only_date(), i+1, length);
             count += cache::update_with_adapters(adapters, timestamp);
         }
 

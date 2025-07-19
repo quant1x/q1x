@@ -312,7 +312,7 @@ namespace level1 {
 
         // 输出结果
         for (size_t i = 0; i < best_ips.size(); i++) {
-            auto v = best_ips[i];
+            auto &v = best_ips[i];
             spdlog::debug("{}: {}={}:{}, crossTime={}", i, v.Name, v.Host, v.Port, v.CrossTime);
         }
 

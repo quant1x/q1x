@@ -15,8 +15,8 @@ const std::string urlRiskAssessment = "http://page3.tdx.com.cn:7615/site/pcwebca
 const int defaultSafetyScore = 100;
 const int defaultSafetyScoreOfNotFound = 100;
 const int defaultSafetyScoreOfIgnore = 0;
-namespace risks {
 
+namespace risks {
 
     // ========================
     // 工具函数：安全获取字段（保留默认值）

@@ -5,6 +5,7 @@
 #include <q1x/datasets/chips.h>
 #include <q1x/factors/f10.h>
 #include <q1x/factors/history.h>
+#include <q1x/datasets/trans.h>
 
 namespace datasets {
 
@@ -18,6 +19,8 @@ namespace datasets {
         cache::Register(std::make_unique<DataKLine>());
         // 分时数据
         cache::Register(std::make_unique<DataMinute>());
+        // 分笔成交
+        cache::Register(std::make_unique<DataTrans>());
         // 筹码分布
         cache::Register(std::make_unique<DataChips>());
 

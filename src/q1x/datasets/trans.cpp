@@ -275,4 +275,13 @@ namespace datasets {
 
         return summary;
     }
+
+    void DataTrans::Print(const std::string &code, const std::vector<exchange::timestamp> &dates) {
+        (void)code;
+        (void)dates;
+    }
+
+    void DataTrans::Update(const std::string &code, const exchange::timestamp &date) {
+        CheckoutTransactionData(code, date, false);
+    }
 } // namespace datasets

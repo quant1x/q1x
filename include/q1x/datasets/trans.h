@@ -2,9 +2,9 @@
 #ifndef QUANT1X_DATASETS_TRANS_H
 #define QUANT1X_DATASETS_TRANS_H 1
 
-#include "q1x/std/api.h"
-#include "q1x/exchange.h"
-#include <ostream>
+#include <q1x/datasets/base.h>
+#include <q1x/level1/transaction_data.h>
+
 
 namespace datasets {
     constexpr const char *const HistoricalTransactionDataFirstTime        = "09:25"; // 第一个时间
@@ -43,6 +43,23 @@ namespace datasets {
     TurnoverDataSummary CountInflow(const std::vector<level1::TickTransaction>& list,
                                     const std::string& securityCode,
                                     const exchange::timestamp& featureDate);
+
+    class DataTrans : public cache::DataAdapter {
+    public:
+        cache::Kind Kind() const override { return BaseTransaction; }
+
+        std::string Owner() override { return cache::DefaultDataProvider; }
+
+        std::string Key() const override { return "trans"; }
+
+        std::string Name() const override { return "历史成交"; }
+
+        std::string Usage() const override { return "历史成交"; }
+
+        void Print(const std::string &code, const std::vector<exchange::timestamp> &dates) override;
+
+        void Update(const std::string &code, const exchange::timestamp &date) override;
+    };
 
 } // namespace datasets
 

@@ -71,11 +71,12 @@ std::pair<std::vector<int>, std::vector<int>> basic_peaks_and_valleys(const std:
         int d_high = diff_high[i + 1] - diff_high[i];
         int d_low  = diff_low[i + 1] - diff_low[i];
 
+        int index = int(i) + 1;   // 波峰和波谷的索引是i+1
         if (d_high == -2) {  // 高价序列由上升到下降，形成波峰
-            peaks.push_back(i + 1);
+            peaks.push_back(index);
         }
         if (d_low == 2) {  // 低价序列由下降到上升，形成波谷
-            valleys.push_back(i + 1);
+            valleys.push_back(index);
         }
     }
 
@@ -146,12 +147,12 @@ namespace ta::patterns {
         for (auto &idx : peak_indices) {
             // 调整索引(+1)
             ++idx;
-            peaks.emplace_back(idx, high[idx]);
+            peaks.emplace_back(double(idx), high[idx]);
         }
         for (auto &idx : valley_indices) {
             // 调整索引(+1)
             ++idx;
-            valleys.emplace_back(idx, low[idx]);
+            valleys.emplace_back(double(idx), low[idx]);
         }
         return {peaks, valleys};
     }

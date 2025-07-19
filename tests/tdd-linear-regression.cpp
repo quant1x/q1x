@@ -31,7 +31,7 @@ public:
 
     // 梯度下降训练
     void fit(const vector<double>& X, const vector<double>& Y) {
-        int n = X.size();
+        int n = int(X.size());
         for (int iter = 0; iter < iterations; ++iter) {
             double dw = 0.0, db = 0.0;
 

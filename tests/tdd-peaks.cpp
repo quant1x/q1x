@@ -5,7 +5,7 @@
 #include <cmath>
 using namespace std;
 
-void findPeaksAndValleys(const vector<int>& nums) {
+static void findPeaksAndValleys(const vector<int> &nums) {
     if (nums.size() < 2) {
         cout << "数组元素不足，无法确定波峰波谷" << endl;
         return;
@@ -14,7 +14,7 @@ void findPeaksAndValleys(const vector<int>& nums) {
     vector<int> peaks;   // 存储波峰位置
     vector<int> valleys; // 存储波谷位置
 
-    int count = nums.size();
+    int count = int(nums.size());
 
     for (int i = 1; i < count - 1; ++i) {
         // 检查是否为波峰
@@ -30,11 +30,17 @@ void findPeaksAndValleys(const vector<int>& nums) {
     // 处理边界情况（如果数组两端可能被视为波峰或波谷）
     // 例如：[1,2,1]中2是波峰
     if (nums.size() >= 2) {
-        if (nums[0] > nums[1]) peaks.push_back(0);
-        else if (nums[0] < nums[1]) valleys.push_back(0);
-
-        if (nums.back() > nums[nums.size()-2]) peaks.push_back(nums.size()-1);
-        else if (nums.back() < nums[nums.size()-2]) valleys.push_back(nums.size()-1);
+        if (nums[0] > nums[1]) {
+            peaks.push_back(0);
+        } else if (nums[0] < nums[1]) {
+            valleys.push_back(0);
+        }
+        int x = int(nums.size());
+        if (nums.back() > nums[x-2]) {
+            peaks.push_back(x-1);
+        } else if (nums.back() < nums[x-2]) {
+            valleys.push_back(x-1);
+        }
     }
 
     // 输出结果
@@ -72,7 +78,7 @@ private:
 public:
     explicit Wave(const vector<double>& inputData) {
         data = inputData;
-        int n = data.size();
+        int n = int(data.size());
         diff.resize(n, 0);
         peakIndex.clear();
         valleyIndex.clear();
@@ -87,9 +93,10 @@ public:
 
     // Normalize: 前向差分归一化，并处理零值（平台）
     void Normalize() {
-        int n = data.size();
+        int n = int(data.size());
         for (int i = 0; i < n - 1; ++i) {
-            diff[i] = compare(data[i + 1], data[i]);
+            diff[i] = compare(data[static_cast<std::vector<double, std::allocator<double>>::size_type>(i) + 1],
+                              data[i]);
         }
         diff[n - 1] = 0; // 最后一位无定义，设为0
 
@@ -117,7 +124,7 @@ public:
 
     // Find: 找波峰波谷，基于一阶差分的变化（类似二阶导数）
     void Find() {
-        int n = diff.size();
+        auto n = diff.size();
         for (int i = 0; i < n - 1; ++i) {
             int d = diff[i + 1] - diff[i];
 
@@ -218,7 +225,7 @@ TEST_CASE("find-peaks-v3", "[peaks]") {
     title("Peaks and Valleys Detection");
     xlabel("Index");
     ylabel("Value");
-    legend();
+    matplot::legend();
     grid(true);
 
     // 设置坐标轴范围
@@ -282,7 +289,7 @@ TEST_CASE("find-peaks-v4", "[peaks]") {
     title("Peaks and Valleys Detection");
     xlabel("Index");
     ylabel("Value");
-    legend()->location(legend::general_alignment::topright);
+    matplot::legend()->location(legend::general_alignment::topright);
     grid(true);
     xlim({0, 10});
     ylim({0, 5}); // 调高Y轴上限确保显示完整
@@ -369,7 +376,7 @@ int compare(double a, double b) {
 }
 
 // 主函数：寻找波峰和波谷
-pair<vector<int>, vector<int>> basic_peaks_and_valleys(const vector<double>& high, const vector<double>& low) {
+static pair<vector<int>, vector<int>> basic_peaks_and_valleys(const vector<double> &high, const vector<double> &low) {
     /**
      * 输入: high - 高价序列, low - 低价序列
      * 返回: 包含波峰和波谷索引的pair
@@ -430,10 +437,10 @@ pair<vector<int>, vector<int>> basic_peaks_and_valleys(const vector<double>& hig
         int d_low = diff_low[i + 1] - diff_low[i];
 
         if (d_high == -2) {  // 高价序列由上升到下降，形成波峰
-            peaks.push_back(i + 1);
+            peaks.push_back(int(i) + 1);
         }
         if (d_low == 2) {    // 低价序列由下降到上升，形成波谷
-            valleys.push_back(i + 1);
+            valleys.push_back(int(i) + 1);
         }
     }
 
@@ -454,7 +461,7 @@ namespace xt {
     using namespace xt;
 }
 
-std::pair<std::vector<int>, std::vector<int>> peaks_and_valleys_xtensor(
+static std::pair<std::vector<int>, std::vector<int>> peaks_and_valleys_xtensor(
     const xt::xarray<double>& high,
     const xt::xarray<double>& low)
 {

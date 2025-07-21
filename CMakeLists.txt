@@ -260,7 +260,7 @@ target_link_libraries(third_libs INTERFACE unofficial::duktape::duktape)
 echo_lib_version(duktape ${unofficial-duktape_VERSION})
 
 message(STATUS "================== 测试工具库 ==================")
-# 查找 Matplot++, 需要安装gnuplot
+# 查找 Matplot++, 需要安装gnuplot, msvc编译出现错误, 无法绘图
 find_package(Matplot++ REQUIRED)
 echo_lib_version(Matplot++, ${Matplot++_VERSION})
 

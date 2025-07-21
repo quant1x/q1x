@@ -247,7 +247,7 @@ namespace exchange {
     }
 
     bool timestamp::operator!=(const timestamp &rhs) const {
-        return !(rhs == *this);
+        return ms_ != rhs.ms_;
     }
 
     bool timestamp::operator<(const timestamp &rhs) const {
@@ -255,14 +255,14 @@ namespace exchange {
     }
 
     bool timestamp::operator>(const timestamp &rhs) const {
-        return rhs < *this;
+        return ms_ > rhs.ms_;
     }
 
     bool timestamp::operator<=(const timestamp &rhs) const {
-        return !(rhs < *this);
+        return ms_ <= rhs.ms_;
     }
 
     bool timestamp::operator>=(const timestamp &rhs) const {
-        return !(*this < rhs);
+        return ms_ >= rhs.ms_;
     }
 }

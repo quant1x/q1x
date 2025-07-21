@@ -111,6 +111,7 @@ add_catch2_executable(tdd-iconv.cpp)
 add_catch2_executable(tdd-cron.cpp)
 
 # 测试缓存
+add_catch2_executable(tdd-calendar.cpp)
 add_catch2_executable(test-calender.cpp)
 
 # 测试协议

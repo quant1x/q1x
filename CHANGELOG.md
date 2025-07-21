@@ -3,9 +3,65 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.17] - 2025-07-21
+### Changed
+- 默认静态库
+- 明确当前编译的选项, 去掉表达式
+- catch2支持unicode
+- 从cmake主配置文件剥离protobuf
+- 数据集各模块简要注释
+- 财报数据无result字段时, 日志输出主要参数
+- 新增f10相关的三个测试单元
+- 特征数据加载日线、分笔成交数据为空时不抛异常输出告警级日志
+- 拆分基础数据类型设定到datasets/base.h
+- 微调部分代码格式
+- 拆分筹码分布为基础数据
+- 外部接口输出告警级日志明确模块信息
+- 财报接口输出告警级日志明确模块信息
+- 调整特征的告警信息模块名称为类名
+- 新增chips读取protobuf缓存
+- 新增matplotplusplus绘图库, windows下效果不好
+- 新增double比较的模板函数,支持不同精度
+- 新增波浪测试代码
+- xsimd组件收敛于q1x/std/simd统一管理
+- 静态分析模式增加波浪
+- 更新xsimd库代码(bde4df7394ccc920aeafc6689aa2d28d8ab7e518)
+- 更新xtensor库v0.27.0代码(c7ae1a6aae85bed9f6bf912da78c70b3a7f49900)
+- 调整基础的波峰检测函数名, 增加前缀basic
+- 新增数据点结构
+- 优化wave代码结构
+- 新增线性回归和波浪的测试代码
+- 线增加基础函数, 平行线, 点到线距离, 对称平行线以及水平方向的镜像线
+- 调整点的结构体名
+- 删除K线的protobuf协议
+- 调整chips协议文本
+- 剔除全局变量前的static, 只保留inline
+- 迁移go版本筹码峰, 日线三角形计算方法
+- 测试输出数据日期及代码
+- 调整输出文本格式
+- 更新boost::pfr(5034bf55fb6bd1efa7a14955bbb7171c2b3491fc)
+- 更新asio(v1.34.2)
+- 适配asio新版本1.34.2, 拆分探测服务器延时功能
+- 新增工程Release编译下的瘦身设置
+- 拆分探测服务器延时功能函数, 定义和实现分离
+- 基础数据增加历史分笔成交数据
+- update命令行增加--end参数, 表示结束日期, --start以缓存日期为基准, 需要取start的上一个交易日, 以确保start日期的特征可以缓存
+- 修复msvc编译整型溢出告警的问题
+- 补充日线数据的加载方式
+- 命名空间前留空白行
+- 基础版本的检测波峰波谷函数改成模板函数
+- 临时变量引用vector元素
+- 强制vector尺寸为int类型
+- 强制vector尺寸为int类型
+- 屏蔽实验性质的cmake检测代码
+- 优化chips测试代码
+- 校验命令行传入的start和end两个参数
+- 注明matplotplusplus在msvc编译无法通过, gcc编译通过, 但是无法完整的绘制图形
+
 ## [0.1.16] - 2025-07-12
 ### Changed
 - 调整mingw下原backward-cpp cmake配置不准确的问题
+- update changelog
 
 ## [0.1.15] - 2025-07-12
 ### Changed
@@ -196,7 +252,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.16...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.17...HEAD
+[0.1.17]: https://gitee.com/quant1x/q1x.git/compare/v0.1.16...v0.1.17
 [0.1.16]: https://gitee.com/quant1x/q1x.git/compare/v0.1.15...v0.1.16
 [0.1.15]: https://gitee.com/quant1x/q1x.git/compare/v0.1.14...v0.1.15
 [0.1.14]: https://gitee.com/quant1x/q1x.git/compare/v0.1.13...v0.1.14

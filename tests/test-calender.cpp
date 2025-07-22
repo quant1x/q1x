@@ -12,653 +12,561 @@ TEST_CASE("update-calendar", "[calendar]") {
 //        std::cout << v << std::endl;
 //    }
 }
-//#include <stdio.h>
-//#include <time.h>
-//#include <duktape.h>
-//#include <q1x/exchange.h>
-//
-//// 可靠判断 Date 对象的方法
-//int is_date_object(duk_context *ctx, duk_idx_t idx) {
-//    // 调用 Object.prototype.toString 方法
-//    duk_get_global_string(ctx, "Object");
-//    duk_get_prop_string(ctx, -1, "prototype");
-//    duk_get_prop_string(ctx, -1, "toString");
-//    duk_dup(ctx, idx < 0 ? idx-3 : idx);  // 复制待检测对象
-//
-//    if (duk_pcall(ctx, 1) != 0) {         // 执行 toString.call(obj)
-//        printf("类型检测失败: %s\n", duk_safe_to_string(ctx, -1));
-//        duk_pop(ctx); // 弹出错误
-//        return 0;
-//    }
-//
-//    const char *str = duk_get_string(ctx, -1);
-//    int ret = (strcmp(str, "[object Date]") == 0);
-//
-//    duk_pop_n(ctx, 3); // 弹出 Object/prototype/toString 结果
-//    return ret;
-//}
-//
-//// 安全获取时间戳（兼容不同引擎）
-//double get_date_timestamp(duk_context *ctx, duk_idx_t idx) {
-//    duk_get_prop_string(ctx, idx, "getTime"); // 1. 获取方法
-//    duk_dup(ctx, idx);                        // 2. 设置 this 绑定
-//
-//    if (duk_pcall(ctx, 1) != 0) {             // 3. 调用 obj.getTime()
-//        printf("调用失败: %s\n", duk_safe_to_string(ctx, -1));
-//        duk_pop(ctx);
-//        return -1;
-//    }
-//
-//    double timestamp = duk_get_number(ctx, -1);
-//    duk_pop(ctx); // 弹出结果
-//    return timestamp;
-//}
-//
-//int main_0() {
-//    duk_context *ctx = duk_create_heap_default();
-//
-//    // 创建测试数组（包含 Date 对象和干扰项）
-//    duk_eval_string(ctx,
-//                    "[ new Date('1990-12-19T00:00:00Z'), "
-//                    "{ fakeDate: true }, "
-//                    "new Date('1990-12-20T00:00:00Z') ]"
-//    );
-//
-//    duk_size_t len = duk_get_length(ctx, -1);
-//    for (duk_uarridx_t i = 0; i < len; i++) {
-//        if (duk_get_prop_index(ctx, -1, i)) { // 获取元素
-//            if (is_date_object(ctx, -1)) {
-//                double ts = get_date_timestamp(ctx, -1);
-//                if (ts >= 0) {
-//                    time_t t = (time_t)(ts / 1000);
-//                    struct tm *tm = gmtime(&t);
-//
-//                    printf("[%d] 合法日期对象\n", i);
-//                    printf("  时间戳: %.0f ms\n", ts);
-//                    printf("  格式化: %04d-%02d-%02d\n",
-//                           tm->tm_year+1900, tm->tm_mon+1, tm->tm_mday);
-//                }
-//            } else {
-//                printf("[%d] 非日期对象: ", i);
-//                if (duk_is_object(ctx, -1)) {
-//                    printf("普通对象\n");
-//                } else {
-//                    printf("%s\n", duk_safe_to_string(ctx, -1));
-//                }
-//            }
-//            duk_pop(ctx); // 弹出元素
-//        }
-//    }
-//
-//    duk_destroy_heap(ctx);
-//    return 0;
-//}
-//
-//#include <stdio.h>
-//#include <duktape.h>
-//
-//// 错误处理函数
-//void handle_error(duk_context *ctx, int rc) {
-//    if (rc) {
-//        printf("Error: %s\n", duk_safe_to_string(ctx, -1));
-//        duk_pop(ctx); // 弹出错误信息
-//    }
-//}
-//
-//int main_1() {
-//    // 创建 Duktape 上下文
-//    duk_context *ctx = duk_create_heap_default();
-//    if (!ctx) {
-//        printf("Failed to create Duktape context\n");
-//        return 1;
-//    }
-//
-//    // 定义返回数组的 JavaScript 函数
-//    const char *js_code =
-//            "function getSampleArray() {\n"
-//            "    return [42, 'Hello', true, {x: 10}];\n"
-//            "}";
-//
-//    // 将 JavaScript 代码推入栈并执行
-//    if (duk_peval_string(ctx, js_code) != 0) {
-//        handle_error(ctx, 1);
-//        duk_destroy_heap(ctx);
-//        return 1;
-//    }
-//    duk_pop(ctx); // 弹出 eval 结果（undefined）
-//
-//    // 调用 JavaScript 函数
-//    duk_get_global_string(ctx, "getSampleArray");  // 将函数推入栈顶
-//    if (duk_pcall(ctx, 0) != 0) {                  // 调用函数（0个参数）
-//        handle_error(ctx, 1);
-//        duk_destroy_heap(ctx);
-//        return 1;
-//    }
-//
-//    // 检查返回值是否为数组
-//    if (!duk_is_array(ctx, -1)) {
-//        printf("Return value is not an array\n");
-//        duk_pop(ctx);
-//        duk_destroy_heap(ctx);
-//        return 1;
-//    }
-//
-//    // 获取数组长度
-//    duk_size_t len = duk_get_length(ctx, -1);
-//    printf("Array length: %d\n", (int)len);
-//
-//    // 遍历数组元素
-//    for (duk_uarridx_t i = 0; i < len; i++) {
-//        duk_get_prop_index(ctx, -1, i);  // 将元素推入栈顶
-//
-//        printf("Element %d: ", (int)i);
-//
-//        if (duk_is_number(ctx, -1)) {
-//            printf("Number: %g\n", duk_get_number(ctx, -1));
-//        } else if (duk_is_string(ctx, -1)) {
-//            printf("String: %s\n", duk_get_string(ctx, -1));
-//        } else if (duk_is_boolean(ctx, -1)) {
-//            printf("Boolean: %s\n", duk_get_boolean(ctx, -1) ? "true" : "false");
-//        } else if (duk_is_object(ctx, -1)) {
-//            printf("Object: ");
-//            duk_get_prop_string(ctx, -1, "x");
-//            printf("{x: %d}\n", duk_get_int(ctx, -1));
-//            duk_pop(ctx); // 弹出 x 的值
-//        }
-//
-//        duk_pop(ctx); // 弹出当前元素
-//    }
-//
-//    // 清理栈（弹出数组）
-//    duk_pop(ctx);
-//
-//    // 销毁上下文
-//    duk_destroy_heap(ctx);
-//    return 0;
-//}
-//
-//#include <duktape.h>
-//#include <string>
-//#include <algorithm>
-//#include <vector>
-//#include <iostream>
-//
-//const char * const sinaJsDecoder = R"(function d(t) {
-//    var e, i, n, r, a, o, s, l = (arguments,
-//            864e5), u = 7657, c = [], h = [], d = ~(3 << 30), f = 1 << 30,
-//        p = [0, 3, 5, 6, 9, 10, 12, 15, 17, 18, 20, 23, 24, 27, 29, 30], m = Math, g = function () {
-//            var l, u;
-//            for (l = 0; 64 > l; l++)
-//                h[l] = m.pow(2, l),
-//                26 > l && (c[l] = v(l + 65),
-//                    c[l + 26] = v(l + 97),
-//                10 > l && (c[l + 52] = v(l + 48)));
-//            for (c.push("+", "/"),
-//                     c = c.join(""),
-//                     i = t.split(""),
-//                     n = i.length,
-//                     l = 0; n > l; l++)
-//                i[l] = c.indexOf(i[l]);
-//            return r = {},
-//                e = o = 0,
-//                a = {},
-//                u = w([12, 6]),
-//                s = 63 ^ u[1],
-//            {
-//                _1479: T,
-//                _136: _,
-//                _200: S,
-//                _139: k,
-//                _197: _mi_run
-//            }["_" + u[0]] || function () {
-//                return []
-//            }
-//        }, v = String.fromCharCode, b = function (t) {
-//            return t === {}._
-//        }, N = function () {
-//            var t, e;
-//            for (t = y(),
-//                     e = 1; ;) {
-//                if (!y())
-//                    return e * (2 * t - 1);
-//                e++
-//            }
-//        }, y = function () {
-//            var t;
-//            return e >= n ? 0 : (t = i[e] & 1 << o,
-//                o++,
-//            o >= 6 && (o -= 6,
-//                e++),
-//                !!t)
-//        }, w = function (t, r, a) {
-//            var s, l, u, c, d;
-//            for (l = [],
-//                     u = 0,
-//                 r || (r = []),
-//                 a || (a = []),
-//                     s = 0; s < t.length; s++)
-//                if (c = t[s],
-//                    u = 0,
-//                    c) {
-//                    if (e >= n)
-//                        return l;
-//                    if (t[s] <= 0)
-//                        u = 0;
-//                    else if (t[s] <= 30) {
-//                        for (; d = 6 - o,
-//                                   d = c > d ? d : c,
-//                                   u |= (i[e] >> o & (1 << d) - 1) << t[s] - c,
-//                                   o += d,
-//                               o >= 6 && (o -= 6,
-//                                   e++),
-//                                   c -= d,
-//                                   !(0 >= c);)
-//                            ;
-//                        r[s] && u >= h[t[s] - 1] && (u -= h[t[s]])
-//                    } else
-//                        u = w([30, t[s] - 30], [0, r[s]]),
-//                        a[s] || (u = u[0] + u[1] * h[30]);
-//                    l[s] = u
-//                } else
-//                    l[s] = 0;
-//            return l
-//        }, x = function (t) {
-//            var e, i, n;
-//            for (t > 1 && (e = 0),
-//                     e = 0; t > e; e++)
-//                r.d++,
-//                    n = r.d % 7,
-//                (3 == n || 4 == n) && (r.d += 5 - n);
-//            return i = new Date,
-//                i.setTime((u + r.d) * l),
-//                i
-//        }, S = function () {
-//            var t, i, a, o, l;
-//            if (s >= 1)
-//                return [];
-//            for (r.d = w([18], [1])[0] - 1,
-//                     a = w([3, 3, 30, 6]),
-//                     r.p = a[0],
-//                     r.ld = a[1],
-//                     r.cd = a[2],
-//                     r.c = a[3],
-//                     r.m = m.pow(10, r.p),
-//                     r.pc = r.cd / r.m,
-//                     i = [],
-//                     t = 0; o = {
-//                d: 1
-//            },
-//                 y() && (a = w([3])[0],
-//                     0 == a ? o.d = w([6])[0] : 1 == a ? (r.d = w([18])[0],
-//                         o.d = 0) : o.d = a),
-//                     l = {
-//                         day: x(o.d)
-//                     },
-//                 y() && (r.ld += N()),
-//                     a = w([3 * r.ld], [1]),
-//                     r.cd += a[0],
-//                     l.close = r.cd / r.m,
-//                     i.push(l),
-//                 !(e >= n) && (e != n - 1 || 63 & (r.c ^ t + 1)); t++)
-//                ;
-//            return i[0].prevclose = r.pc,
-//                i
-//        }, _ = function () {
-//            var t, i, a, o, l, u, c, h, d, f, p;
-//            if (s > 2)
-//                return [];
-//            for (c = [],
-//                     d = {
-//                         v: "volume",
-//                         p: "price",
-//                         a: "avg_price"
-//                     },
-//                     r.d = w([18], [1])[0] - 1,
-//                     h = {
-//                         day: x(1)
-//                     },
-//                     a = w(1 > s ? [3, 3, 4, 1, 1, 1, 5] : [4, 4, 4, 1, 1, 1, 3]),
-//                     t = 0; 7 > t; t++)
-//                r[["la", "lp", "lv", "tv", "rv", "zv", "pp"][t]] = a[t];
-//            for (r.m = m.pow(10, r.pp),
-//                     s >= 1 ? (a = w([3, 3]),
-//                         r.c = a[0],
-//                         a = a[1]) : (a = 5,
-//                         r.c = 2),
-//                     r.pc = w([6 * a])[0],
-//                     h.pc = r.pc / r.m,
-//                     r.cp = r.pc,
-//                     r.da = 0,
-//                     r.sa = r.sv = 0,
-//                     t = 0; !(e >= n) && (e != n - 1 || 7 & (r.c ^ t)); t++) {
-//                for (l = {},
-//                         o = {},
-//                         f = r.tv ? y() : 1,
-//                         i = 0; 3 > i; i++)
-//                    if (p = ["v", "p", "a"][i],
-//                    (f ? y() : 0) && (a = N(),
-//                        r["l" + p] += a),
-//                        u = "v" == p && r.rv ? y() : 1,
-//                        a = w([3 * r["l" + p] + ("v" == p ? 7 * u : 0)], [!!i])[0] * (u ? 1 : 100),
-//                        o[p] = a,
-//                    "v" == p) {
-//                        if (!(l[d[p]] = a) && (s > 1 || 241 > t) && (r.zv ? !y() : 1)) {
-//                            o.p = 0;
-//                            break
-//                        }
-//                    } else
-//                        "a" == p && (r.da = (1 > s ? 0 : r.da) + o.a);
-//                r.sv += o.v,
-//                    l[d.p] = (r.cp += o.p) / r.m,
-//                    r.sa += o.v * r.cp,
-//                    l[d.a] = b(o.a) ? t ? c[t - 1][d.a] : l[d.p] : r.sv ? ((m.floor((r.sa * (2e3 / r.m) + r.sv) / r.sv) >> 1) + r.da) / 1e3 : l[d.p] + r.da / 1e3,
-//                    c.push(l)
-//            }
-//            return c[0].date = h.day,
-//                c[0].prevclose = h.pc,
-//                c
-//        }, T = function () {
-//            var t, e, i, n, a, o, l;
-//            if (s >= 1)
-//                return [];
-//            for (r.lv = 0,
-//                     r.ld = 0,
-//                     r.cd = 0,
-//                     r.cv = [0, 0],
-//                     r.p = w([6])[0],
-//                     r.d = w([18], [1])[0] - 1,
-//                     r.m = m.pow(10, r.p),
-//                     a = w([3, 3]),
-//                     r.md = a[0],
-//                     r.mv = a[1],
-//                     t = []; a = w([6]),
-//                     a.length;) {
-//                if (i = {
-//                    c: a[0]
-//                },
-//                    n = {},
-//                    i.d = 1,
-//                32 & i.c)
-//                    for (; ;) {
-//                        if (a = w([6])[0],
-//                        63 == (16 | a)) {
-//                            l = 16 & a ? "x" : "u",
-//                                a = w([3, 3]),
-//                                i[l + "_d"] = a[0] + r.md,
-//                                i[l + "_v"] = a[1] + r.mv;
-//                            break
-//                        }
-//                        if (32 & a) {
-//                            o = 8 & a ? "d" : "v",
-//                                l = 16 & a ? "x" : "u",
-//                                i[l + "_" + o] = (7 & a) + r["m" + o];
-//                            break
-//                        }
-//                        if (o = 15 & a,
-//                            0 == o ? i.d = w([6])[0] : 1 == o ? (r.d = o = w([18])[0],
-//                                i.d = 0) : i.d = o,
-//                            !(16 & a))
-//                            break
-//                    }
-//                n.date = x(i.d);
-//                for (o in {
-//                    v: 0,
-//                    d: 0
-//                })
-//                    b(i["x_" + o]) || (r["l" + o] = i["x_" + o]),
-//                    b(i["u_" + o]) && (i["u_" + o] = r["l" + o]);
-//                for (i.l_l = [i.u_d, i.u_d, i.u_d, i.u_d, i.u_v],
-//                         l = p[15 & i.c],
-//                     1 & i.u_v && (l = 31 - l),
-//                     16 & i.c && (i.l_l[4] += 2),
-//                         e = 0; 5 > e; e++)
-//                    l & 1 << 4 - e && i.l_l[e]++,
-//                        i.l_l[e] *= 3;
-//                i.d_v = w(i.l_l, [1, 0, 0, 1, 1], [0, 0, 0, 0, 1]),
-//                    o = r.cd + i.d_v[0],
-//                    n.open = o / r.m,
-//                    n.high = (o + i.d_v[1]) / r.m,
-//                    n.low = (o - i.d_v[2]) / r.m,
-//                    n.close = (o + i.d_v[3]) / r.m,
-//                    a = i.d_v[4],
-//                "number" == typeof a && (a = [a, a >= 0 ? 0 : -1]),
-//                    r.cd = o + i.d_v[3],
-//                    l = r.cv[0] + a[0],
-//                    r.cv = [l & d, r.cv[1] + a[1] + !!((r.cv[0] & d) + (a[0] & d) & f)],
-//                    n.volume = (r.cv[0] & f - 1) + r.cv[1] * f,
-//                    t.push(n)
-//            }
-//            return t
-//        }, k = function () {
-//            var t, e, i, n;
-//            if (s > 1)
-//                return [];
-//            for (r.l = 0,
-//                     n = -1,
-//                     r.d = w([18])[0] - 1,
-//                     i = w([18])[0]; r.d < i;)
-//                e = x(1),
-//                    0 >= n ? (y() && (r.l += N()),
-//                        n = w([3 * r.l], [0])[0] + 1,
-//                    t || (t = [e],
-//                        n--)) : t.push(e),
-//                    n--;
-//            return t
-//        };
-//    return _mi_run = function () {
-//        var t, i, a, o;
-//        if (s >= 1)
-//            return [];
-//        for (r.f = w([6])[0],
-//                 r.c = w([6])[0],
-//                 a = [],
-//                 r.dv = [],
-//                 r.dl = [],
-//                 t = 0; t < r.f; t++)
-//            r.dv[t] = 0,
-//                r.dl[t] = 0;
-//        for (t = 0; !(e >= n) && (e != n - 1 || 7 & (r.c ^ t)); t++) {
-//            for (o = [],
-//                     i = 0; i < r.f; i++)
-//                y() && (r.dl[i] += N()),
-//                    r.dv[i] += w([3 * r.dl[i]], [1])[0],
-//                    o[i] = r.dv[i];
-//            a.push(o)
-//        }
-//        return a
-//    }
-//        ,
-//        g()()
-//})";
-//
-//std::string preprocess(const std::string& text) {
-//    std::string processed = text;
-//    size_t eqPos = processed.find('=');
-//    if (eqPos != std::string::npos) {
-//        processed = processed.substr(eqPos + 1);
-//    }
-//    size_t semiPos = processed.find(';');
-//    if (semiPos != std::string::npos) {
-//        processed = processed.substr(0, semiPos);
-//    }
-//    processed.erase(std::remove(processed.begin(), processed.end(), '"'), processed.end());
-//    return processed;
-//}
-//
-//
-//int main() {
-//    std::string text = exchange::update_calendar();
-//
-//    duk_context *ctx = duk_create_heap_default();
-//
-//    // 定义JS函数
-//    //duk_eval_string(ctx, sinaJsDecoder);
-//    if (duk_peval_string(ctx,sinaJsDecoder) != DUK_EXEC_SUCCESS) {
-//        std::cerr << "Error in JavaScript code: " << duk_safe_to_string(ctx, -1) << std::endl;
-//        duk_destroy_heap(ctx);
-//        return 1;
-//    }
-//
-//    // 调用函数
-//    auto a1 = duk_get_global_string(ctx, "d");
-//    std::cout << a1 << std::endl;
-//    std::string input = R"(var datelist="LC/AAAf8CXCw6mHbaPgkryxXv10eAJP1LW0SD39aT7+NV44Xba3PxCgTdrp5BkYVAc11hWvg0c/19UAc7jNtHQyWBAu2xmGuZI1NVAc3FepphjnTBw1X4hmGu+ypVAcvFenpBXPqCc6F4ZmGueLFwbIN8QTDXPsCc1FepphjvOoCc8FepphjvcgFO3CP00wxXXWhrkUdZrIJpw9X3ThrlEp6hlGc88Kcem0VeFpZM46VV4MrTC2KScKc811U4aLXUdlzINc9lTrwFW3T52KPj0mDueVFuUR1RtiEoCXfdgFOOSGRXnUhrXWhb0kt6Rk2pU44JV4SrTyU9wSDHPwCnXdP1FuiUM44r7qwdKqcYrIZpw1DqgrlU5IrHRawxjrwBaqcbrIt9gr3UhDtOpyVNjEnCHPnC3royNWvi0gj/";var KLC_TD_SH=datelist;)";
-//    input = preprocess(text);
-//    auto a2 = duk_push_string(ctx, input.c_str());
-//    std::cout << a2 << std::endl;
-//    //duk_call(ctx, 1);
-//    if (duk_pcall(ctx, 1) != DUK_EXEC_SUCCESS) {
-//        std::cerr << "Error: " << duk_safe_to_string(ctx, -1) << std::endl;
-//        duk_destroy_heap(ctx);
-//        return 1;
-//    }
-//
-//    // 打印返回值的类型和内容
-//    //std::cout << "Return value type: " << duk_get_type(ctx, -1) << std::endl;
-//    //std::cout << "Return value: " << duk_safe_to_string(ctx, -1) << std::endl;
-//
-//    // 检查返回值是否为数组
-//    if (!duk_is_array(ctx, -1)) {
-//        std::cerr << "Return value is not an array!" << std::endl;
-//        duk_destroy_heap(ctx);
-//        return 1;
-//    }
-//
-//    // 获取数组长度
-//    auto a3 = duk_get_length(ctx, -1);
-//    std::cout << a3 << std::endl;
-//    //duk_size_t len = duk_get_uint(ctx, -1);
-//    //std::cout << len << std::endl;
-//    //duk_pop(ctx);  // 弹出长度值
-//    size_t len = a3;
-//    std::cout << "Array length: " << len << std::endl;
-//
-//    // 遍历数组元素
-//    for (duk_uarridx_t i = 0; i < len; i++) {
-//        duk_get_prop_index(ctx, -1, i);
-//        std::cout << "Element(" << duk_get_type(ctx, -1) <<")" << i << ": ";
-//        if (duk_is_number(ctx, -1)) {
-//            std::cout << "number: " << duk_get_number(ctx, -1);
-//        } else if (duk_is_string(ctx, -1)) {
-//            std::cout << "string: " << duk_get_string(ctx, -1);
-//        } else if (duk_is_boolean(ctx, -1)) {
-//            std::cout << "boolean: " << duk_get_boolean(ctx, -1);
-//        } else if (duk_is_object(ctx, -1)) {
-//            const char *date_str = duk_safe_to_string(ctx, -1);
-//            std::cout << "object: " << date_str << std::endl;
-//
-////            auto pb = duk_get_prop_string(ctx, -1, "getTime");
-////            std::cout << "get method: " << pb << std::endl;
-////            printf("{getTime: %d}\n", duk_get_int(ctx, -1));
-////            duk_pop(ctx); // 弹出 x 的值
-//
-//
-//            //auto date_num = duk_get_number(ctx, -1);
-//            //std::cout << "object: " << date_num;
-////            duk_get_prop_string(ctx, -1, "toISOString");
-////            if (duk_is_callable(ctx, -1)) {
-////                duk_dup(ctx, -1);
-////                if (duk_pcall_method(ctx, 0) == 0) {
-////                    double ts = duk_get_number(ctx, -1);
-////                    std::cout << "object: " << ts;
-////                    duk_pop(ctx); // 弹出时间戳
-////                } else {
-////                    std::cerr << "Error: " << duk_safe_to_string(ctx, -1) << std::endl;
-////                }
-////            }
-////            duk_pop(ctx); // 弹出getTime
-//        } else {
-//            std::cout << "[unknown type]";
-//        }
-//        std::cout << std::endl;
-//
-//        duk_pop(ctx);  // 弹出当前元素
-//    }
-//
-//    duk_destroy_heap(ctx);
-//    return 0;
-//}
-//
-////#include <iostream>
-////#include <string>
-////#include <cstdlib>
-////#include "mujs.h"
-////
-////using namespace std;
-////
-////
-////int main() {
-////    // 初始化 mujs 环境
-////    js_State *J = js_newstate(nullptr, nullptr, JS_STRICT);
-////
-////    // 加载 JavaScript 文件
-////    string jsFilePath = "D:/projects/quant1x/q2x/cmake-build-debug/js_decode.js";
-////    //jsFilePath = "js_decode.js";
-////    cerr << "Loading JavaScript file: " << jsFilePath << endl;
-////    if (js_dofile(J, jsFilePath.c_str())) {
-////        cerr << "Error loading JavaScript file: " << jsFilePath << endl;
-////        js_freestate(J);
-////        return 1;
-////    }
-////    cerr << "JavaScript file loaded successfully." << endl;
-//////    js_getglobal(J, "d");
-//////    int num = js_tonumber(J, -1);
-//////    std::cout << num << std::endl;
-//////    js_pop(J, 1);
-////    // 检查函数 d 是否存在
-////    js_getglobal(J, "d");
-////    if (js_type(J, -1) != JS_ISFUNCTION) {
-////        cerr << "Error: 'd' is not a function." << endl;
-////        js_pop(J, 1);
-////        js_freestate(J);
-////        return 1;
-////    }
-////    js_pop(J, 1);
-////
-////    // 输入编码内容
-////    string input = "LC/AAAf8CXCw6mHbaPgkryxXv10eAJP1LW0SD39aT7+NV44Xba3PxCgTdrFc3FepphjnTBw1X4hmGu+ypVAcvFenpBXPqCc6F4ZmGueLFwbIN8QTDXPsCc1FepphjvOoCc8FepphjvcgFO3CP00wxXXWhrkUdZrIJpw9X3ThrlEp6hlGc88Kcem0VeFpZM46VV4MrTC2KScKc811U4aLXUdlzINc9lTrwFW3T52KPj0mDueVFuUR1RtiEoCXfdgFOOSGRXnUhrXWhb0kt6Rk2pU44JV4SrTyU9wSDHPwCnXdP1FuiUM44r7qwdKqcYrIZpw1DqgrlU5IrHRawxjrwBaqcbrIt9gr3UhDtOpyVNjEnCHPnC3royNWvi0gj/";
-////
-////    // 设置输入参数
-////    js_pushundefined(J); // this 对象
-////    js_pushstring(J, input.c_str());
-////
-////    // 调用函数 d
-////    js_getglobal(J, "d");
-////    if (js_pcall(J, 1)) { // 调用函数，传入 1 个参数
-////        cerr << "Error calling function 'd': " << js_trystring(J, -1, "unknown error") << endl;
-////        js_pop(J, 1);
-////        js_freestate(J);
-////        return 1;
-////    }
-////
-////    // 获取返回值
-////    if (js_isarray(J, -1)) {
-////        int length = js_getlength(J, -1);
-////        cout << "Decoded Results:" << endl;
-////        for (int i = 0; i < length; ++i) {
-////            js_getindex(J, -1, i);
-////            cout << js_tostring(J, -1) << endl;
-////            js_pop(J, 1);
-////        }
-////    } else {
-////        cerr << "Unexpected return type from 'd' function." << endl;
-////    }
-////
-////    // 清理 mujs 环境
-////    js_freestate(J);
-////    return 0;
-////}
 
-TEST_CASE("date-range-1", "[calendar]") {
-    exchange::timestamp begin("2025-05-29");
-    exchange::timestamp end("2025-05-30");
-    auto list = exchange::date_range(begin, end);
-    std::cout<< list << std::endl;
-}
+#include <iostream>
+#include <vector>
+#include <string>
+#include <cmath>
+#include <cstdint>
+#include <iomanip>
+#include <sstream>
+#include <ctime>
 
-TEST_CASE("date-range-2", "[calendar]") {
-    exchange::timestamp begin("2025-05-25");
-    exchange::timestamp end("2025-05-31");
-    auto list = exchange::date_range(begin, end);
-    std::cout<< list << std::endl;
+class Decoder {
+private:
+    // Constants
+    static constexpr int64_t l = 86400000; // 毫秒每天 (864e5)
+    static constexpr int64_t u_base = 7657;
+    static constexpr int32_t d_mask = ~(3 << 30);
+    static constexpr int64_t f_val = 1LL << 30;
+
+    // Base64 字符表（标准顺序）
+    static const std::string c_alphabet;
+
+    // 预计算 2^i
+    std::vector<int64_t> h;
+
+    // 输入数据（base64 解码后索引）
+    std::vector<int> i_data;
+    int e = 0; // 字节索引
+    int o = 0; // 位偏移
+    int n = 0; // 总字节数
+
+    // 状态结构体
+    struct State {
+        int d = 0;   // day offset
+        int p = 0;   // precision
+        int ld = 0;  // last delta?
+        int64_t cd = 0; // close delta
+        int c = 0;   // control flag
+        int m = 0;   // pow(10, p)
+
+        // For _()
+        int la = 0, lp = 0, lv = 0, tv = 0, rv = 0, zv = 0, pp = 0;
+        int64_t pc = 0, cp = 0;
+        int64_t da = 0, sa = 0, sv = 0;
+
+        // For T()
+        int md = 0, mv = 0;
+        std::vector<int64_t> cv = {0, 0};
+
+        // For k()
+        int lk = 0; // 对应 JS 中的 r.l （我重命名为 lk 避免冲突）
+
+        // For _mi_run
+        int f = 0;
+        std::vector<int> dv;
+        std::vector<int> dl;
+    } r;
+
+    int s = 0;           // mode from header
+    int u_header = 0;    // 控制分支
+
+public:
+    struct Candle {
+        std::string day;
+        double open = 0.0, high = 0.0, low = 0.0, close = 0.0;
+        int64_t volume = 0;
+        double prevclose = 0.0;
+    };
+
+    struct Trade {
+        std::string date;
+        double price = 0.0, avg_price = 0.0;
+        int64_t volume = 0;
+        double prevclose = 0.0;
+    };
+
+    struct MultiField {
+        std::vector<int> values;
+    };
+
+    struct DailyClose {
+        std::string day;
+        double close;
+        bool has_prevclose = false;
+        double prevclose = 0.0;
+
+        // 构造函数：第一个用 with_prev
+        DailyClose(const std::string& d, double c) : day(d), close(c) {}
+        DailyClose with_prev(double pc) const {
+            DailyClose copy(*this);
+            copy.has_prevclose = true;
+            copy.prevclose = pc;
+            return copy;
+        }
+    };
+
+private:
+    char v(int x) { return static_cast<char>(x); }
+
+    void initialize(const std::string& t) {
+        h.resize(64);
+        for (int i = 0; i < 64; ++i) {
+            h[i] = 1LL << i;
+        }
+
+        i_data.clear();
+        for (char ch : t) {
+            size_t pos = c_alphabet.find(ch);
+            if (pos != std::string::npos) {
+                i_data.push_back(static_cast<int>(pos));
+            } else {
+                i_data.push_back(-1);
+            }
+        }
+        n = static_cast<int>(i_data.size());
+        e = 0;
+        o = 0;
+    }
+
+    bool y() {
+        if (e >= n) return false;
+        bool result = (i_data[e] & (1 << o)) != 0;
+        o++;
+        if (o >= 6) {
+            o -= 6;
+            e++;
+        }
+        return result;
+    }
+
+    int64_t N() {
+        int64_t t = y() ? 1 : 0;
+        int64_t e_count = 1;
+        while (y()) {
+            e_count++;
+        }
+        return e_count * (2 * t - 1);
+    }
+
+    std::vector<int64_t> w(const std::vector<int>& t,
+                           const std::vector<int>& r_flag = {},
+                           const std::vector<int>& a_flag = {}) {
+        std::vector<int64_t> result;
+        std::vector<int> r_use = r_flag.empty() ? std::vector<int>(t.size(), 0) : r_flag;
+        std::vector<int> a_use = a_flag.empty() ? std::vector<int>(t.size(), 0) : a_flag;
+
+        for (size_t idx = 0; idx < t.size(); ++idx) {
+            int len = t[idx];
+            if (len == 0) {
+                result.push_back(0);
+                continue;
+            }
+            if (e >= n) break;
+
+            int64_t val = 0;
+            int bits_left = len;
+
+            while (bits_left > 0 && e < n) {
+                int take = std::min(bits_left, 6 - o);
+                uint8_t mask = (1 << take) - 1;
+                val |= ((i_data[e] >> o) & mask) << (len - bits_left);
+
+                o += take;
+                bits_left -= take;
+
+                if (o >= 6) {
+                    o -= 6;
+                    e++;
+                }
+            }
+
+            if (len <= 30 && r_use[idx] && val >= h[len - 1]) {
+                val -= h[len];
+            } else if (len > 30) {
+                auto sub = w({30, len - 30}, {0, r_use[idx]});
+                if (!a_use[idx]) {
+                    val = sub[0] + sub[1] * h[30];
+                } else {
+                    result.push_back(sub[0]);
+                    result.push_back(sub[1]);
+                    continue;
+                }
+            }
+            result.push_back(val);
+        }
+        return result;
+    }
+
+    std::string x(int day_offset) {
+        int64_t total_days = u_base + r.d + day_offset;
+        int64_t millis = total_days * l;
+        time_t sec = millis / 1000;
+        tm* ptm = gmtime(&sec);
+
+        std::ostringstream oss;
+        oss << (1900 + ptm->tm_year)
+            << '-' << std::setfill('0') << std::setw(2) << (ptm->tm_mon + 1)
+            << '-' << std::setfill('0') << std::setw(2) << ptm->tm_mday;
+        return oss.str();
+    }
+
+    std::vector<DailyClose> S() {
+        if (s >= 1) return {};
+
+        r.d = w({18}, {1})[0] - 1;
+        auto a = w({3, 3, 30, 6});
+        r.p = a[0]; r.ld = a[1]; r.cd = a[2]; r.c = a[3];
+        r.m = static_cast<int>(std::pow(10, r.p));
+        double initial_pc = r.cd / static_cast<double>(r.m);  // prevclose
+
+        std::vector<DailyClose> result;
+        int index = 0;
+
+        while (true) {
+            // 解析 day offset
+            if (!y()) break;
+
+            auto cmd = w({3})[0];
+            int day_offset = 1;  // default
+
+            if (cmd == 0) {
+                day_offset = w({6})[0];
+            } else if (cmd == 1) {
+                r.d = w({18})[0];
+                day_offset = 0;
+            } else {
+                day_offset = cmd;
+            }
+
+            std::string date_str = x(day_offset);
+
+            // 更新 ld
+            if (y()) {
+                r.ld += N();
+            }
+
+            // 更新 cd
+            auto delta_vec = w({3 * r.ld}, {1});
+            r.cd += delta_vec[0];
+            double current_close = r.cd / static_cast<double>(r.m);
+
+            DailyClose bar(date_str, current_close);
+
+            // 只有第一个加 prevclose
+            if (index == 0) {
+                bar.has_prevclose = true;
+                bar.prevclose = initial_pc;
+            }
+
+            result.push_back(bar);
+
+            // 循环终止条件
+            if (e >= n) break;
+            if (e == n - 1 && ((r.c ^ (index + 1)) & 63) == 0) break;
+
+            index++;
+        }
+
+        return result;
+    }
+
+    std::vector<Trade> _() {
+        if (s > 2) return {};
+
+        r.d = w({18}, {1})[0] - 1;
+        Trade first;
+        first.date = x(1);
+
+        std::vector<int> lens = (s >= 1) ? std::vector<int>{4,4,4,1,1,1,3} : std::vector<int>{3,3,4,1,1,1,5};
+        auto a = w(lens);
+        r.la = a[0]; r.lp = a[1]; r.lv = a[2]; r.tv = a[3];
+        r.rv = a[4]; r.zv = a[5]; r.pp = a[6];
+
+        r.m = static_cast<int>(std::pow(10, r.pp));
+
+        int a_len;
+        if (s >= 1) {
+            auto tmp = w({3, 3});
+            r.c = tmp[0];
+            a_len = tmp[1];
+        } else {
+            r.c = 2;
+            a_len = 5;
+        }
+
+        r.pc = w({6 * a_len})[0];
+        first.prevclose = r.pc / static_cast<double>(r.m);
+        r.cp = r.pc;
+        r.da = r.sa = r.sv = 0;
+
+        std::vector<Trade> trades;
+        int t_idx = 0;
+        while (e < n) {
+            Trade trade;
+            bool has_vol_update = r.tv ? y() : true;
+
+            int64_t op_p = 0, op_v = 0, op_a = 0;
+
+            for (int i = 0; i < 3; ++i) {
+                bool updated = has_vol_update ? y() : false;
+                if (updated) {
+                    int64_t delta = N();
+                    if (i == 0) r.lv += delta;
+                    else if (i == 1) r.lp += delta;
+                    else if (i == 2) r.la += delta;
+                }
+
+                bool raw_mode = (i == 0 && r.rv) ? y() : true;
+                int bit_len = 3 * (i == 0 ? r.lv : (i == 1 ? r.lp : r.la));
+                if (i == 0 && !raw_mode) bit_len += 7;
+
+                auto val_vec = w({bit_len}, {i != 0});
+                int64_t raw_val = val_vec[0];
+                int64_t final_val = raw_mode ? raw_val : raw_val * 100;
+
+                if (i == 0) op_v = final_val;
+                else if (i == 1) op_p = final_val;
+                else if (i == 2) op_a = final_val;
+
+                if (i == 0 && op_v == 0 && (s <= 1 || t_idx >= 241) && (r.zv ? !y() : true)) {
+                    op_p = 0;
+                    break;
+                }
+            }
+
+            if (op_p == 0) continue;
+
+            r.sv += op_v;
+            r.cp += op_p;
+            r.sa += op_v * r.cp;
+
+            trade.price = r.cp / static_cast<double>(r.m);
+            trade.volume = op_v;
+            if (op_a == 0) {
+                trade.avg_price = trades.empty() ? trade.price : trades.back().avg_price;
+            } else {
+                if (r.sv == 0) {
+                    trade.avg_price = trade.price + r.da / 1000.0;
+                } else {
+                    int64_t temp = (r.sa * 2000LL / r.m + r.sv);
+                    trade.avg_price = ((temp / r.sv) / 2 + r.da) / 1000.0;
+                }
+            }
+
+            trades.push_back(trade);
+            t_idx++;
+
+            if (e >= n) break;
+            if (e == n - 1 && ((r.c ^ t_idx) & 7) == 0) break;
+        }
+
+        if (!trades.empty()) {
+            trades[0].date = first.date;
+            trades[0].prevclose = first.prevclose;
+        }
+        return trades;
+    }
+
+    std::vector<Candle> T() {
+        if (s >= 1) return {};
+        r.lv = r.ld = r.cd = 0;
+        r.cv = {0, 0};
+        r.p = w({6})[0];
+        r.d = w({18}, {1})[0] - 1;
+        r.m = static_cast<int>(std::pow(10, r.p));
+        auto md_mv = w({3, 3});
+        r.md = md_mv[0]; r.mv = md_mv[1];
+
+        const std::vector<int> p_table = {0,3,5,6,9,10,12,15,17,18,20,23,24,27,29,30};
+
+        std::vector<Candle> candles;
+        while (true) {
+            auto a = w({6});
+            if (a.empty()) break;
+            int cmd = a[0];
+
+            Candle bar;
+            int x_d = r.ld, x_v = r.lv, u_d = r.ld, u_v = r.lv;
+            (void)u_d;
+            (void)u_v;
+            if (cmd & 32) {
+                while (true) {
+                    a = w({6});
+                    if (a.empty()) break;
+                    int sub = a[0];
+                    if ((sub & 63) == (16 | 63)) {
+                        bool is_x = !(sub & 16);
+                        auto vals = w({3,3});
+                        if (is_x) { x_d = vals[0] + r.md; x_v = vals[1] + r.mv; }
+                        else { r.md = vals[0] + r.md; r.mv = vals[1] + r.mv; }
+                        break;
+                    } else if (sub & 32) {
+                        bool is_d = !(sub & 8), is_x = !(sub & 16);
+                        int val = (sub & 7);
+                        if (is_x) { if (is_d) x_d = val + r.md; else x_v = val + r.mv; }
+                        else { if (is_d) r.md = val + r.md; else r.mv = val + r.mv; }
+                        break;
+                    } else {
+                        int oc = sub & 15;
+                        if (oc == 0) bar.day = x(w({6})[0]);
+                        else if (oc == 1) { r.d = w({18})[0]; bar.day = x(0); }
+                        else bar.day = x(oc);
+                        if (!(sub & 16)) break;
+                    }
+                }
+            } else {
+                bar.day = x(cmd & 63);
+            }
+
+            std::vector<int> lens = {x_d, x_d, x_d, x_d, x_v};
+            int p_idx = p_table[cmd & 15];
+            if (x_v & 1) p_idx = 31 - p_idx;
+            if (cmd & 16) lens[4] += 2;
+            for (int i = 0; i < 5; ++i) {
+                if (p_idx & (1 << (4 - i))) lens[i]++;
+                lens[i] *= 3;
+            }
+
+            auto diffs = w(lens, {1,0,0,1,1}, {0,0,0,0,1});
+            int64_t base = r.cd + diffs[0];
+            bar.open = base / static_cast<double>(r.m);
+            bar.high = (base + diffs[1]) / static_cast<double>(r.m);
+            bar.low = (base - diffs[2]) / static_cast<double>(r.m);
+            bar.close = (base + diffs[3]) / static_cast<double>(r.m);
+
+            int64_t vol_raw = diffs[4];
+            std::vector<int64_t> vol_pair = {vol_raw >= 0 ? vol_raw : (vol_raw & (f_val - 1)), vol_raw >= 0 ? 0 : -1};
+
+            r.cd = base + diffs[3];
+            int64_t new_low = r.cv[0] + vol_pair[0];
+            int64_t carry = r.cv[1] + vol_pair[1];
+            if (((r.cv[0] & d_mask) + (vol_pair[0] & d_mask)) & f_val) carry++;
+            r.cv[0] = new_low & (f_val - 1);
+            r.cv[1] = carry;
+            bar.volume = r.cv[0] + r.cv[1] * f_val;
+
+            candles.push_back(bar);
+        }
+        return candles;
+    }
+
+    std::vector<std::string> k() {
+        if (s > 1) return {};
+
+        r.lk = 0;
+        int count = -1;
+        r.d = w({18})[0] - 1;
+        int end_day = w({18})[0];
+
+        std::vector<std::string> result;
+        std::string first_day = x(1);
+
+        while (r.d < end_day) {
+            std::string today = x(1);
+            if (count <= 0) {
+                if (y()) r.lk += N();
+                auto tmp = w(std::vector<int>{3 * r.lk}, {0});
+                count = tmp[0] + 1;
+
+                if (result.empty()) {
+                    result.push_back(first_day);
+                    count--;
+                } else {
+                    result.push_back(today);
+                }
+            } else {
+                result.push_back(today);
+            }
+            count--;
+            r.d++;
+        }
+
+        // 如果没推入任何数据，至少返回第一个
+        if (result.empty()) {
+            result.push_back(first_day);
+        }
+
+        return result;
+    }
+
+    std::vector<MultiField> _mi_run() {
+        if (s >= 1) return {};
+        r.f = w({6})[0];
+        r.c = w({6})[0];
+        r.dv.assign(r.f, 0);
+        r.dl.assign(r.f, 0);
+        std::vector<MultiField> res;
+        int idx = 0;
+        while (e < n) {
+            MultiField mf;
+            mf.values.resize(r.f);
+            for (int i = 0; i < r.f; ++i) {
+                if (y()) r.dl[i] += N();
+                auto val = w({3 * r.dl[i]}, {1});
+                r.dv[i] += val[0];
+                mf.values[i] = r.dv[i];
+            }
+            res.push_back(mf);
+            idx++;
+            if (e >= n) break;
+            if (e == n - 1 && ((r.c ^ idx) & 7) == 0) break;
+        }
+        return res;
+    }
+
+public:
+    template<typename T>
+    std::vector<T> decode(const std::string& input) {
+        initialize(input);
+        auto u = w({12, 6});
+        u_header = u[0];
+        s = 63 ^ u[1];
+
+        std::cout << "u[0]=" << u_header << " 分支: ";
+        std::string name;
+        switch (u_header) {
+            case 1479: name = "T"; break;
+            case 136:  name = "_"; break;
+            case 200:  name = "S"; break;
+            case 139:  name = "k"; break;
+            case 197:  name = "_mi_run"; break;
+            default:   name = "unknown";
+        }
+        std::cout << name << "\n";
+
+        if constexpr (std::is_same_v<T, std::string>) {
+            if (u_header == 139) return k();  // k() → vector<string>
+        } else if constexpr (std::is_same_v<T, DailyClose>) {
+            if (u_header == 200) return S();  // S() → vector<DailyClose>
+        } else if constexpr (std::is_same_v<T, Trade>) {
+            if (u_header == 136) return _();
+        } else if constexpr (std::is_same_v<T, Candle>) {
+            if (u_header == 1479) return T();
+        } else if constexpr (std::is_same_v<T, MultiField>) {
+            if (u_header == 197) return _mi_run();
+        }
+        return {};
+        return {};
+    }
+};
+
+// Static definition
+const std::string Decoder::c_alphabet =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+// 测试主函数
+TEST_CASE("c1", "[calendar]") {
+    std::string encoded_data = "LC/AAAf8CXCw6mHbaPgkryxXv10eAJP1LW0SD39aT7+NV44Xba3PxCgTdrFc3FepphjnTBw1X4hmGu+ypVAcvFenpBXPqCc6F4ZmGueLFwbIN8QTDXPsCc1FepphjvOoCc8FepphjvcgFO3CP00wxXXWhrkUdZrIJpw9X3ThrlEp6hlGc88Kcem0VeFpZM46VV4MrTC2KScKc811U4aLXUdlzINc9lTrwFW3T52KPj0mDueVFuUR1RtiEoCXfdgFOOSGRXnUhrXWhb0kt6Rk2pU44JV4SrTyU9wSDHPwCnXdP1FuiUM44r7qwdKqcYrIZpw1DqgrlU5IrHRawxjrwBaqcbrIt9gr3UhDtOpyVNjEnCHPnC3royNWvi0gj/";
+
+    Decoder dec;
+
+    // Try decoding as SimpleDate (likely S function)
+    auto dates = dec.decode<std::string>(encoded_data);
+    std::cout << "\n--- Decoded Dates ---\n";
+    for (const auto& d : dates) {
+        std::cout << d << "\n";
+    }
+
 }

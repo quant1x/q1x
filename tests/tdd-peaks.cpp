@@ -124,7 +124,7 @@ public:
 
     // Find: 找波峰波谷，基于一阶差分的变化（类似二阶导数）
     void Find() {
-        auto n = diff.size();
+        auto n = int(diff.size());
         for (int i = 0; i < n - 1; ++i) {
             int d = diff[i + 1] - diff[i];
 
@@ -179,194 +179,194 @@ TEST_CASE("find-peaks-v2", "[peaks]") {
     cout << endl;
 }
 
-#include <matplot/matplot.h>
-
-using namespace matplot;
-
-TEST_CASE("find-peaks-v3", "[peaks]") {
-
-    // 原始数据
-    std::vector<double> data = {1, 2, 2, 3, 2, 1, 2, 3, 4, 3, 2, 1};
-    auto [peaks, valleys] = PeeksAndValleys(data);
-
-    // 构建 x 坐标
-    std::vector<double> x(data.size());
-    std::iota(x.begin(), x.end(), 0.0);
-
-    // 提取波峰波谷的 x 和 y 值
-    std::vector<double> peak_x, valley_x, peak_y, valley_y;
-    for (int idx : peaks) {
-        peak_x.push_back(static_cast<double>(idx));
-        peak_y.push_back(data[idx]);
-    }
-    for (int idx : valleys) {
-        valley_x.push_back(static_cast<double>(idx));
-        valley_y.push_back(data[idx]);
-    }
-
-    // 绘制原始数据曲线
-    plot(x, data, "-o")->color("blue").line_width(2).marker_size(3);
-
-    // 绘制波峰
-    scatter(peak_x, peak_y)
-        ->color("red")
-        .marker("X")
-        .marker_size(10) // 调整标记点大小
-        .display_name("Peaks");
-
-    // 绘制波谷
-    scatter(valley_x, valley_y)
-        ->color("green")
-        .marker("O")
-        .marker_size(10) // 调整标记点大小
-        .display_name("Valleys");
-
-    // 设置标题和标签
-    title("Peaks and Valleys Detection");
-    xlabel("Index");
-    ylabel("Value");
-    matplot::legend();
-    grid(true);
-
-    // 设置坐标轴范围
-    std::array<double, 2> x_limits = {0., static_cast<double>(data.size() - 1)};
-    std::array<double, 2> y_limits = {
-        *std::min_element(data.begin(), data.end()) - 1.,
-        *std::max_element(data.begin(), data.end()) + 1.
-    };
-    xlim(x_limits);
-    ylim(y_limits);
-
-    // 强制刷新绘图上下文
-    //matplot::flush();
-
-    // 显示图表
-    matplot::show();
-}
-
-TEST_CASE("find-peaks-v4", "[peaks]") {
-    // 原始数据（示例数据，需替换为实际数据）
-    std::vector<double> data = {3, 2.5, 2, 1.5, 1, 1.5, 1.5, 2, 1.5, 2, 1.5};
-    std::vector<double> x(data.size());
-    std::iota(x.begin(), x.end(), 0);
-
-    // 创建图形对象
-    auto f = figure(true);
-    f->size(800, 600);
-
-    // 1. 先绘制蓝色折线（确保在最底层）
-    auto pl = plot(x, data);
-    pl->color("blue")
-        .line_width(1)
-        .display_name("Data");
-
-    // 2. 绘制所有数据点（蓝色空心圆）
-    auto sc = scatter(x, data);
-    sc->marker("o")
-        .marker_size(5)
-        .marker_face_color("none")
-        .marker_face_color("blue")
-        .line_width(1);
-
-    // 3. 强制绘制波谷点（绿色实心圆）
-    std::vector<size_t> valleys = {4, 6, 8, 10}; // 波谷位置索引
-    std::vector<double> vx, vy;
-    for (auto i : valleys) {
-        if (i < data.size()) {
-            vx.push_back(x[i]);
-            vy.push_back(data[i]);
-        }
-    }
-    auto valley_pts = scatter(vx, vy);
-    valley_pts->marker("o")
-        .marker_size(12)
-        .marker_face_color("green")
-        .marker_face_color("black")
-        .line_width(2)
-        .display_name("Valleys");
-
-    // 图表修饰
-    title("Peaks and Valleys Detection");
-    xlabel("Index");
-    ylabel("Value");
-    matplot::legend()->location(legend::general_alignment::topright);
-    grid(true);
-    xlim({0, 10});
-    ylim({0, 5}); // 调高Y轴上限确保显示完整
-
-    // 重要：强制刷新图形缓冲区
-    //matplot::flush();
-    show();
-}
-
-struct KLine {
-    double open;
-    double close;
-    double high;
-    double low;
-};
-
-void drawManualCandle(const std::vector<double>& x,
-                      const std::vector<double>& opens,
-                      const std::vector<double>& closes,
-                      const std::vector<double>& lows,
-                      const std::vector<double>& highs) {
-    // 绘制上下影线
-    for (size_t i = 0; i < x.size(); ++i) {
-        std::vector<double> vx = {x[i], x[i]};
-        std::vector<double> vy = {lows[i], highs[i]};
-        plot(vx, vy)->color("black").line_width(1);
-    }
-
-    // 绘制实体
-    for (size_t i = 0; i < x.size(); ++i) {
-        double width = 0.4;
-        double left = x[i] - width/2;
-        double right = x[i] + width/2;
-
-        std::vector<double> x_box = {left, right, right, left, left};
-        std::vector<double> y_box = {opens[i], opens[i], closes[i], closes[i], opens[i]};
-
-        std::string color = (closes[i] >= opens[i]) ? "red" : "green";
-        fill(x_box, y_box, color);
-        plot(x_box, y_box)->color("black").line_width(1);
-    }
-}
-
-TEST_CASE("find-peaks-v5", "[peaks]") {
-    std::vector<KLine> klines = {
-        {45.3, 47.8, 48.2, 44.5},
-        {47.8, 46.2, 48.0, 45.0},
-        {46.2, 48.5, 49.1, 45.8},
-        {48.5, 49.1, 49.5, 47.0},
-        {49.1, 50.3, 51.0, 48.5},
-        {50.3, 49.7, 50.8, 49.0},
-        {49.7, 51.2, 52.5, 49.5},
-        {51.2, 52.0, 52.8, 50.8},
-        {52.0, 53.5, 54.0, 51.5},
-        {53.5, 52.8, 54.2, 52.0}
-    };
-
-    std::vector<double> x, high, low, opens, closes;
-    for (size_t i = 0; i < klines.size(); ++i) {
-        x.emplace_back(i+1);
-        high.emplace_back(klines[i].high);
-        low.emplace_back(klines[i].low);
-        opens.emplace_back(klines[i].open);
-        closes.emplace_back(klines[i].close);
-    }
-
-    // 创建蜡烛图
-    drawManualCandle(x, opens, closes, low, high);
-    //p->color("red").line_width(1);
-
-    title("K-Line Chart");
-    xlabel("Day");
-    ylabel("Price");
-    grid(on);
-
-    show();
-}
+//#include <matplot/matplot.h>
+//
+//using namespace matplot;
+//
+//TEST_CASE("find-peaks-v3", "[peaks]") {
+//
+//    // 原始数据
+//    std::vector<double> data = {1, 2, 2, 3, 2, 1, 2, 3, 4, 3, 2, 1};
+//    auto [peaks, valleys] = PeeksAndValleys(data);
+//
+//    // 构建 x 坐标
+//    std::vector<double> x(data.size());
+//    std::iota(x.begin(), x.end(), 0.0);
+//
+//    // 提取波峰波谷的 x 和 y 值
+//    std::vector<double> peak_x, valley_x, peak_y, valley_y;
+//    for (int idx : peaks) {
+//        peak_x.push_back(static_cast<double>(idx));
+//        peak_y.push_back(data[idx]);
+//    }
+//    for (int idx : valleys) {
+//        valley_x.push_back(static_cast<double>(idx));
+//        valley_y.push_back(data[idx]);
+//    }
+//
+//    // 绘制原始数据曲线
+//    plot(x, data, "-o")->color("blue").line_width(2).marker_size(3);
+//
+//    // 绘制波峰
+//    scatter(peak_x, peak_y)
+//        ->color("red")
+//        .marker("X")
+//        .marker_size(10) // 调整标记点大小
+//        .display_name("Peaks");
+//
+//    // 绘制波谷
+//    scatter(valley_x, valley_y)
+//        ->color("green")
+//        .marker("O")
+//        .marker_size(10) // 调整标记点大小
+//        .display_name("Valleys");
+//
+//    // 设置标题和标签
+//    title("Peaks and Valleys Detection");
+//    xlabel("Index");
+//    ylabel("Value");
+//    matplot::legend();
+//    grid(true);
+//
+//    // 设置坐标轴范围
+//    std::array<double, 2> x_limits = {0., static_cast<double>(data.size() - 1)};
+//    std::array<double, 2> y_limits = {
+//        *std::min_element(data.begin(), data.end()) - 1.,
+//        *std::max_element(data.begin(), data.end()) + 1.
+//    };
+//    xlim(x_limits);
+//    ylim(y_limits);
+//
+//    // 强制刷新绘图上下文
+//    //matplot::flush();
+//
+//    // 显示图表
+//    matplot::show();
+//}
+//
+//TEST_CASE("find-peaks-v4", "[peaks]") {
+//    // 原始数据（示例数据，需替换为实际数据）
+//    std::vector<double> data = {3, 2.5, 2, 1.5, 1, 1.5, 1.5, 2, 1.5, 2, 1.5};
+//    std::vector<double> x(data.size());
+//    std::iota(x.begin(), x.end(), 0);
+//
+//    // 创建图形对象
+//    auto f = figure(true);
+//    f->size(800, 600);
+//
+//    // 1. 先绘制蓝色折线（确保在最底层）
+//    auto pl = plot(x, data);
+//    pl->color("blue")
+//        .line_width(1)
+//        .display_name("Data");
+//
+//    // 2. 绘制所有数据点（蓝色空心圆）
+//    auto sc = scatter(x, data);
+//    sc->marker("o")
+//        .marker_size(5)
+//        .marker_face_color("none")
+//        .marker_face_color("blue")
+//        .line_width(1);
+//
+//    // 3. 强制绘制波谷点（绿色实心圆）
+//    std::vector<size_t> valleys = {4, 6, 8, 10}; // 波谷位置索引
+//    std::vector<double> vx, vy;
+//    for (auto i : valleys) {
+//        if (i < data.size()) {
+//            vx.push_back(x[i]);
+//            vy.push_back(data[i]);
+//        }
+//    }
+//    auto valley_pts = scatter(vx, vy);
+//    valley_pts->marker("o")
+//        .marker_size(12)
+//        .marker_face_color("green")
+//        .marker_face_color("black")
+//        .line_width(2)
+//        .display_name("Valleys");
+//
+//    // 图表修饰
+//    title("Peaks and Valleys Detection");
+//    xlabel("Index");
+//    ylabel("Value");
+//    matplot::legend()->location(legend::general_alignment::topright);
+//    grid(true);
+//    xlim({0, 10});
+//    ylim({0, 5}); // 调高Y轴上限确保显示完整
+//
+//    // 重要：强制刷新图形缓冲区
+//    //matplot::flush();
+//    show();
+//}
+//
+//struct KLine {
+//    double open;
+//    double close;
+//    double high;
+//    double low;
+//};
+//
+//void drawManualCandle(const std::vector<double>& x,
+//                      const std::vector<double>& opens,
+//                      const std::vector<double>& closes,
+//                      const std::vector<double>& lows,
+//                      const std::vector<double>& highs) {
+//    // 绘制上下影线
+//    for (size_t i = 0; i < x.size(); ++i) {
+//        std::vector<double> vx = {x[i], x[i]};
+//        std::vector<double> vy = {lows[i], highs[i]};
+//        plot(vx, vy)->color("black").line_width(1);
+//    }
+//
+//    // 绘制实体
+//    for (size_t i = 0; i < x.size(); ++i) {
+//        double width = 0.4;
+//        double left = x[i] - width/2;
+//        double right = x[i] + width/2;
+//
+//        std::vector<double> x_box = {left, right, right, left, left};
+//        std::vector<double> y_box = {opens[i], opens[i], closes[i], closes[i], opens[i]};
+//
+//        std::string color = (closes[i] >= opens[i]) ? "red" : "green";
+//        fill(x_box, y_box, color);
+//        plot(x_box, y_box)->color("black").line_width(1);
+//    }
+//}
+//
+//TEST_CASE("find-peaks-v5", "[peaks]") {
+//    std::vector<KLine> klines = {
+//        {45.3, 47.8, 48.2, 44.5},
+//        {47.8, 46.2, 48.0, 45.0},
+//        {46.2, 48.5, 49.1, 45.8},
+//        {48.5, 49.1, 49.5, 47.0},
+//        {49.1, 50.3, 51.0, 48.5},
+//        {50.3, 49.7, 50.8, 49.0},
+//        {49.7, 51.2, 52.5, 49.5},
+//        {51.2, 52.0, 52.8, 50.8},
+//        {52.0, 53.5, 54.0, 51.5},
+//        {53.5, 52.8, 54.2, 52.0}
+//    };
+//
+//    std::vector<double> x, high, low, opens, closes;
+//    for (size_t i = 0; i < klines.size(); ++i) {
+//        x.emplace_back(i+1);
+//        high.emplace_back(klines[i].high);
+//        low.emplace_back(klines[i].low);
+//        opens.emplace_back(klines[i].open);
+//        closes.emplace_back(klines[i].close);
+//    }
+//
+//    // 创建蜡烛图
+//    drawManualCandle(x, opens, closes, low, high);
+//    //p->color("red").line_width(1);
+//
+//    title("K-Line Chart");
+//    xlabel("Day");
+//    ylabel("Price");
+//    grid(on);
+//
+//    show();
+//}
 
 // 比较函数，与Python版本相同
 int compare(double a, double b) {

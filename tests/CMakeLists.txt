@@ -110,6 +110,9 @@ add_catch2_executable(tdd-iconv.cpp)
 # cron测试
 add_catch2_executable(tdd-cron.cpp)
 
+# 网络测试
+add_catch2_executable(tdd-http.cpp)
+
 # 测试缓存
 add_catch2_executable(tdd-calendar.cpp)
 add_catch2_executable(test-calender.cpp)

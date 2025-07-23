@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.18] - 2025-07-23
+### Changed
+- 新增历史分笔成交记录的proto3协议
+- 屏蔽matplotplusplus绘图工具
+- 第一版日历js转c++解码
+- 优化部分代码
+- 新增http测试, 占位
+
 ## [0.1.17] - 2025-07-21
 ### Changed
 - 默认静态库
@@ -57,6 +65,7 @@ All notable changes to this project will be documented in this file.
 - 优化chips测试代码
 - 校验命令行传入的start和end两个参数
 - 注明matplotplusplus在msvc编译无法通过, gcc编译通过, 但是无法完整的绘制图形
+- update changelog
 
 ## [0.1.16] - 2025-07-12
 ### Changed
@@ -252,7 +261,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.17...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.18...HEAD
+[0.1.18]: https://gitee.com/quant1x/q1x.git/compare/v0.1.17...v0.1.18
 [0.1.17]: https://gitee.com/quant1x/q1x.git/compare/v0.1.16...v0.1.17
 [0.1.16]: https://gitee.com/quant1x/q1x.git/compare/v0.1.15...v0.1.16
 [0.1.15]: https://gitee.com/quant1x/q1x.git/compare/v0.1.14...v0.1.15

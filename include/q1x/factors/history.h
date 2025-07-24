@@ -2,9 +2,9 @@
 #ifndef QUANT1X_FACTOR_HISTORY_H
 #define QUANT1X_FACTOR_HISTORY_H 1
 
-#include "q1x/std/api.h"
-#include "q1x/engine/action.h"
-#include "q1x/factors/base.h"
+#include <q1x/std/api.h>
+#include <q1x/engine/action.h>
+#include <q1x/factors/base.h>
 
 struct History {
     std::string Date;                 // 日期, 数据落地的日期
@@ -37,11 +37,6 @@ struct History {
     int         NewNoLowN;            // 低点提高次数
     int         NewLowN;              // 新低次数
     int64_t     OpenVolume;           // 开盘量
-    bool        no1_up_trend;         // 1号策略
-    bool        no1_down_trend;       // 1号策略
-    bool        no1_start_condition;  // 1号策略
-    double      no1_start_price;      // 1号策略
-    bool        no1_cross_high;       // 1号策略
     int         AdjustmentCount;      // 新增：除权除息次数
     std::string UpdateTime;           // 更新时间
     uint64_t    State;                // 样本状态

@@ -148,54 +148,6 @@ void HistoryFeature::Update(const std::string &code, const exchange::timestamp &
     auto summary = datasets::CountInflow(list, code, ts_cache);
     history.OpenVolume = summary.OpenVolume;
 
-    // 1号策略补充
-    auto baseHigh = formula::ref(HIGH, 1);
-    //UP_TREND := HIGH > VAR1;    {最高价上行}
-    auto UP_TREND = HIGH > baseHigh;
-    xt::xarray<bool> b_up = xt::cast<bool>(UP_TREND);
-    history.no1_up_trend = formula::at(b_up, -1);
-    //DOWN_TREND := HIGH < VAR1;  {最高价下行}
-    auto DOWN_TREND = HIGH < baseHigh;
-    xt::xarray<bool> b_down = xt::cast<bool>(DOWN_TREND);
-    history.no1_down_trend = formula::at(b_down, -1);
-    //
-    //{记录最高价上行起点（使用 LLV 计算最近低点）}
-    //START_CONDITION := UP_TREND AND REF(DOWN_TREND, 1);
-    auto START_CONDITION = UP_TREND && formula::ref(DOWN_TREND, 1);
-    xt::xarray<bool> b_start = xt::cast<bool>(START_CONDITION);
-    history.no1_start_condition = formula::at(b_start, -1);
-    //START_PRICE := VALUEWHEN(START_CONDITION, LOW);  {仅在条件成立时记录 LOW}
-    auto START_PRICE = formula::value_when(START_CONDITION, LOW);
-    history.no1_start_price = formula::at(START_PRICE, -1);
-    //
-    //{判断是否创新高}
-    //NEW_HIGH := HIGH > HHV(HIGH, BARSLAST(START_CONDITION) + 1);
-    auto new_high_n = formula::bars_last(START_CONDITION)+1;
-    const xt::xarray<double> highest = formula::rolling(HIGH, new_high_n, formula::rolling_ops::hhv);
-    auto NEW_HIGH = HIGH > highest;
-    //
-    //{买入信号：突破下行趋势}
-    //BUY_SIGNAL := CROSS(HIGH, REF(HIGH, 1)) AND REF(DOWN_TREND, 1);
-    auto b_cross_high = formula::cross(HIGH, formula::ref(HIGH,1));
-    history.no1_cross_high = formula::at(b_cross_high, -1);
-    auto break_high = xt::cast<bool>(b_cross_high);
-    auto down_trend = xt::cast<bool>(formula::ref(DOWN_TREND, 1));
-    auto BUY_SIGNAL = break_high && down_trend;
-    auto buy_cond = xt::eval(BUY_SIGNAL);  // 先评估为具体数组
-
-    //
-    //{卖出信号1：跌破上行起点}
-    //SELL_SIGNAL1 := LOW < START_PRICE AND START_PRICE > 0;
-    auto SELL_SIGNAL1 = LOW<START_PRICE && START_PRICE>0;
-    //
-    //{卖出信号2：无新高后下行}
-    //SELL_SIGNAL2 := REF(UP_TREND, 1) AND DOWN_TREND AND NOT(NEW_HIGH);
-    auto SELL_SIGNAL2 = formula::ref(UP_TREND, 1) && DOWN_TREND && !NEW_HIGH;
-    //
-    //{综合卖出信号}
-    //SELL_SIGNAL := SELL_SIGNAL1 OR SELL_SIGNAL2;
-    auto SELL_SIGNAL = SELL_SIGNAL1 || SELL_SIGNAL2;
-
     history.UpdateTime = api::get_timestamp();
     history.State |= factors::FeatureHistory;
 }
@@ -248,7 +200,7 @@ namespace factors {
         inline exchange::timestamp                  g_factor_history_date{};
     }
 
-    void check_and_update(const exchange::timestamp& timestamp) {
+    static void check_and_update(const exchange::timestamp &timestamp) {
         std::lock_guard<std::mutex> lock{g_factor_history_mutex};
         exchange::timestamp algin_date = timestamp.pre_market_time();
         if(g_factor_history_map.empty() || g_factor_history_date != algin_date) {

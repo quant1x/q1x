@@ -326,7 +326,7 @@ namespace exchange {
         }
 
         /// js解码
-        std::vector<std::string> decode(const std::string &text) {
+        static std::vector<std::string> decode(const std::string &text) {
             duk_context *ctx = duk_create_heap_default();
 
             if (duk_peval_string(ctx, javascript_decoder) != DUK_EXEC_SUCCESS) {

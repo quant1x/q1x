@@ -9,19 +9,12 @@
 #include <string>
 
 namespace q1x {
-    std::tm safe_localtime(std::time_t t) noexcept;
-    std::tm safe_gmtime(std::time_t t) noexcept;
-
     namespace safe {
         // 安全的 localtime 函数，避免线程不安全
-        inline std::tm localtime(std::time_t t) noexcept {
-            return q1x::safe_localtime(t);
-        }
+        std::tm localtime(std::time_t t) noexcept;
 
         // 安全的 gmtime 函数，避免线程不安全
-        inline std::tm gmtime(std::time_t t) noexcept {
-            return q1x::safe_gmtime(t);
-        }
+        std::tm gmtime(std::time_t t) noexcept;
 
         inline std::string strerror(int errnum) {
             constexpr size_t buf_size = 256;

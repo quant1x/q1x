@@ -102,7 +102,7 @@ namespace exchange {
         return list;
     }
 
-    std::vector<block_info> get_block_info_from_config(const std::string &filename) {
+    static std::vector<block_info> get_block_info_from_config(const std::string &filename) {
         auto blkFilename = config::get_block_path() + "/" + filename;
         std::ifstream in(blkFilename, std::ios::binary);
         if(!in.is_open()) {
@@ -167,7 +167,7 @@ namespace exchange {
         }
     };
 
-    std::vector<IndustryInfo> load_industry_blocks() {
+    static std::vector<IndustryInfo> load_industry_blocks() {
         std::string hyfile = "tdxhy.cfg";
         std::string cacheFilename = config::get_block_path() + "/" + hyfile;
 
@@ -236,7 +236,7 @@ namespace exchange {
         return list;
     }
 
-    std::vector<block_info> parse_and_generate_block_file() {
+    static std::vector<block_info> parse_and_generate_block_file() {
         auto blockInfos = load_index_block_infos();
         tsl::robin_map<std::string, std::string> block2Name{};
         for(auto const & v : blockInfos) {

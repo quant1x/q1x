@@ -2,7 +2,7 @@
 #ifndef QUANT1X_BACKTEST_POSITION_H
 #define QUANT1X_BACKTEST_POSITION_H 1
 
-#include "q1x/backtest/trade.h"
+#include <q1x/backtest/trade.h>
 
 namespace backtest {
 

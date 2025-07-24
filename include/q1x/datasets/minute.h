@@ -2,7 +2,7 @@
 #ifndef QUANT1X_DATASETS_MINUTE_H
 #define QUANT1X_DATASETS_MINUTE_H 1
 
-#include "xdxr.h"
+#include <q1x/datasets/xdxr.h>
 #include <ranges>
 
 namespace datasets {

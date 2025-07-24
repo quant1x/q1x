@@ -1,4 +1,5 @@
 #include <q1x/engine/strategy.h>
+
 std::string StrategyInfo::QmtStrategyName() const {
     std::string result = "S";
     char buffer[20];  // 最大支持 uint64_t 字符数（如 18446744073709551615）

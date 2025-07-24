@@ -2,12 +2,12 @@
 #ifndef QUANT1X_BACKTEST_H
 #define QUANT1X_BACKTEST_H 1
 
-#include "q1x/std/api.h"
-#include "q1x/backtest/order.h"
-#include "q1x/backtest/position.h"
-#include "q1x/backtest/trade.h"
-#include "q1x/datasets/kline.h"
-#include "q1x/engine/strategy.h"
+#include <q1x/std/api.h>
+#include <q1x/backtest/order.h>
+#include <q1x/backtest/position.h>
+#include <q1x/backtest/trade.h>
+#include <q1x/datasets/kline.h>
+#include <q1x/engine/strategy.h>
 
 // 使用时间点别名简化代码
 using TimePoint = std::chrono::system_clock::time_point;

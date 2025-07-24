@@ -2,8 +2,8 @@
 #ifndef QUANT1X_CONFIG_DETAIL_TRADING_SESSION_H
 #define QUANT1X_CONFIG_DETAIL_TRADING_SESSION_H 1
 
-#include "q1x/std/strings.h"
-#include "q1x/std/safe.h"
+#include <q1x/std/strings.h>
+#include <q1x/std/safe.h>
 #include <algorithm>
 #include <chrono>
 #include <ctime>

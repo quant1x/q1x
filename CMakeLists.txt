@@ -862,7 +862,12 @@ install(TARGETS q1x third_libs xtensor_optimize global_compile_options EXPORT q1
 
 # 安装主库头文件
 install(
-    DIRECTORY include/ ${CMAKE_BINARY_DIR}/include/private/
+    DIRECTORY include/
+    DESTINATION include/
+)
+
+install(
+    DIRECTORY ${CMAKE_BINARY_DIR}/include/private/
     DESTINATION include/q1x
 )
 

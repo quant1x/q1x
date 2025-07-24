@@ -2,11 +2,11 @@
 #ifndef QUANT1X_CONFIG_DETAIL_STRATEGY_PARAMETER_H
 #define QUANT1X_CONFIG_DETAIL_STRATEGY_PARAMETER_H 1
 
-#include "q1x/std/strings.h"
-#include "q1x/encoding/yaml.h"
-#include "rule-parameter.h"
-#include "trading-session.h"
-#include "price_cage.h"
+#include <q1x/std/strings.h>
+#include <q1x/encoding/yaml.h>
+#include <q1x/config/rule-parameter.h>
+#include <q1x/config/trading-session.h>
+#include <q1x/config/price_cage.h>
 #include <string>
 #include <vector>
 #include <algorithm>

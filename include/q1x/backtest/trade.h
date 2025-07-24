@@ -2,7 +2,7 @@
 #ifndef QUANT1X_BACKTEST_TRADE_H
 #define QUANT1X_BACKTEST_TRADE_H 1
 
-#include "q1x/engine/strategy.h"
+#include <q1x/engine/strategy.h>
 
 namespace backtest {
     // 成交记录数据结构

@@ -1,4 +1,4 @@
-#include "q1x/std/affinity.h"
+#include <q1x/std/affinity.h>
 
 #include <atomic>
 #include <climits>  // 添加头文件用于LONG_MAX

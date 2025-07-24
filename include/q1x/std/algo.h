@@ -2,7 +2,7 @@
 #ifndef API_ALGO_H
 #define API_ALGO_H 1
 
-#include "q1x/std/numerics.h"
+#include <q1x/std/numerics.h>
 
 namespace algo {
 

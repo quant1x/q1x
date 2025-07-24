@@ -5,18 +5,18 @@
 #include <cmath>
 using namespace std;
 
-static void findPeaksAndValleys(const vector<int> &nums) {
+static void findPeaksAndValleys(const vector<int64_t> &nums) {
     if (nums.size() < 2) {
         cout << "数组元素不足，无法确定波峰波谷" << endl;
         return;
     }
 
-    vector<int> peaks;   // 存储波峰位置
-    vector<int> valleys; // 存储波谷位置
+    vector<int64_t> peaks;    // 存储波峰位置
+    vector<int64_t> valleys;  // 存储波谷位置
 
-    int count = int(nums.size());
+    int64_t count = int64_t(nums.size());
 
-    for (int i = 1; i < count - 1; ++i) {
+    for (int64_t i = 1; i < count - 1; ++i) {
         // 检查是否为波峰
         if (nums[i] > nums[i-1] && nums[i] > nums[i+1]) {
             peaks.push_back(i);
@@ -35,7 +35,7 @@ static void findPeaksAndValleys(const vector<int> &nums) {
         } else if (nums[0] < nums[1]) {
             valleys.push_back(0);
         }
-        int x = int(nums.size());
+        int64_t x = int64_t(nums.size());
         if (nums.back() > nums[x-2]) {
             peaks.push_back(x-1);
         } else if (nums.back() < nums[x-2]) {
@@ -45,22 +45,22 @@ static void findPeaksAndValleys(const vector<int> &nums) {
 
     // 输出结果
     cout << "波峰位置: ";
-    for (int pos : peaks) {
+    for (auto const & pos : peaks) {
         cout << pos << " ";
     }
     cout << endl;
 
     cout << "波谷位置: ";
-    for (int pos : valleys) {
+    for (auto const & pos : valleys) {
         cout << pos << " ";
     }
     cout << endl;
 }
 
 TEST_CASE("find-peaks-v1", "[peaks]") {
-    vector<int> nums = {1, 3, 2, 4, 4, 1, 5, 4, 3, 2, 6};
+    vector<int64_t> nums = {1, 3, 2, 4, 4, 1, 5, 4, 3, 2, 6};
     cout << "数组: ";
-    for (int num : nums) {
+    for (int64_t num : nums) {
         cout << num << " ";
     }
     cout << endl;
@@ -149,7 +149,7 @@ public:
 };
 
 // 对外接口函数
-pair<vector<int>, vector<int>> PeeksAndValleys(const vector<double>& data) {
+static pair<vector<int>, vector<int>> PeeksAndValleys(const vector<double> &data) {
     if (data.empty()) {
         return make_pair(vector<int>{}, vector<int>{});
     }
@@ -461,7 +461,7 @@ namespace xt {
     using namespace xt;
 }
 
-static std::pair<std::vector<int>, std::vector<int>> peaks_and_valleys_xtensor(
+static std::pair<std::vector<int64_t>, std::vector<int64_t>> peaks_and_valleys_xtensor(
     const xt::xarray<double>& high,
     const xt::xarray<double>& low)
 {
@@ -473,19 +473,19 @@ static std::pair<std::vector<int>, std::vector<int>> peaks_and_valleys_xtensor(
     size_t n = high.size();
 
     // 第一步：计算一阶差分 (向量化操作)
-    xt::xarray<int> diff_high = xt::zeros<int>({n});
-    xt::xarray<int> diff_low = xt::zeros<int>({n});
+    xt::xarray<int64_t> diff_high = xt::zeros<int64_t>({n});
+    xt::xarray<int64_t> diff_low  = xt::zeros<int64_t>({n});
 
     // 计算差分 (更高效的向量化方式)
     xt::view(diff_high, xt::range(0, n-1)) = xt::sign(xt::view(high, xt::range(1, n)) - xt::view(high, xt::range(0, n-1)));
     xt::view(diff_low, xt::range(0, n-1)) = xt::sign(xt::view(low, xt::range(1, n)) - xt::view(low, xt::range(0, n-1)));
 
     // 第二步：处理平台区域 (向量化处理)
-    auto process_plateaus = [](xt::xarray<int>& diff) {
+    auto process_plateaus = [](xt::xarray<int64_t> &diff) {
         size_t n = diff.size();
 
         // 前向填充非零值
-        int last_non_zero = 0;
+        int64_t last_non_zero = 0;
         for (size_t i = 0; i < n; ++i) {
             if (diff[i] != 0) {
                 last_non_zero = diff[i];
@@ -517,8 +517,8 @@ static std::pair<std::vector<int>, std::vector<int>> peaks_and_valleys_xtensor(
     auto valley_indices = xt::flatten_indices(xt::where(xt::equal(d_low, 2)));
 
     // 转换为std::vector并调整索引(+1)
-    std::vector<int> peaks(peak_indices.begin(), peak_indices.end());
-    std::vector<int> valleys(valley_indices.begin(), valley_indices.end());
+    std::vector<int64_t> peaks(peak_indices.begin(), peak_indices.end());
+    std::vector<int64_t> valleys(valley_indices.begin(), valley_indices.end());
 
     for (auto& idx : peaks) ++idx;
     for (auto& idx : valleys) ++idx;

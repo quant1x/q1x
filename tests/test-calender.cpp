@@ -32,16 +32,16 @@ private:
     inline static const std::string base64_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     std::vector<int64_t> h;
-    std::vector<int> i_data;
-    int e = 0, o = 0, n = 0;
+    std::vector<int64_t> i_data;
+    int64_t e = 0, o = 0, n = 0;
 
     struct State {
-        int d = 0, p = 0, ld = 0, c = 0;
+        int64_t d = 0, p = 0, ld = 0, c = 0;
         int64_t cd = 0;
         int m = 0;
 
         // For k()
-        int lk = 0;
+        int64_t lk = 0;
 
         // For S(), _, T(), etc.
         int la = 0, lp = 0, lv = 0, tv = 0, rv = 0, zv = 0, pp = 0;
@@ -52,8 +52,8 @@ private:
         std::vector<int> dv, dl;
     } r;
 
-    int s = 0;
-    int u_header = 0;
+    int64_t s = 0;
+    int64_t u_header = 0;
 
 public:
     struct DailyClose {
@@ -113,22 +113,22 @@ private:
         return e_count * (2 * t - 1);
     }
 
-    std::vector<int64_t> w(const std::vector<int>& t,
-                           const std::vector<int>& r_flag = {},
-                           const std::vector<int>& a_flag = {}) {
+    std::vector<int64_t> w(const std::vector<int64_t>& t,
+                           const std::vector<int64_t>& r_flag = {},
+                           const std::vector<int64_t>& a_flag = {}) {
         std::vector<int64_t> res;
-        std::vector<int> r_use = r_flag.empty() ? std::vector<int>(t.size(), 0) : r_flag;
-        std::vector<int> a_use = a_flag.empty() ? std::vector<int>(t.size(), 0) : a_flag;
+        std::vector<int64_t> r_use = r_flag.empty() ? std::vector<int64_t>(t.size(), 0) : r_flag;
+        std::vector<int64_t> a_use = a_flag.empty() ? std::vector<int64_t>(t.size(), 0) : a_flag;
 
         for (size_t i = 0; i < t.size(); ++i) {
-            int len = t[i];
+            int64_t len = t[i];
             if (len == 0) { res.push_back(0); continue; }
             if (e >= n) break;
 
             int64_t val = 0;
-            int bits = len;
+            int64_t bits = len;
             while (bits > 0 && e < n) {
-                int take = std::min(bits, 6 - o);
+                int64_t take = std::min(bits, 6 - o);
                 uint8_t mask = (1 << take) - 1;
                 val |= ((i_data[e] >> o) & mask) << (len - bits);
                 o += take; bits -= take;
@@ -147,23 +147,23 @@ private:
         return res;
     }
 
-    std::string x(int offset) {
+    std::string x(int64_t offset) {
         int64_t total_days = u_base + r.d + offset;
         time_t sec = (total_days * l) / 1000;
-        tm* ptm = gmtime(&sec);
+        tm ptm = q1x::safe::gmtime(sec);
         std::ostringstream oss;
-        oss << (1900 + ptm->tm_year) << '-'
-            << std::setfill('0') << std::setw(2) << (ptm->tm_mon + 1) << '-'
-            << std::setfill('0') << std::setw(2) << ptm->tm_mday;
+        oss << (1900 + ptm.tm_year) << '-'
+            << std::setfill('0') << std::setw(2) << (ptm.tm_mon + 1) << '-'
+            << std::setfill('0') << std::setw(2) << ptm.tm_mday;
         return oss.str();
     }
 
     std::vector<std::string> k() {
         if (s > 1) return {};
         r.lk = 0;
-        int count = -1;
+        int64_t count = -1;
         r.d = w({18})[0] - 1;
-        int end_day = w({18})[0];
+        int64_t end_day = w({18})[0];
 
         std::vector<std::string> res;
         std::string first = x(1);
@@ -202,7 +202,7 @@ private:
         int idx = 0;
         while (true) {
             if (!y()) break;
-            int cmd = w({3})[0], off = 1;
+            int64_t cmd = w({3})[0], off = 1;
             if (cmd == 0) off = w({6})[0];
             else if (cmd == 1) { r.d = w({18})[0]; off = 0; }
             else off = cmd;

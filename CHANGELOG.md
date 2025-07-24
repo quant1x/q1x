@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.19] - 2025-07-24
+### Changed
+- msvc编译修复类型长度不匹配的问题
+- 适配msvc
+- 删除1号策略
+
 ## [0.1.18] - 2025-07-23
 ### Changed
 - 新增历史分笔成交记录的proto3协议
@@ -10,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - 第一版日历js转c++解码
 - 优化部分代码
 - 新增http测试, 占位
+- update changelog
 
 ## [0.1.17] - 2025-07-21
 ### Changed
@@ -261,7 +268,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.18...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.19...HEAD
+[0.1.19]: https://gitee.com/quant1x/q1x.git/compare/v0.1.18...v0.1.19
 [0.1.18]: https://gitee.com/quant1x/q1x.git/compare/v0.1.17...v0.1.18
 [0.1.17]: https://gitee.com/quant1x/q1x.git/compare/v0.1.16...v0.1.17
 [0.1.16]: https://gitee.com/quant1x/q1x.git/compare/v0.1.15...v0.1.16

@@ -42,7 +42,7 @@ struct LinearRegressionModel {
 
 // 线性回归拟合
 LinearRegressionModel linear_regression(const std::vector<ta::point>& points) {
-    int n = points.size();
+    int n = int(points.size());
     if (n < 2) {
         return {0.0, 0.0}; // 数据不足
     }

@@ -49,13 +49,13 @@ namespace quant1x {
         if(sub_parser.is_used(cmd_flag_start)) {
             tmp_start_date = updateStartDate.value;
         }
-        std::cout << tmp_start_date << std::endl;
+        std::cout << "开始日期" << tmp_start_date << std::endl;
         // 判断结束日期
         std::string tmp_end_date = exchange::last_trading_day().only_date();
         if(sub_parser.is_used(cmd_flag_end)) {
             tmp_end_date = updateEndDate.value;
         }
-        std::cout << tmp_end_date << std::endl;
+        std::cout << "结束日期" << tmp_end_date << std::endl;
         // 标准化日期
         exchange::timestamp start_date = exchange::timestamp::parse(tmp_start_date).pre_market_time();
         start_date = exchange::last_trading_day(start_date);

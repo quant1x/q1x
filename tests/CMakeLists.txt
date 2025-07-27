@@ -122,6 +122,19 @@ add_catch2_executable(tdd-level1-detect-server.cpp)
 
 # formula测试
 add_catch2_executable(tdd-formula.cpp)
+add_catch2_executable(tdd-rolling.cpp)
+
+# numerics 数值类功能测试
+add_catch2_executable(tdd-number-range.cpp)
+
+# 时间功能 测试
+add_catch2_executable(tdd-session.cpp)
+add_catch2_executable(tdd-timestamp.cpp)
+add_catch2_executable(tdd-times.cpp)
+
+# 文件锁/落地标识
+add_catch2_executable(tdd-touch.cpp)
+add_catch2_executable(tdd-filelock.cpp)
 
 # f10
 add_catch2_executable(tdd-notices.cpp)

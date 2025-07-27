@@ -3,9 +3,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.1.23] - 2025-07-27
+### Changed
+- 补充文件锁、滑动窗口和时间类测试代码
+
 ## [0.1.22] - 2025-07-24
 ### Changed
 - 参数输出到控制台的格式
+- update changelog
 
 ## [0.1.21] - 2025-07-24
 ### Changed
@@ -284,7 +289,8 @@ All notable changes to this project will be documented in this file.
 - 构建一个最简单的v0.0.1版本的工具库项目组织架构
 
 
-[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.22...HEAD
+[Unreleased]: https://gitee.com/quant1x/q1x.git/compare/v0.1.23...HEAD
+[0.1.23]: https://gitee.com/quant1x/q1x.git/compare/v0.1.22...v0.1.23
 [0.1.22]: https://gitee.com/quant1x/q1x.git/compare/v0.1.21...v0.1.22
 [0.1.21]: https://gitee.com/quant1x/q1x.git/compare/v0.1.20...v0.1.21
 [0.1.20]: https://gitee.com/quant1x/q1x.git/compare/v0.1.19...v0.1.20
